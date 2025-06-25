@@ -61,4 +61,62 @@ document.querySelectorAll('.region-filter').forEach(cb => {
 
 // ========== 3. MALHA DE RODOVIAS (Excel) ==========
 fetch('data/PLANILHA BI - OFICIAL.xlsx')
-  .then(r
+  .then(r => r.arrayBuffer())
+  .then(buf => {
+    const wb     = XLSX.read(buf, { type: 'array' });
+    const sheet  = wb.Sheets[wb.SheetNames[0]];
+    const data   = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
+    const head   = data[0].map(h => (h || '').toString().trim());
+
+    const rcIdx  = head.findIndex(h => /rc\b/i.test(h));
+    const rodIdx = head.findIndex(h => /rodovia|rod\./i.test(h));
+    const latIdx = head.findIndex(h => /lat/i.test(h));
+    const lonIdx = head.findIndex(h => /lon/i.test(h));
+    const seqIdx = head.findIndex(h => /seq|ordem|index/i.test(h));
+
+    if ([rcIdx, rodIdx, latIdx, lonIdx].includes(-1)) {
+      console.error('Cabeçalho detectado:', head);
+      alert('Colunas de RC, Rodovia, Latitude ou Longitude não encontradas.');
+      return;
+    }
+
+    const grupos = {};
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (row[latIdx] == null || row[lonIdx] == null) continue;
+
+      const lat = parseFloat(row[latIdx].toString().replace(',', '.'));
+      const lon = parseFloat(row[lonIdx].toString().replace(',', '.'));
+      if (isNaN(lat) || isNaN(lon)) continue;
+
+      const chave = `${row[rcIdx]} ${row[rodIdx]}`.trim();
+      if (!grupos[chave]) grupos[chave] = [];
+      grupos[chave].push({ lat, lon, seq: seqIdx >= 0 ? +row[seqIdx] : i });
+    }
+
+    const roadLayers = {};
+    Object.entries(grupos).forEach(([name, pts]) => {
+      pts.sort((a, b) => a.seq - b.seq);
+      const line = L.polyline(pts.map(p => [p.lat, p.lon]),
+                              { color: '#666', weight: 3 });
+      line.addTo(map);
+      roadLayers[name] = line;
+    });
+
+    const cont = document.getElementById('rodovia-filters');
+    Object.keys(roadLayers).sort().forEach(name => {
+      const lb = document.createElement('label');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = true;
+      cb.onchange = e => e.target.checked
+        ? map.addLayer(roadLayers[name])
+        : map.removeLayer(roadLayers[name]);
+      lb.append(cb, ` ${name}`);
+      cont.appendChild(lb);
+    });
+  })
+  .catch(err => {
+    console.error('Erro lendo Excel:', err);
+    alert('Não foi possível ler PLANILHA BI - OFICIAL.xlsx.');
+  });
