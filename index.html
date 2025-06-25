@@ -1,60 +1,238 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Mapa Interativo – DR.02</title>
+  <head>
+    <meta charset="utf-8" />
+    <title>Mapa DR‑02 – Filtro Avançado</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Leaflet -->
+    <!-- TODO: adicionar atributo `defer`/`async` para evitar bloquear o parser -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha512-sA+e2nN7Q0tKw0bVyG67WEMyQuTzZjnbgvn+iJvOYlbDdEnFGBF8sH51ALec+4D3tkbZ6ZCZIG9DJWFr6M7i4g=="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha512-XQoYMqMTK8LvdlxumsuTsBT1L0O6QvPj+ux5vgWU6prmM3GSnTnKRe0OT8Hx2M4RkX2R0rChYHcR1Ed1Z7zUgA=="
+      crossorigin=""
+    ></script>
 
-  <!-- Leaflet -->
-  <link rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-
-  <!-- CSS do projeto -->
-  <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-  <h1>Mapa Interativo – DR.02</h1>
-
-  <div id="container">
-    <!-- Sidebar fixa ----------------------------------------------->
+    <!-- Simple styling -->
+    <style>
+      /* PERF: mover para arquivo externo para permitir cache pelo navegador */
+      body {
+        margin: 0;
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        height: 100vh;
+        font-family: system-ui, sans-serif;
+      }
+      /* Sidebar */
+      #sidebar {
+        overflow-y: auto;
+        padding: 1rem;
+        border-right: 1px solid #e5e7eb;
+        background: #fafafa;
+      }
+      details {
+        margin-bottom: 0.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        background: #fff;
+        transition: box-shadow 0.2s;
+      }
+      details[open] {
+        box-shadow: 0 0 0 2px #0ea5e9 inset;
+      }
+      summary {
+        cursor: pointer;
+        font-weight: 600;
+        outline: none;
+      }
+      .road-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0.25rem 0;
+      }
+      .road-toggle label {
+        flex: 1;
+        cursor: pointer;
+      }
+      #kmFilter {
+        margin-top: 1rem;
+      }
+      #kmValue {
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+      }
+      /* Map */
+      #map {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
     <aside id="sidebar">
       <h2>Filtros</h2>
 
-      <fieldset>
-        <legend>Regiões</legend>
-        <label><input type="checkbox" class="region-filter" data-region="RC 2.1" checked> RC 2.1</label>
-        <label><input type="checkbox" class="region-filter" data-region="RC 2.2" checked> RC 2.2</label>
-        <label><input type="checkbox" class="region-filter" data-region="RC 2.4" checked> RC 2.4</label>
-        <label><input type="checkbox" class="region-filter" data-region="RC 2.5" checked> RC 2.5</label>
-        <label><input type="checkbox" class="region-filter" data-region="RC 2.6+2.8" checked> RC 2.6+2.8</label>
-        <label><input type="checkbox" class="region-filter" data-region="RC 2.7" checked> RC 2.7</label>
-        <label><input type="checkbox" class="region-filter" data-region="CGR.02 Unificada" checked> CGR.02 Unificada</label>
-      </fieldset>
+      <!-- Blocos RC preenchidos dinamicamente pelo script -->
+      <div id="filterContainer"></div>
 
-      <fieldset>
-        <legend>Rodovias</legend>
-        <input id="road-search" type="search" placeholder="Buscar rodovia…">
-        <div id="rodovia-filters"></div>
-      </fieldset>
+      <div id="kmFilter">
+        <label for="kmRange">Filtrar por Km até: <span id="kmValue">0</span></label>
+        <input
+          type="range"
+          id="kmRange"
+          min="0"
+          max="999"
+          value="999"
+          step="1"
+          style="width: 100%"
+        />
+      </div>
     </aside>
 
-    <!-- Mapa -->
-    <div id="map"></div>
-  </div>
+    <main id="map"></main>
 
-  <!-- Scripts ------------------------------------------------------>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/shpjs@latest/dist/shp.min.js"></script>
-  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-  <script src="js/script.js"></script>
+    <script>
+      // ===== Configurações iniciais =====
+      const map = L.map("map").setView([-23.6, -48.1], 8);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap"
+      }).addTo(map);
 
-  <!-- Filtro de busca por rodovia -->
-  <script>
-    document.getElementById('road-search').addEventListener('input', e => {
-      const q = e.target.value.toLowerCase();
-      document.querySelectorAll('#rodovia-filters label').forEach(lb => {
-        lb.style.display = lb.textContent.toLowerCase().includes(q) ? 'block' : 'none';
+      /*
+        Estrutura para carregar suas camadas.
+        Formato esperado:
+        {
+          "RC 2.1": {
+            "SP‑138": { url: "geojson/sp138.geojson", minKm: 0, maxKm: 110 },
+            "SP‑250": { url: "geojson/sp250.geojson", minKm: 0, maxKm: 220 }
+          },
+          "RC 2.2": { ... }
+        }
+
+        Preencha/ajuste conforme seus arquivos.
+      */
+      const LAYER_MANIFEST = {
+        "RC 2.1": {
+          "SP‑138": {
+            url: "geojson/sp138.geojson",
+            minKm: 0,
+            maxKm: 110,
+            color: "#ef4444"
+          },
+          "SP‑250": {
+            url: "geojson/sp250.geojson",
+            minKm: 0,
+            maxKm: 220,
+            color: "#6366f1"
+          }
+        },
+        "RC 2.2": {
+          "SP‑280": {
+            url: "geojson/sp280.geojson",
+            minKm: 0,
+            maxKm: 189,
+            color: "#10b981"
+          }
+        }
+        // Adicione mais RC / rodovias aqui…
+      };
+
+      // ===== Helpers =====
+      const layerStore = {}; // Guardará camadas Leaflet por chave "RC|Rodovia"
+
+      function createPolylineLayer(url, color) {
+        // TODO: usar AbortController para cancelar fetches se usuário alternar rapidamente
+        return fetch(url)
+          .then((r) => r.json())
+          .then((geojson) =>
+            L.geoJSON(geojson, {
+              style: { color, weight: 4, opacity: 0.9 }
+            })
+          );
+      }
+
+      function buildUI() {
+        const container = document.getElementById("filterContainer");
+        // NOTE: usar DocumentFragment para reduzir reflows quando houver muitas RCs
+        for (const [rc, roads] of Object.entries(LAYER_MANIFEST)) {
+          const details = document.createElement("details");
+          const summary = document.createElement("summary");
+          summary.textContent = rc;
+          details.appendChild(summary);
+
+          for (const [road, cfg] of Object.entries(roads)) {
+            const id = `${rc}|${road}`;
+            const div = document.createElement("div");
+            div.className = "road-toggle";
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.id = id;
+
+            const label = document.createElement("label");
+            label.htmlFor = id;
+            label.textContent = road;
+
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            details.appendChild(div);
+
+            // Pré‑carrega a camada mas não adiciona ao mapa ainda
+            createPolylineLayer(cfg.url, cfg.color).then((layer) => {
+              layerStore[id] = { layer, cfg };
+            });
+
+            checkbox.addEventListener("change", (e) => {
+              const obj = layerStore[id];
+              if (!obj) return;
+              if (e.target.checked) {
+                map.addLayer(obj.layer);
+              } else {
+                map.removeLayer(obj.layer);
+              }
+              applyKmFilter();
+            });
+          }
+
+          container.appendChild(details);
+        }
+      }
+
+      // ===== Filtro de Km =====
+      const kmRange = document.getElementById("kmRange");
+      const kmValueSpan = document.getElementById("kmValue");
+
+      kmRange.addEventListener("input", () => {
+        kmValueSpan.textContent = kmRange.value;
+        applyKmFilter();
       });
-    });
-  </script>
-</body>
+      kmValueSpan.textContent = kmRange.value;
+
+      function applyKmFilter() {
+        const kmLimit = parseFloat(kmRange.value);
+        for (const [key, obj] of Object.entries(layerStore)) {
+          const { layer, cfg } = obj;
+          const visible = layer._map; // true se já está no mapa
+          if (!visible) continue; // ignorar não visíveis
+
+          // Se kmLimit menor que faixa da rodovia, ajusta visibilidade
+          if (kmLimit < cfg.minKm || kmLimit > cfg.maxKm) {
+            map.removeLayer(layer);
+          } else if (!map.hasLayer(layer)) {
+            map.addLayer(layer);
+          }
+        }
+        // FIXME: limpar layerStore de camadas nunca usadas para evitar vazamentos de memória
+      }
+
+      // ===== Inicialização =====
+      buildUI();
+    </script>
+  </body>
 </html>
