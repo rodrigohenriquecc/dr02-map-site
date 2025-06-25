@@ -8,21 +8,21 @@
   <link rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
-  <!-- Estilo próprio -->
+  <!-- Seu CSS -->
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <h1>Mapa Interativo - DR.02</h1>
+  <h1>Mapa Interativo – DR.02</h1>
 
   <section id="controls">
     <fieldset>
       <legend>Regiões</legend>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.1" checked> RC&nbsp;2.1</label>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.2" checked> RC&nbsp;2.2</label>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.4" checked> RC&nbsp;2.4</label>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.5" checked> RC&nbsp;2.5</label>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.6+2.8" checked> RC&nbsp;2.6+2.8</label>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.7" checked> RC&nbsp;2.7</label>
+      <label><input type="checkbox" class="region-filter" data-region="RC 2.1" checked> RC 2.1</label>
+      <label><input type="checkbox" class="region-filter" data-region="RC 2.2" checked> RC 2.2</label>
+      <label><input type="checkbox" class="region-filter" data-region="RC 2.4" checked> RC 2.4</label>
+      <label><input type="checkbox" class="region-filter" data-region="RC 2.5" checked> RC 2.5</label>
+      <label><input type="checkbox" class="region-filter" data-region="RC 2.6+2.8" checked> RC 2.6+2.8</label>
+      <label><input type="checkbox" class="region-filter" data-region="RC 2.7" checked> RC 2.7</label>
     </fieldset>
 
     <fieldset>
@@ -33,14 +33,17 @@
 
   <div id="map"></div>
 
-  <!-- Bibliotecas JS -->
+  <!-- ====== ORDEM DOS SCRIPTS (NÃO ALTERAR) ====== -->
+  <!-- 1) Leaflet -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <!-- shpjs para ler shapefiles ZIP -->
+
+  <!-- 2) shpjs  (lê shapefiles ZIP) -->
   <script src="https://unpkg.com/shpjs@latest/dist/shp.min.js"></script>
-  <!-- SheetJS para ler o Excel -->
+
+  <!-- 3) SheetJS  (lê o Excel) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.20.1/dist/xlsx.full.min.js"></script>
 
-  <!-- Script principal -->
+  <!-- 4) Script do projeto – DEVE vir por último -->
   <script src="js/script.js"></script>
 </body>
 </html>
