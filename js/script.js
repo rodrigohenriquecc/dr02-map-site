@@ -16,7 +16,7 @@ function randomColor(alpha = 0.2) {
 }
 
 /* ---------------------------------------------------------
- * 2. REGIÕES
+ * 2. REGIÕES – SHAPEFILES ZIP
  * --------------------------------------------------------- */
 const regions = [
   { name: 'RC 2.1', file: 'RC 2.1.zip' },
@@ -42,7 +42,7 @@ regions.forEach(info => {
         map._initialFitDone = true;
       }
     })
-    .catch(err => console.error(`Erro no ${info.file}:`, err));
+    .catch(err => console.error(`Erro ao ler ${info.file}:`, err));
 
   layer.addTo(map);
   regionLayers[info.name] = layer;
@@ -57,24 +57,25 @@ document.querySelectorAll('.region-filter').forEach(cb => {
 });
 
 /* ---------------------------------------------------------
- * 3. MALHA DE RODOVIAS
+ * 3. MALHA DE RODOVIAS – PLANILHA EXCEL
  * --------------------------------------------------------- */
-const excelFile = 'planilha.xlsx';        // planilha corrigida com LAT e LON
+const excelFile = 'planilha.xlsx';        // nome da planilha em /data/
 
 (async () => {
   try {
-    const resp = await fetch(`data/${encodeURIComponent(excelFile)}`);
+    const url  = `data/${encodeURIComponent(excelFile)}`;
+    const resp = await fetch(url);
     if (!resp.ok) throw new Error(`Status ${resp.status}`);
     parseExcel(await resp.arrayBuffer());
   } catch (err) {
     console.error(err);
-    alert('Não foi possível baixar a planilha. Verifique o nome em /data/.');
+    alert(`Não foi possível baixar "${excelFile}". Verifique o nome em /data/.`);
   }
 })();
 
 function parseExcel(buf) {
   if (typeof XLSX === 'undefined') {
-    alert('SheetJS não carregou — confira as tags <script>.');
+    alert('SheetJS não carregou – confira as tags <script>.');
     return;
   }
 
@@ -83,31 +84,34 @@ function parseExcel(buf) {
   const data  = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
   const head  = data[0].map(h => (h || '').toString().trim());
 
-  /* ---- DETECÇÃO PELOS CABEÇALHOS ---- */
+  /* ---- DETECÇÃO DE ÍNDICES POR NOME ---- */
   const rcIdx  = head.findIndex(h => /^rc$/i.test(h));
   const rodIdx = head.findIndex(h => /^sp$/i.test(h));
+  const kmIdx  = head.findIndex(h => /^km$/i.test(h));
   const latIdx = head.findIndex(h => /^lat$/i.test(h));
   const lonIdx = head.findIndex(h => /^lon$/i.test(h));
-  const seqIdx = head.findIndex(h => /^km$/i.test(h));
 
-  if ([rcIdx, rodIdx, latIdx, lonIdx, seqIdx].includes(-1)) {
+  if ([rcIdx, rodIdx, kmIdx, latIdx, lonIdx].includes(-1)) {
     console.table(head);
-    alert('Alguma coluna (RC, SP, KM, LAT, LON) não foi encontrada. Veja o console.');
+    alert('Alguma das colunas RC, SP, KM, LAT ou LON não foi encontrada. Veja o console.');
     return;
   }
 
-  /* ---- AGRUPA PONTOS POR RODOVIA ---- */
+  /* ---- AGRUPA PONTOS ---- */
   const grupos = {};
+  let total = 0;
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    const lat = parseFloat(row[latIdx]);
-    const lon = parseFloat(row[lonIdx]);
+    const lat = parseFloat(String(row[latIdx]).replace(',', '.'));
+    const lon = parseFloat(String(row[lonIdx]).replace(',', '.'));
     if (isNaN(lat) || isNaN(lon)) continue;
 
+    total++;
     const chave = `${row[rcIdx]} ${row[rodIdx]}`.trim();
     if (!grupos[chave]) grupos[chave] = [];
-    grupos[chave].push({ lat, lon, seq: +row[seqIdx] || i });
+    grupos[chave].push({ lat, lon, seq: +row[kmIdx] || i });
   }
+  console.log('Pontos válidos encontrados:', total);
 
   /* ---- DESENHA LINHAS ---- */
   const roadLayers = {};
@@ -122,13 +126,14 @@ function parseExcel(buf) {
   /* ---- FILTROS ---- */
   const box = document.getElementById('rodovia-filters');
   Object.keys(roadLayers).sort().forEach(name => {
-    const label = document.createElement('label');
-    const cb    = document.createElement('input');
-    cb.type = 'checkbox'; cb.checked = true;
+    const lab = document.createElement('label');
+    const cb  = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = true;
     cb.onchange = e => e.target.checked
       ? map.addLayer(roadLayers[name])
       : map.removeLayer(roadLayers[name]);
-    label.append(cb, ' ', name);
-    box.appendChild(label);
+    lab.append(cb, ' ', name);
+    box.appendChild(lab);
   });
 }
