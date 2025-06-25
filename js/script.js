@@ -1,7 +1,9 @@
 /* global L, shp, XLSX */
-
-// ========== 1. MAPA BASE ==========
+/* ---------------------------------------------------------
+ * 1. MAPA BASE
+ * --------------------------------------------------------- */
 const map = L.map('map').setView([-23.5, -47.8], 8);
+
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 18,
   attribution: '&copy; OpenStreetMap contributors'
@@ -14,7 +16,9 @@ function randomColor(alpha = 0.2) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-// ========== 2. REGIÕES ==========
+/* ---------------------------------------------------------
+ * 2. REGIÕES – SHAPEFILES ZIP
+ * --------------------------------------------------------- */
 const regions = [
   { name: 'RC 2.1', file: 'RC 2.1.zip' },
   { name: 'RC 2.2', file: 'RC 2.2.zip' },
@@ -25,6 +29,7 @@ const regions = [
 ];
 
 const regionLayers = {};
+
 regions.forEach(info => {
   const color = randomColor();
   const layer = L.geoJson(null, {
@@ -39,9 +44,7 @@ regions.forEach(info => {
         map._initialFitDone = true;
       }
     })
-    .catch(err => {
-      console.error(`Erro ao ler ${info.file}:`, err);
-    });
+    .catch(err => console.error(`Erro no ${info.file}:`, err));
 
   layer.addTo(map);
   regionLayers[info.name] = layer;
@@ -55,38 +58,32 @@ document.querySelectorAll('.region-filter').forEach(cb => {
   });
 });
 
-// ========== 3. MALHA DE RODOVIAS (Excel) ==========
+/* ---------------------------------------------------------
+ * 3. MALHA DE RODOVIAS – PLANILHA EXCEL
+ * --------------------------------------------------------- */
+const excelFile = 'planilha.xlsx';            // <-- Nome ÚNICO que será buscado
 
-// Tenta várias variações de nome até encontrar uma que exista
-const excelCandidates = [
-  'PLANILHA BI - OFICIAL.xlsx',
-  'PLANILHA BI - OFICIAL.xlsm',
-  'PLANILHA_BI_-_OFICIAL.xlsx',
-  'PLANILHA.xlsx',
-  'planilha.xlsx'
-];
-
-async function loadExcel() {
-  for (const file of excelCandidates) {
-    const url = `data/${encodeURIComponent(file)}`;
-    try {
-      const resp = await fetch(url);
-      if (!resp.ok) {        // 404 ou outro status ≠ 200
-        console.warn(`Tentativa falhou (${resp.status}): ${url}`);
-        continue;            // tenta o próximo candidato
-      }
-      console.info(`✓ Planilha carregada: ${file}`);
-      const buf = await resp.arrayBuffer();
-      parseExcel(buf);
-      return;                // encerra após a primeira bem-sucedida
-    } catch (err) {
-      console.error(`Erro tentando ${file}:`, err);
-    }
+(async () => {
+  const url = `data/${encodeURIComponent(excelFile)}`;
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`Status ${resp.status} para ${url}`);
+    console.info(`✓ Planilha carregada: ${excelFile}`);
+    const buf = await resp.arrayBuffer();
+    parseExcel(buf);
+  } catch (err) {
+    console.error(err);
+    alert(`Não foi possível baixar "${excelFile}" em /data/. Verifique o nome e o commit.`);
   }
-  alert('Não foi possível encontrar a planilha Excel em /data/. Verifique o nome do arquivo.');
-}
+})();
 
 function parseExcel(buf) {
+  if (typeof XLSX === 'undefined') {
+    alert('Biblioteca SheetJS não carregou. Verifique as tags <script> no index.html.');
+    console.error('XLSX is not defined – script de SheetJS ausente ou fora de ordem.');
+    return;
+  }
+
   const wb    = XLSX.read(buf, { type: 'array' });
   const sheet = wb.Sheets[wb.SheetNames[0]];
   const data  = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
@@ -127,6 +124,7 @@ function parseExcel(buf) {
     roadLayers[name] = line;
   });
 
+  // Interface de filtros
   const cont = document.getElementById('rodovia-filters');
   Object.keys(roadLayers).sort().forEach(name => {
     const lb = document.createElement('label');
@@ -140,6 +138,3 @@ function parseExcel(buf) {
     cont.appendChild(lb);
   });
 }
-
-// Inicializa
-loadExcel();
