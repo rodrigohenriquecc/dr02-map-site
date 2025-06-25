@@ -59,11 +59,11 @@ document.querySelectorAll('.region-filter').forEach(cb => {
 /* ---------------------------------------------------------
  * 3. MALHA DE RODOVIAS – PLANILHA EXCEL
  * --------------------------------------------------------- */
-const excelFile = 'planilha.xlsx';   // ↩️  ajuste aqui se usar outro nome
+const excelFile = 'planilha.xlsx';   // nome do arquivo dentro de /data/
 
 (async () => {
   try {
-    const url = `data/${encodeURIComponent(excelFile)}`;
+    const url  = `data/${encodeURIComponent(excelFile)}`;
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`Status ${resp.status} para ${url}`);
     console.info(`✓ Planilha carregada: ${excelFile}`);
@@ -74,10 +74,19 @@ const excelFile = 'planilha.xlsx';   // ↩️  ajuste aqui se usar outro nome
   }
 })();
 
+/* ---------- Ajuste fixo dos índices das colunas ---------- *
+ * Se inserir / mover colunas, atualize estes números.
+ * --------------------------------------------------------- */
+const rcIdx  = 0;  // "RC"
+const rodIdx = 1;  // "SP" (rodovia)
+const latIdx = 6;  // "LAT"
+const lonIdx = 7;  // "LON"
+const seqIdx = 2;  // "KM"  (usado como sequência)
+
 /* ------------ FUNÇÃO PRINCIPAL ------------- */
 function parseExcel(buf) {
   if (typeof XLSX === 'undefined') {
-    alert('Biblioteca SheetJS não carregou. Confira a ordem das tags <script>.');
+    alert('Biblioteca SheetJS não carregou. Confira as tags <script>.');
     console.error('XLSX is not defined.');
     return;
   }
@@ -85,42 +94,17 @@ function parseExcel(buf) {
   const wb    = XLSX.read(buf, { type: 'array' });
   const sheet = wb.Sheets[wb.SheetNames[0]];
   const data  = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
-  const head  = data[0].map(h => (h || '').toString().trim());
-
-  /* ---------- MOSTRA CABEÇALHOS ---------- */
-  window.head = head;          // pode digitar "head" no console
-  console.table(head);         // imprime tabela 0,1,2,… → cabeçalho
-
-  /* ---------- CONFIGURE AQUI ---------- *
-   * 1) Veja no console qual coluna é qual;
-   * 2) Troque os índices OU regex abaixo;
-   * 3) Salve e recarregue.                */
-  const rcIdx  = head.findIndex(h => /^rc|regional$/i.test(h));    // ou número fixo
-  const rodIdx = head.findIndex(h => /^rod|rodovia$/i.test(h));    // ou número fixo
-  const latIdx = head.findIndex(h => /^lat/i.test(h));             // ou número fixo
-  const lonIdx = head.findIndex(h => /^lon/i.test(h));             // ou número fixo
-  /* ------------------------------------ */
-
-  if ([rcIdx, rodIdx, latIdx, lonIdx].includes(-1)) {
-    alert('⚠️ Ajuste os índices/regex em script.js para RC, Rodovia, Latitude, Longitude.\n' +
-          'Veja o console.table(head) para os nomes corretos.');
-    return;
-  }
-
-  const seqIdx = head.findIndex(h => /seq|ordem|index/i.test(h));
 
   const grupos = {};
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    if (row[latIdx] == null || row[lonIdx] == null) continue;
-
-    const lat = parseFloat(row[latIdx].toString().replace(',', '.'));
-    const lon = parseFloat(row[lonIdx].toString().replace(',', '.'));
+    const lat = parseFloat(row[latIdx]);
+    const lon = parseFloat(row[lonIdx]);
     if (isNaN(lat) || isNaN(lon)) continue;
 
     const chave = `${row[rcIdx]} ${row[rodIdx]}`.trim();
     if (!grupos[chave]) grupos[chave] = [];
-    grupos[chave].push({ lat, lon, seq: seqIdx >= 0 ? +row[seqIdx] : i });
+    grupos[chave].push({ lat, lon, seq: +row[seqIdx] || i });
   }
 
   const roadLayers = {};
