@@ -14,39 +14,46 @@
 <body>
   <h1>Mapa Interativo – DR.02</h1>
 
-  <!-- Painel flutuante de filtros ------------------------------------------->
-  <section id="controls" class="collapsed">
-    <header id="controls-toggle">▸ Filtros</header>
+  <div id="container">
+    <!-- Sidebar fixa ------------------------------------------------------->
+    <aside id="sidebar">
+      <h2>Filtros</h2>
 
-    <fieldset>
-      <legend>Regiões</legend>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.1" checked> RC&nbsp;2.1</label>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.2" checked> RC&nbsp;2.2</label>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.4" checked> RC&nbsp;2.4</label>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.5" checked> RC&nbsp;2.5</label>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.6+2.8" checked> RC&nbsp;2.6+2.8</label>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.7" checked> RC&nbsp;2.7</label>
-    </fieldset>
+      <fieldset>
+        <legend>Regiões</legend>
+        <label><input type="checkbox" class="region-filter" data-region="RC 2.1" checked> RC&nbsp;2.1</label>
+        <label><input type="checkbox" class="region-filter" data-region="RC 2.2" checked> RC&nbsp;2.2</label>
+        <label><input type="checkbox" class="region-filter" data-region="RC 2.4" checked> RC&nbsp;2.4</label>
+        <label><input type="checkbox" class="region-filter" data-region="RC 2.5" checked> RC&nbsp;2.5</label>
+        <label><input type="checkbox" class="region-filter" data-region="RC 2.6+2.8" checked> RC&nbsp;2.6+2.8</label>
+        <label><input type="checkbox" class="region-filter" data-region="RC 2.7" checked> RC&nbsp;2.7</label>
+      </fieldset>
 
-    <fieldset>
-      <legend>Rodovias</legend>
-      <div id="rodovia-filters"></div>
-    </fieldset>
-  </section>
+      <fieldset>
+        <legend>Rodovias</legend>
+        <input id="road-search" type="search" placeholder="Buscar rodovia…" />
+        <div id="rodovia-filters"></div>
+      </fieldset>
+    </aside>
 
-  <!-- Mapa -->
-  <div id="map"></div>
+    <!-- Mapa -->
+    <div id="map"></div>
+  </div>
 
-  <!-- ===== ORDEM DOS SCRIPTS (NÃO ALTERAR) ===== -->
+  <!-- ===== Scripts ===== -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/shpjs@latest/dist/shp.min.js"></script>
   <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
   <script src="js/script.js"></script>
 
-  <!-- Toggle do painel flutuante -->
+  <!-- Pequeno script para busca de rodovias -->
   <script>
-    document.getElementById('controls-toggle').onclick = () =>
-      document.getElementById('controls').classList.toggle('collapsed');
+    document.getElementById('road-search').addEventListener('input', e => {
+      const q = e.target.value.toLowerCase();
+      document.querySelectorAll('#rodovia-filters label').forEach(lb => {
+        lb.style.display = lb.textContent.toLowerCase().includes(q) ? 'block' : 'none';
+      });
+    });
   </script>
 </body>
 </html>
