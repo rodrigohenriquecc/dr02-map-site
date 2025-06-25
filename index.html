@@ -1,176 +1,60 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="utf-8" />
-    <title>Mapa DR‑02 – Filtro Avançado</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- Leaflet – carregado com defer; removido integrity para evitar bloqueio se CDN atualizar -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<head>
+  <meta charset="UTF-8">
+  <title>Mapa Interativo – DR.02</title>
 
-    <style>
-      /* Mover para .css externo para cache se desejar */
-      body {
-        margin: 0;
-        display: grid;
-        grid-template-columns: 320px 1fr;
-        height: 100vh;
-        font-family: system-ui, sans-serif;
-      }
-      #sidebar {
-        overflow-y: auto;
-        padding: 1rem;
-        border-right: 1px solid #e5e7eb;
-        background: #fafafa;
-      }
-      details {
-        margin-bottom: 0.5rem;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.5rem;
-        padding: 0.25rem 0.5rem;
-        background: #fff;
-      }
-      summary {
-        cursor: pointer;
-        font-weight: 600;
-      }
-      .road-toggle {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin: 0.25rem 0;
-      }
-      .road-toggle label {
-        flex: 1;
-        cursor: pointer;
-      }
-      #kmFilter {
-        margin-top: 1rem;
-      }
-      #kmValue {
-        font-variant-numeric: tabular-nums;
-        font-weight: 600;
-      }
-      #map {
-        width: 100%;
-        height: 100%;
-      }
-    </style>
-  </head>
-  <body>
+  <!-- Leaflet -->
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <!-- CSS do projeto -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <h1>Mapa Interativo – DR.02</h1>
+
+  <div id="container">
+    <!-- Sidebar fixa ----------------------------------------------->
     <aside id="sidebar">
       <h2>Filtros</h2>
-      <div id="filterContainer"></div>
 
-      <div id="kmFilter">
-        <label for="kmRange">Filtrar por Km até: <span id="kmValue">999</span></label>
-        <input type="range" id="kmRange" min="0" max="999" value="999" step="1" style="width: 100%" />
-      </div>
+      <fieldset>
+        <legend>Regiões</legend>
+        <label><input type="checkbox" class="region-filter" data-region="RC 2.1" checked> RC 2.1</label>
+        <label><input type="checkbox" class="region-filter" data-region="RC 2.2" checked> RC 2.2</label>
+        <label><input type="checkbox" class="region-filter" data-region="RC 2.4" checked> RC 2.4</label>
+        <label><input type="checkbox" class="region-filter" data-region="RC 2.5" checked> RC 2.5</label>
+        <label><input type="checkbox" class="region-filter" data-region="RC 2.6+2.8" checked> RC 2.6+2.8</label>
+        <label><input type="checkbox" class="region-filter" data-region="RC 2.7" checked> RC 2.7</label>
+        <label><input type="checkbox" class="region-filter" data-region="CGR.02 Unificada" checked> CGR.02 Unificada</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Rodovias</legend>
+        <input id="road-search" type="search" placeholder="Buscar rodovia…">
+        <div id="rodovia-filters"></div>
+      </fieldset>
     </aside>
 
-    <main id="map"></main>
+    <!-- Mapa -->
+    <div id="map"></div>
+  </div>
 
-    <script>
-      window.addEventListener("DOMContentLoaded", () => {
-        if (typeof L === "undefined") {
-          console.error("Leaflet não foi carregado – verifique a conexão ou o link do CDN.");
-          return;
-        }
+  <!-- Scripts ------------------------------------------------------>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/shpjs@latest/dist/shp.min.js"></script>
+  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="js/script.js"></script>
 
-        // ===== Configurações iniciais =====
-        const map = L.map("map").setView([-23.6, -48.1], 8);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "© OpenStreetMap"
-        }).addTo(map);
-
-        const LAYER_MANIFEST = {
-          "RC 2.1": {
-            "SP-138": {
-              url: "geojson/sp138.geojson",
-              minKm: 0,
-              maxKm: 110,
-              color: "#ef4444"
-            },
-            "SP-250": {
-              url: "geojson/sp250.geojson",
-              minKm: 0,
-              maxKm: 220,
-              color: "#6366f1"
-            }
-          },
-          "RC 2.2": {
-            "SP-280": {
-              url: "geojson/sp280.geojson",
-              minKm: 0,
-              maxKm: 189,
-              color: "#10b981"
-            }
-          }
-          // Adicione mais RC / rodovias aqui…
-        };
-
-        /* ===== Helpers ===== */
-        const layerStore = {};
-        function createPolylineLayer(url, color) {
-          return fetch(url)
-            .then((r) => r.json())
-            .then((geojson) =>
-              L.geoJSON(geojson, { style: { color, weight: 4, opacity: 0.9 } })
-            );
-        }
-
-        function buildUI() {
-          const container = document.getElementById("filterContainer");
-          const frag = document.createDocumentFragment();
-
-          for (const [rc, roads] of Object.entries(LAYER_MANIFEST)) {
-            const details = document.createElement("details");
-            details.innerHTML = `<summary>${rc}</summary>`;
-
-            for (const [road, cfg] of Object.entries(roads)) {
-              const id = `${rc}|${road}`;
-              const div = document.createElement("div");
-              div.className = "road-toggle";
-              div.innerHTML = `<input type="checkbox" id="${id}" /> <label for="${id}">${road}</label>`;
-              details.appendChild(div);
-
-              createPolylineLayer(cfg.url, cfg.color).then((layer) => {
-                layerStore[id] = { layer, cfg };
-              });
-
-              div.querySelector("input").addEventListener("change", (e) => {
-                const obj = layerStore[id];
-                if (!obj) return;
-                e.target.checked ? map.addLayer(obj.layer) : map.removeLayer(obj.layer);
-                applyKmFilter();
-              });
-            }
-            frag.appendChild(details);
-          }
-          container.appendChild(frag);
-        }
-
-        /* ===== Filtro de Km ===== */
-        const kmRange = document.getElementById("kmRange");
-        const kmValueSpan = document.getElementById("kmValue");
-        kmRange.addEventListener("input", () => {
-          kmValueSpan.textContent = kmRange.value;
-          applyKmFilter();
-        });
-
-        function applyKmFilter() {
-          const kmLimit = parseFloat(kmRange.value);
-          for (const obj of Object.values(layerStore)) {
-            const { layer, cfg } = obj;
-            if (!layer._map) continue; // não visível
-            if (kmLimit < cfg.minKm || kmLimit > cfg.maxKm) {
-              map.removeLayer(layer);
-            }
-          }
-        }
-
-        buildUI();
+  <!-- Filtro de busca por rodovia -->
+  <script>
+    document.getElementById('road-search').addEventListener('input', e => {
+      const q = e.target.value.toLowerCase();
+      document.querySelectorAll('#rodovia-filters label').forEach(lb => {
+        lb.style.display = lb.textContent.toLowerCase().includes(q) ? 'block' : 'none';
       });
-    </script>
-  </body>
+    });
+  </script>
+</body>
 </html>
