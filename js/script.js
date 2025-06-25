@@ -1,109 +1,110 @@
-// Map initialization
+/* global L, shp, XLSX */
+
+// ===============================
+// 1. MAPA BASE
+// ===============================
 const map = L.map('map').setView([-23.5, -47.8], 8);
+
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 18,
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-// ---------- Utility functions ----------
-function randomColor(alpha=0.2){
-  const r=Math.floor(Math.random()*255);
-  const g=Math.floor(Math.random()*255);
-  const b=Math.floor(Math.random()*255);
+// Utilitário: cor RGBA aleatória com alpha opcional
+function randomColor(alpha = 0.2) {
+  const r = Math.floor(Math.random() * 255);
+  const g = Math.floor(Math.random() * 255);
+  const b = Math.floor(Math.random() * 255);
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-// ---------- Load region shapefiles ----------
+// ===============================
+// 2. REGIÕES – SHAPEFILES .ZIP
+// ===============================
 const regions = [
-  {name:'RC 2.1',file:'RC 2.1.zip'},
-  {name:'RC 2.2',file:'RC 2.2.zip'},
-  {name:'RC 2.4',file:'RC 2.4.zip'},
-  {name:'RC 2.5',file:'RC 2.5.zip'},
-  {name:'RC 2.6+2.8',file:'RC 2.6+2.8.zip'},
-  {name:'RC 2.7',file:'RC 2.7.zip'}
+  { name: 'RC 2.1', file: 'RC 2.1.zip' },
+  { name: 'RC 2.2', file: 'RC 2.2.zip' },
+  { name: 'RC 2.4', file: 'RC 2.4.zip' },
+  { name: 'RC 2.5', file: 'RC 2.5.zip' },
+  { name: 'RC 2.6+2.8', file: 'RC 2.6+2.8.zip' },
+  { name: 'RC 2.7', file: 'RC 2.7.zip' }
 ];
+
 const regionLayers = {};
 
-regions.forEach(info=>{
+regions.forEach(info => {
   const color = randomColor();
-  const layer = omnivore.shapefile(`data/${info.file}`, null, L.geoJson(null, {
-    style: { color: color, weight: 1, fillColor: color, fillOpacity: 0.2 }
-  }));
-  regionLayers[info.name] = layer;
-  layer.on('ready', () => {
-    // Optionally fit map to first region
-    // map.fitBounds(layer.getBounds());
+  const layer = L.geoJson(null, {
+    style: {
+      color: color,
+      weight: 1,
+      fillColor: color,
+      fillOpacity: 0.2
+    }
   });
+
+  // Carrega o ZIP → GeoJSON
+  shp(`data/${info.file}`)
+    .then(geojson => {
+      layer.addData(geojson);
+      // Ajuste opcional de bounds na 1ª região carregada
+      if (!map._initialFitDone) {
+        map.fitBounds(layer.getBounds());
+        map._initialFitDone = true;
+      }
+    })
+    .catch(err => {
+      console.error(`Erro ao ler ${info.file}:`, err);
+      alert(`Não foi possível ler ${info.file}. Veja o console para detalhes.`);
+    });
+
   layer.addTo(map);
+  regionLayers[info.name] = layer;
 });
 
-// Region filter checkboxes
-document.querySelectorAll('.region-filter').forEach(cb=>{
-  cb.addEventListener('change', e=>{
+// Checkboxes para ligar/desligar regiões
+document.querySelectorAll('.region-filter').forEach(cb => {
+  cb.addEventListener('change', e => {
     const name = e.target.dataset.region;
-    if(e.target.checked){
+    if (e.target.checked) {
       map.addLayer(regionLayers[name]);
-    }else{
+    } else {
       map.removeLayer(regionLayers[name]);
     }
   });
 });
 
-// ---------- Load Excel and plot road network ----------
+// ===============================
+// 3. MALHA DE RODOVIAS – EXCEL
+// ===============================
 fetch('data/PLANILHA BI - OFICIAL.xlsx')
-  .then(r=>r.arrayBuffer())
-  .then(buf=>{
-    const workbook = XLSX.read(buf,{type:'array'});
+  .then(r => r.arrayBuffer())
+  .then(buf => {
+    const workbook = XLSX.read(buf, { type: 'array' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(sheet, {header:1, defval:null});
+    const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
 
-    // Expect columns: RC | Rodovia | KM Inicial | KM Final | Latitude | Longitude | Municipio | Seq
-    const header = data[0];
-    const rcIdx = header.findIndex(h=>/RC/i.test(h));
-    const rodIdx= header.findIndex(h=>/Rodovia/i.test(h));
-    const latIdx= header.findIndex(h=>/Lat/i.test(h));
-    const lonIdx= header.findIndex(h=>/Lon/i.test(h));
-    const seqIdx= header.findIndex(h=>/Seq|Ordem|Index/i.test(h));
+    // ===== 3.1 DETECTA ÍNDICE DAS COLUNAS =====
+    const header = data[0].map(h => (h || '').toString().trim());
+    const rcIdx   = header.findIndex(h => /rc\b/i.test(h));
+    const rodIdx  = header.findIndex(h => /rodovia|rod\./i.test(h));
+    const latIdx  = header.findIndex(h => /lat/i.test(h));
+    const lonIdx  = header.findIndex(h => /lon/i.test(h));
+    const seqIdx  = header.findIndex(h => /seq|ordem|index/i.test(h));
 
-    const groups = {};
-    for(let i=1;i<data.length;i++){
-      const row = data[i];
-      if(row[latIdx]==null || row[lonIdx]==null) continue;
-      const key = `${row[rcIdx]} ${row[rodIdx]}`.trim();
-      if(!groups[key]) groups[key] = [];
-      groups[key].push({
-        lat: parseFloat(row[latIdx]),
-        lon: parseFloat(row[lonIdx]),
-        seq: seqIdx>=0 ? Number(row[seqIdx]) : i
-      });
+    if ([rcIdx, rodIdx, latIdx, lonIdx].some(i => i === -1)) {
+      console.error('Cabeçalhos detectados:', header);
+      alert('Colunas de RC, Rodovia, Latitude ou Longitude não encontradas na planilha.');
+      return;
     }
-    // Create layers per road
-    const roadLayers = {};
-    Object.entries(groups).forEach(([key, pts])=>{
-      // sort by seq
-      pts.sort((a,b)=>a.seq-b.seq);
-      const coords = pts.map(p=>[p.lat, p.lon]);
-      const line = L.polyline(coords, {color:'#666', weight:3, opacity:1});
-      line.addTo(map);
-      roadLayers[key]=line;
-    });
 
-    // Build UI for roads
-    const container = document.getElementById('rodovia-filters');
-    Object.keys(roadLayers).sort().forEach(name=>{
-      const id = name.replace(/\s+/g,'_');
-      const label = document.createElement('label');
-      const cb = document.createElement('input');
-      cb.type='checkbox'; cb.checked=true;
-      cb.addEventListener('change', e=>{
-        if(e.target.checked){ map.addLayer(roadLayers[name]); }
-        else { map.removeLayer(roadLayers[name]); }
-      });
-      label.append(cb, ` ${name}`);
-      container.append(label);
-    });
-  })
-  .catch(err=>{
-    console.error('Erro carregando Excel:', err);
-    alert('Não foi possível carregar PLANILHA BI - OFICIAL.xlsx. Verifique se o arquivo está em /data/');
-  });
+    // ===== 3.2 AGRUPA PONTOS POR RODOVIA =====
+    const grupos = {};
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (row[latIdx] == null || row[lonIdx] == null) continue;
+
+      // Converte para número (troca vírgula por ponto, se necessário)
+      const lat = parseFloat(row[latIdx].toString().replace(',', '.'));
+      const lon = parseFloat(row[lonIdx].toString().replace(',', '.'));
+      if (isNaN(lat) || isNaN(lon)) con
