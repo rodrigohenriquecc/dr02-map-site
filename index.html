@@ -8,13 +8,16 @@
   <link rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
-  <!-- Seu CSS -->
+  <!-- CSS do projeto -->
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <h1>Mapa Interativo – DR.02</h1>
 
-  <section id="controls">
+  <!-- Painel flutuante de filtros ------------------------------------------->
+  <section id="controls" class="collapsed">
+    <header id="controls-toggle">▸ Filtros</header>
+
     <fieldset>
       <legend>Regiões</legend>
       <label><input type="checkbox" class="region-filter" data-region="RC 2.1" checked> RC&nbsp;2.1</label>
@@ -31,19 +34,19 @@
     </fieldset>
   </section>
 
+  <!-- Mapa -->
   <div id="map"></div>
 
-  <!-- ====== ORDEM DOS SCRIPTS (NÃO ALTERAR) ====== -->
-  <!-- 1) Leaflet -->
+  <!-- ===== ORDEM DOS SCRIPTS (NÃO ALTERAR) ===== -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- 2) shpjs – leitor de shapefiles ZIP -->
   <script src="https://unpkg.com/shpjs@latest/dist/shp.min.js"></script>
-
-  <!-- 3) SheetJS – leitor de Excel (mirror unpkg) -->
   <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-
-  <!-- 4) Script principal – DEVE vir por último -->
   <script src="js/script.js"></script>
+
+  <!-- Toggle do painel flutuante -->
+  <script>
+    document.getElementById('controls-toggle').onclick = () =>
+      document.getElementById('controls').classList.toggle('collapsed');
+  </script>
 </body>
 </html>
