@@ -1,13 +1,57 @@
+/* Reset básico ----------------------------------------------*/
 * { box-sizing: border-box; }
 body { margin: 0; font-family: Arial, sans-serif; }
-h1 { margin: 0; padding: 0.5rem; background:#2c3e50; color:#fff; font-size:1.2rem; }
-#controls { padding: 0.5rem; background:#ecf0f1; }
-fieldset { border:1px solid #bdc3c7; margin-bottom:0.5rem; }
-legend { font-weight:bold; }
-label { display:block; margin-right:0.5rem; font-size:0.9rem; }
-#map { height: calc(100vh - 160px); }
-@media (min-width:768px){
-  #map { height: calc(100vh - 120px); }
-  #controls { display:flex; gap:1rem; }
-  fieldset { flex:1; }
+h1   { margin: 0; padding: 0.5rem 1rem; background: #2c3e50; color:#fff;
+       font-size: 1.2rem; }
+
+/* Mapa ocupa a tela inteira (abaixo do cabeçalho) ------------*/
+#map { height: calc(100vh - 52px); }   /* 52 px ≈ altura do <h1> */
+
+/* Painel flutuante de filtros --------------------------------*/
+#controls {
+  position: absolute;
+  top: 70px;                /* logo abaixo do cabeçalho */
+  right: 10px;
+  width: 260px;
+  background: #fff;
+  border: 1px solid #bdc3c7;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  max-height: 85vh;
+  overflow-y: auto;
+  transition: transform .25s ease;
+  z-index: 1000;
+}
+#controls.collapsed {
+  transform: translateY(calc(-100% + 36px)); /* mostra só o header */
+}
+#controls > header {
+  background: #2c3e50;
+  color: #fff;
+  padding: 4px 8px;
+  font-size: .9rem;
+  cursor: pointer;
+  user-select: none;
+}
+#controls fieldset {
+  margin: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+#controls legend {
+  font-weight: 600;
+  padding: 0 4px;
+}
+#controls label {
+  display: block;
+  font-size: .85rem;
+  margin: 2px 0;
+}
+
+/* Mobile: painel na parte inferior ---------------------------*/
+@media (max-width:480px){
+  #controls{
+    top:auto; bottom:10px; right:50%; transform:translate(50%,0);
+    width:90%; max-height:60vh;
+  }
 }
