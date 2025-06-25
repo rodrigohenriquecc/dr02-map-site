@@ -3,7 +3,6 @@
  * 1. MAPA BASE
  * --------------------------------------------------------- */
 const map = L.map('map').setView([-23.5, -47.8], 8);
-
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 18,
   attribution: '&copy; OpenStreetMap contributors'
@@ -29,7 +28,6 @@ const regions = [
 ];
 
 const regionLayers = {};
-
 regions.forEach(info => {
   const color = randomColor();
   const layer = L.geoJson(null, {
@@ -61,26 +59,26 @@ document.querySelectorAll('.region-filter').forEach(cb => {
 /* ---------------------------------------------------------
  * 3. MALHA DE RODOVIAS – PLANILHA EXCEL
  * --------------------------------------------------------- */
-const excelFile = 'planilha.xlsx';            // <-- Nome ÚNICO que será buscado
+const excelFile = 'planilha.xlsx';   // ↩️  ajuste aqui se usar outro nome
 
 (async () => {
-  const url = `data/${encodeURIComponent(excelFile)}`;
   try {
+    const url = `data/${encodeURIComponent(excelFile)}`;
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`Status ${resp.status} para ${url}`);
     console.info(`✓ Planilha carregada: ${excelFile}`);
-    const buf = await resp.arrayBuffer();
-    parseExcel(buf);
+    parseExcel(await resp.arrayBuffer());
   } catch (err) {
     console.error(err);
-    alert(`Não foi possível baixar "${excelFile}" em /data/. Verifique o nome e o commit.`);
+    alert(`Não foi possível baixar "${excelFile}". Verifique o nome e o commit em /data/.`);
   }
 })();
 
+/* ------------ FUNÇÃO PRINCIPAL ------------- */
 function parseExcel(buf) {
   if (typeof XLSX === 'undefined') {
-    alert('Biblioteca SheetJS não carregou. Verifique as tags <script> no index.html.');
-    console.error('XLSX is not defined – script de SheetJS ausente ou fora de ordem.');
+    alert('Biblioteca SheetJS não carregou. Confira a ordem das tags <script>.');
+    console.error('XLSX is not defined.');
     return;
   }
 
@@ -89,17 +87,27 @@ function parseExcel(buf) {
   const data  = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
   const head  = data[0].map(h => (h || '').toString().trim());
 
-  const rcIdx  = head.findIndex(h => /rc\b/i.test(h));
-  const rodIdx = head.findIndex(h => /rodovia|rod\./i.test(h));
-  const latIdx = head.findIndex(h => /lat/i.test(h));
-  const lonIdx = head.findIndex(h => /lon/i.test(h));
-  const seqIdx = head.findIndex(h => /seq|ordem|index/i.test(h));
+  /* ---------- MOSTRA CABEÇALHOS ---------- */
+  window.head = head;          // pode digitar "head" no console
+  console.table(head);         // imprime tabela 0,1,2,… → cabeçalho
+
+  /* ---------- CONFIGURE AQUI ---------- *
+   * 1) Veja no console qual coluna é qual;
+   * 2) Troque os índices OU regex abaixo;
+   * 3) Salve e recarregue.                */
+  const rcIdx  = head.findIndex(h => /^rc|regional$/i.test(h));    // ou número fixo
+  const rodIdx = head.findIndex(h => /^rod|rodovia$/i.test(h));    // ou número fixo
+  const latIdx = head.findIndex(h => /^lat/i.test(h));             // ou número fixo
+  const lonIdx = head.findIndex(h => /^lon/i.test(h));             // ou número fixo
+  /* ------------------------------------ */
 
   if ([rcIdx, rodIdx, latIdx, lonIdx].includes(-1)) {
-    console.error('Cabeçalhos encontrados:', head);
-    alert('Colunas de RC, Rodovia, Latitude ou Longitude não reconhecidas.');
+    alert('⚠️ Ajuste os índices/regex em script.js para RC, Rodovia, Latitude, Longitude.\n' +
+          'Veja o console.table(head) para os nomes corretos.');
     return;
   }
+
+  const seqIdx = head.findIndex(h => /seq|ordem|index/i.test(h));
 
   const grupos = {};
   for (let i = 1; i < data.length; i++) {
