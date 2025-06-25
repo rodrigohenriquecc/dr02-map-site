@@ -57,4 +57,55 @@ const excelFile = 'planilha.xlsx';
 fetch(`data/${encodeURIComponent(excelFile)}`)
   .then(r => r.arrayBuffer())
   .then(buf => parseExcel(buf))
-  .catch(() => alert(`Falha ao baixar ${excelFile
+  .catch(() => alert(`Falha ao baixar ${excelFile}. Verifique em /data/.`));
+
+function detectIdx(header, key) {
+  return header.findIndex(h => h.replace(/\s+/g, '').toUpperCase() === key);
+}
+
+function parseExcel(buf) {
+  if (!window.XLSX) { alert('SheetJS não carregou.'); return; }
+
+  const sheet = XLSX.read(buf, { type:'array' }).Sheets;
+  const data  = XLSX.utils.sheet_to_json(sheet[Object.keys(sheet)[0]], { header:1, defval:null });
+  const head  = data[0].map(h => (h || '').toString().trim());
+
+  const rc   = detectIdx(head,'RC');
+  const sp   = detectIdx(head,'SP');
+  const km   = detectIdx(head,'KM');
+  const lat  = detectIdx(head,'LAT');
+  const lon  = detectIdx(head,'LON');
+
+  if ([rc,sp,km,lat,lon].includes(-1)) {
+    console.table(head);
+    alert('RC, SP, KM, LAT ou LON não encontrados.');
+    return;
+  }
+
+  const roads = {}, toNum = v => parseFloat(String(v).replace(',','.'));
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i], la = toNum(row[lat]), lo = toNum(row[lon]);
+    if (isNaN(la) || isNaN(lo)) continue;
+    const key = `${row[rc]} ${row[sp]}`.trim();
+    (roads[key] ||= []).push({ la, lo, seq:+row[km] || i });
+  }
+
+  const roadLayers = {};
+  Object.entries(roads).forEach(([name, pts]) => {
+    pts.sort((a,b) => a.seq - b.seq);
+    roadLayers[name] = L.polyline(pts.map(p => [p.la,p.lo]),
+                                  { color:'#666', weight:3 }).addTo(map);
+  });
+
+  /* filtros */
+  const box = document.getElementById('rodovia-filters');
+  Object.keys(roadLayers).sort().forEach(name => {
+    const lab = document.createElement('label');
+    const cb  = document.createElement('input');
+    cb.type='checkbox'; cb.checked=true;
+    cb.onchange = e => e.target.checked
+      ? map.addLayer(roadLayers[name])
+      : map.removeLayer(roadLayers[name]);
+    lab.append(cb,' ',name); box.append(lab);
+  });
+}
