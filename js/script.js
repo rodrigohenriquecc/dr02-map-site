@@ -63,8 +63,7 @@ const excelFile = 'planilha.xlsx';        // nome da planilha em /data/
 
 (async () => {
   try {
-    const url  = `data/${encodeURIComponent(excelFile)}`;
-    const resp = await fetch(url);
+    const resp = await fetch(`data/${encodeURIComponent(excelFile)}`);
     if (!resp.ok) throw new Error(`Status ${resp.status}`);
     parseExcel(await resp.arrayBuffer());
   } catch (err) {
@@ -72,6 +71,10 @@ const excelFile = 'planilha.xlsx';        // nome da planilha em /data/
     alert(`Não foi possível baixar "${excelFile}". Verifique o nome em /data/.`);
   }
 })();
+
+function detectIdx(header, keyword) {
+  return header.findIndex(h => h.replace(/\s+/g, '').toUpperCase() === keyword);
+}
 
 function parseExcel(buf) {
   if (typeof XLSX === 'undefined') {
@@ -84,34 +87,43 @@ function parseExcel(buf) {
   const data  = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
   const head  = data[0].map(h => (h || '').toString().trim());
 
-  /* ---- DETECÇÃO DE ÍNDICES POR NOME ---- */
-  const rcIdx  = head.findIndex(h => /^rc$/i.test(h));
-  const rodIdx = head.findIndex(h => /^sp$/i.test(h));
-  const kmIdx  = head.findIndex(h => /^km$/i.test(h));
-  const latIdx = head.findIndex(h => /^lat$/i.test(h));
-  const lonIdx = head.findIndex(h => /^lon$/i.test(h));
+  console.log('Cabeçalhos → ', head.join(', '));
+
+  const rcIdx  = detectIdx(head, 'RC');
+  const rodIdx = detectIdx(head, 'SP');
+  const kmIdx  = detectIdx(head, 'KM');
+  const latIdx = detectIdx(head, 'LAT');
+  const lonIdx = detectIdx(head, 'LON');
 
   if ([rcIdx, rodIdx, kmIdx, latIdx, lonIdx].includes(-1)) {
-    console.table(head);
     alert('Alguma das colunas RC, SP, KM, LAT ou LON não foi encontrada. Veja o console.');
     return;
   }
 
   /* ---- AGRUPA PONTOS ---- */
   const grupos = {};
-  let total = 0;
+  let totalPts = 0;
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    const lat = parseFloat(String(row[latIdx]).replace(',', '.'));
-    const lon = parseFloat(String(row[lonIdx]).replace(',', '.'));
+    let lat = row[latIdx], lon = row[lonIdx];
+    if (lat == null || lon == null) continue;
+
+    lat = parseFloat(String(lat).replace(',', '.'));
+    lon = parseFloat(String(lon).replace(',', '.'));
     if (isNaN(lat) || isNaN(lon)) continue;
 
-    total++;
+    totalPts++;
     const chave = `${row[rcIdx]} ${row[rodIdx]}`.trim();
     if (!grupos[chave]) grupos[chave] = [];
     grupos[chave].push({ lat, lon, seq: +row[kmIdx] || i });
   }
-  console.log('Pontos válidos encontrados:', total);
+
+  console.log('Pontos válidos:', totalPts);
+
+  if (totalPts === 0) {
+    alert('Nenhum ponto válido encontrado (LAT/LON vazios ou inválidos).');
+    return;
+  }
 
   /* ---- DESENHA LINHAS ---- */
   const roadLayers = {};
@@ -123,17 +135,18 @@ function parseExcel(buf) {
     roadLayers[name] = line;
   });
 
+  console.log('Rodovias criadas:', Object.keys(roadLayers).length);
+
   /* ---- FILTROS ---- */
   const box = document.getElementById('rodovia-filters');
   Object.keys(roadLayers).sort().forEach(name => {
-    const lab = document.createElement('label');
-    const cb  = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = true;
+    const label = document.createElement('label');
+    const cb    = document.createElement('input');
+    cb.type = 'checkbox'; cb.checked = true;
     cb.onchange = e => e.target.checked
       ? map.addLayer(roadLayers[name])
       : map.removeLayer(roadLayers[name]);
-    lab.append(cb, ' ', name);
-    box.appendChild(lab);
+    label.append(cb, ' ', name);
+    box.appendChild(label);
   });
 }
