@@ -4,10 +4,9 @@
   <meta charset="UTF-8">
   <title>Mapa Interativo DR.02</title>
 
-  <!-- Leaflet CSS (sem SRI) -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
   <!-- Estilo próprio -->
   <link rel="stylesheet" href="css/style.css">
@@ -18,12 +17,12 @@
   <section id="controls">
     <fieldset>
       <legend>Regiões</legend>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.1" checked> RC 2.1</label>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.2" checked> RC 2.2</label>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.4" checked> RC 2.4</label>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.5" checked> RC 2.5</label>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.6+2.8" checked> RC 2.6+2.8</label>
-      <label><input type="checkbox" class="region-filter" data-region="RC 2.7" checked> RC 2.7</label>
+      <label><input type="checkbox" class="region-filter" data-region="RC 2.1" checked> RC&nbsp;2.1</label>
+      <label><input type="checkbox" class="region-filter" data-region="RC 2.2" checked> RC&nbsp;2.2</label>
+      <label><input type="checkbox" class="region-filter" data-region="RC 2.4" checked> RC&nbsp;2.4</label>
+      <label><input type="checkbox" class="region-filter" data-region="RC 2.5" checked> RC&nbsp;2.5</label>
+      <label><input type="checkbox" class="region-filter" data-region="RC 2.6+2.8" checked> RC&nbsp;2.6+2.8</label>
+      <label><input type="checkbox" class="region-filter" data-region="RC 2.7" checked> RC&nbsp;2.7</label>
     </fieldset>
 
     <fieldset>
@@ -34,13 +33,14 @@
 
   <div id="map"></div>
 
-  <!-- Bibliotecas JS (sem SRI) -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
+  <!-- Bibliotecas JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- shpjs para ler shapefiles ZIP -->
+  <script src="https://unpkg.com/shpjs@latest/dist/shp.min.js"></script>
+  <!-- SheetJS para ler o Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.20.1/dist/xlsx.full.min.js"></script>
 
-  <!-- Script do mapa -->
+  <!-- Script principal -->
   <script src="js/script.js"></script>
 </body>
 </html>
