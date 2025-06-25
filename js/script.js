@@ -16,7 +16,7 @@ function randomColor(alpha = 0.2) {
 }
 
 /* ---------------------------------------------------------
- * 2. REGIÕES – SHAPEFILES ZIP
+ * 2. REGIÕES
  * --------------------------------------------------------- */
 const regions = [
   { name: 'RC 2.1', file: 'RC 2.1.zip' },
@@ -57,44 +57,46 @@ document.querySelectorAll('.region-filter').forEach(cb => {
 });
 
 /* ---------------------------------------------------------
- * 3. MALHA DE RODOVIAS – PLANILHA EXCEL
+ * 3. MALHA DE RODOVIAS
  * --------------------------------------------------------- */
-const excelFile = 'planilha.xlsx';   // nome do arquivo dentro de /data/
+const excelFile = 'planilha.xlsx';        // planilha corrigida com LAT e LON
 
 (async () => {
   try {
-    const url  = `data/${encodeURIComponent(excelFile)}`;
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`Status ${resp.status} para ${url}`);
-    console.info(`✓ Planilha carregada: ${excelFile}`);
+    const resp = await fetch(`data/${encodeURIComponent(excelFile)}`);
+    if (!resp.ok) throw new Error(`Status ${resp.status}`);
     parseExcel(await resp.arrayBuffer());
   } catch (err) {
     console.error(err);
-    alert(`Não foi possível baixar "${excelFile}". Verifique o nome e o commit em /data/.`);
+    alert('Não foi possível baixar a planilha. Verifique o nome em /data/.');
   }
 })();
 
-/* ---------- Ajuste fixo dos índices das colunas ---------- *
- * Se inserir / mover colunas, atualize estes números.
- * --------------------------------------------------------- */
-const rcIdx  = 0;  // "RC"
-const rodIdx = 1;  // "SP" (rodovia)
-const latIdx = 6;  // "LAT"
-const lonIdx = 7;  // "LON"
-const seqIdx = 2;  // "KM"  (usado como sequência)
-
-/* ------------ FUNÇÃO PRINCIPAL ------------- */
 function parseExcel(buf) {
   if (typeof XLSX === 'undefined') {
-    alert('Biblioteca SheetJS não carregou. Confira as tags <script>.');
-    console.error('XLSX is not defined.');
+    alert('SheetJS não carregou — confira as tags <script>.');
     return;
   }
 
   const wb    = XLSX.read(buf, { type: 'array' });
   const sheet = wb.Sheets[wb.SheetNames[0]];
   const data  = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
+  const head  = data[0].map(h => (h || '').toString().trim());
 
+  /* ---- DETECÇÃO PELOS CABEÇALHOS ---- */
+  const rcIdx  = head.findIndex(h => /^rc$/i.test(h));
+  const rodIdx = head.findIndex(h => /^sp$/i.test(h));
+  const latIdx = head.findIndex(h => /^lat$/i.test(h));
+  const lonIdx = head.findIndex(h => /^lon$/i.test(h));
+  const seqIdx = head.findIndex(h => /^km$/i.test(h));
+
+  if ([rcIdx, rodIdx, latIdx, lonIdx, seqIdx].includes(-1)) {
+    console.table(head);
+    alert('Alguma coluna (RC, SP, KM, LAT, LON) não foi encontrada. Veja o console.');
+    return;
+  }
+
+  /* ---- AGRUPA PONTOS POR RODOVIA ---- */
   const grupos = {};
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
@@ -107,6 +109,7 @@ function parseExcel(buf) {
     grupos[chave].push({ lat, lon, seq: +row[seqIdx] || i });
   }
 
+  /* ---- DESENHA LINHAS ---- */
   const roadLayers = {};
   Object.entries(grupos).forEach(([name, pts]) => {
     pts.sort((a, b) => a.seq - b.seq);
@@ -116,17 +119,16 @@ function parseExcel(buf) {
     roadLayers[name] = line;
   });
 
-  // Interface de filtros
-  const cont = document.getElementById('rodovia-filters');
+  /* ---- FILTROS ---- */
+  const box = document.getElementById('rodovia-filters');
   Object.keys(roadLayers).sort().forEach(name => {
-    const lb = document.createElement('label');
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = true;
+    const label = document.createElement('label');
+    const cb    = document.createElement('input');
+    cb.type = 'checkbox'; cb.checked = true;
     cb.onchange = e => e.target.checked
       ? map.addLayer(roadLayers[name])
       : map.removeLayer(roadLayers[name]);
-    lb.append(cb, ` ${name}`);
-    cont.appendChild(lb);
+    label.append(cb, ' ', name);
+    box.appendChild(label);
   });
 }
