@@ -4,70 +4,49 @@
   <meta charset="utf-8" />
   <title>DR-02 • Mapa de Trechos</title>
 
-  <!-- Leaflet (mapas) ------------------------------------------------>
+  <!-- Leaflet ------------------------------------------------------->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha384-C7WDMEXV8p/Oy9Xybx1OdYCbqBpaKkG5XMgSS0wJXoPUmeXH2hUTphlpve5uRq6s"
     crossorigin=""
   />
   <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha384-u6ZJ5KYLvU90Y4bHyQyfY0s2ct3hJ7+jpQmi9vFJlgbiY/vMnj5uuWYFzJgCIfkG"
     crossorigin=""
     defer
   ></script>
 
-  <!-- SheetJS (Excel) ----------------------------------------------->
+  <!-- SheetJS (Excel) --------------------------------------------->
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.2/xlsx.full.min.js"
-    integrity="sha512-ktpEOtxYUKM6mxkvo2+eAFuGJIV0V1xGL6pQCOpC7w/LX8ahDhdfLZy6sXpmKaWZKPxDkZH49v9Zvt0p3Ft7HA=="
     crossorigin="anonymous"
     referrerpolicy="no-referrer"
     defer
   ></script>
 
-  <!-- Estilos mínimos ----------------------------------------------->
+  <!-- Estilo mínimo para ocupar a tela inteira -->
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      font-family: system-ui, sans-serif;
+    html, body { height: 100%; margin: 0; }
+    #map { height: 100%; width: 100%; }
+    #loading{
+      position:absolute;top:1rem;left:50%;transform:translateX(-50%);
+      padding:.6rem 1rem;background:#fff;border-radius:.5rem;
+      box-shadow:0 1px 6px rgba(0,0,0,.2);z-index:999;
     }
-    #map {
-      height: 100%;
-      width: 100%;
-    }
-    /* mensagem de carregamento */
-    #loading {
-      position: absolute;
-      top: 1rem;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: .6rem 1rem;
-      background: #fff;
-      border-radius: .5rem;
-      box-shadow: 0 1px 6px rgba(0,0,0,.2);
-      z-index: 999;
-    }
-    #loading.hidden { display: none; }
+    #loading.hidden{display:none;}
   </style>
 </head>
 <body>
-  <!-- Indicador de carregamento -->
   <div id="loading">Carregando planilha…</div>
-
-  <!-- Mapa -->
   <div id="map"></div>
 
-  <!-- Seu script -->
+  <!-- Seu código principal ----------------------------------------->
   <script src="script.js" defer></script>
 
-  <!-- Esconde o “loading” quando DOM pronto ------------------------->
+  <!-- Esconde o aviso assim que o DOM estiver pronto --------------->
   <script>
-    document.addEventListener('DOMContentLoaded', () =>
-      document.getElementById('loading').classList.add('hidden')
-    );
+    document.addEventListener('DOMContentLoaded',
+      () => document.getElementById('loading').classList.add('hidden'));
   </script>
 </body>
 </html>
