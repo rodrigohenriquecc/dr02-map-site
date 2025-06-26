@@ -118,7 +118,8 @@ async function carregarRodovias (map) {
       const p = pts[i];
       if (i>0) {
         const ant = pts[i-1];
-        if (distanciaMetros(ant,p) > LIMITE_METROS) segmentos.push([]);
+        const dist = distanciaMetros(ant.lat, ant.lon, p.lat, p.lon);
+        if (dist > LIMITE_METROS) segmentos.push([]);
       }
       segmentos.at(-1).push([p.lat, p.lon]);
     }
@@ -153,7 +154,6 @@ function criarPainelRodovia () {
     onAdd(){
       const div = L.DomUtil.create('div','leaflet-bar');
       div.style.cssText = 'background:#fff;padding:8px;min-width:160px;';
-      /* monta opções sem template aninhado */
       const opts = Object.keys(rodoviaDatas)
         .sort()
         .map(r => '<option>'+r+'</option>')
@@ -208,12 +208,13 @@ function aplicarFiltro(){
 /* ---------------------------------------------------------- */
 /* UTILITÁRIAS                                                */
 /* ---------------------------------------------------------- */
-function distanciaMetros(a,b){return distanciaMetros(a.lat,a.lon,b.lat,b.lon);}
-function distanciaMetros(lat1,lon1,lat2,lon2){
-  const R=6371000,d=Math.PI/180;
+function distanciaMetros(lat1, lon1, lat2, lon2){
+  const R=6371000, d=Math.PI/180;
   const dLat=(lat2-lat1)*d, dLon=(lon2-lon1)*d;
   const h=Math.sin(dLat/2)**2+
           Math.cos(lat1*d)*Math.cos(lat2*d)*Math.sin(dLon/2)**2;
   return 2*R*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
 }
-function corAleatoria(){ return `hsl(${Math.random()*360},70%,60%)`; }
+function corAleatoria(){
+  return `hsl(${Math.random()*360},70%,60%)`;
+}
