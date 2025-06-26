@@ -2,37 +2,46 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>DR-02 • Mapa de Trechos e Regiões</title>
+  <title>DR-02 • Trechos e Regiões</title>
 
-  <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <!-- Leaflet ------------------------------------------------------->
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 
-  <!-- SheetJS (Excel) -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+  <!-- SheetJS + shp.js --------------------------------------------->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
+          defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/shpjs@3.6.2/dist/shp.min.js"
+          defer></script>
 
-  <!-- shp.js (lê shapefile ZIP no browser) -->
-  <script src="https://cdn.jsdelivr.net/npm/shpjs@3.6.2/dist/shp.min.js" defer></script>
-
+  <!-- Estilos ------------------------------------------------------->
   <style>
     html,body{height:100%;margin:0}
     #map{height:100%}
-    #loading{
-      position:absolute;top:1rem;left:50%;transform:translateX(-50%);
-      padding:.6rem 1rem;background:#fff;border-radius:.5rem;
-      box-shadow:0 1px 6px rgba(0,0,0,.2);z-index:999}
-    #loading.hidden{display:none}
+
+    /* cartão de filtros */
+    .rodovia-card{
+      background:#fff;border-radius:8px;padding:10px 12px;min-width:180px;
+      box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:14px;line-height:1.3
+    }
+    .rodovia-card label{display:block;font-weight:600;margin-bottom:4px}
+    .rodovia-card input,
+    .rodovia-card select{
+      width:100%;border:1px solid #ccc;border-radius:4px;padding:4px;
+      margin-bottom:6px;box-sizing:border-box
+    }
+    .toggle-btn{
+      position:absolute;bottom:10px;left:10px;width:30px;height:30px;
+      background:#fff;border:none;border-radius:4px;cursor:pointer;
+      font-size:18px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.25)
+    }
   </style>
 </head>
 <body>
-  <div id="loading">Carregando dados…</div>
   <div id="map"></div>
 
+  <!-- código principal -->
   <script src="js/script.js" defer></script>
-
-  <script>
-    document.addEventListener('DOMContentLoaded',
-      () => document.getElementById('loading').classList.add('hidden'));
-  </script>
 </body>
 </html>
