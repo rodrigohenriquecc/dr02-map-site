@@ -1,111 +1,113 @@
-/* global L, shp, XLSX */
-/* ---------------------------------------------------------
- * 1. MAPA BASE
- * --------------------------------------------------------- */
-const map = L.map('map').setView([-23.5, -47.8], 8);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 18,
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
+/* script.js – DR-02 Map Site
+   Requer: leaflet.js, xlsx.full.min.js
+   (c) 2025 – Rodrigo Henrique
+*/
 
-function randomColor(alpha = 1) {
-  const r = () => Math.floor(Math.random() * 255);
-  return `rgba(${r()},${r()},${r()},${alpha})`;
+/* global L, XLSX */
+
+document.addEventListener('DOMContentLoaded', init);
+
+async function init () {
+  try {
+    const pontos = await lerExcel('planilha.xlsx');   // mesmo nome do arquivo no GitHub
+    construirMapa(pontos);
+  } catch (err) {
+    console.error(err);
+    alert('Falha ao carregar a planilha:\n' + err.message);
+  }
 }
 
-/* ---------------------------------------------------------
- * 2. REGIÕES – SHAPEFILES
- * --------------------------------------------------------- */
-const regions = [
-  { name: 'RC 2.1',           file: 'RC 2.1.zip' },
-  { name: 'RC 2.2',           file: 'RC 2.2.zip' },
-  { name: 'RC 2.4',           file: 'RC 2.4.zip' },
-  { name: 'RC 2.5',           file: 'RC 2.5.zip' },
-  { name: 'RC 2.6+2.8',       file: 'RC 2.6+2.8.zip' },
-  { name: 'RC 2.7',           file: 'RC 2.7.zip' },
-  { name: 'CGR.02 Unificada', file: 'CGR.02 Unificada.zip' }   // ← NOVO
-];
+/* ------------------------------------------------------------------ */
+/* 1. Leitura e saneamento da planilha                                */
+/* ------------------------------------------------------------------ */
+async function lerExcel (url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Não foi possível baixar “${url}”`);
+  const buffer = await res.arrayBuffer();
 
-const regionLayers = {};
-regions.forEach(({ name, file }) => {
-  const stroke = randomColor();                   // cor da borda
-  const layer  = L.geoJson(null, {
-    style: { color: stroke, weight: 3, fillOpacity: 0 } // sem preenchimento
-  });
-  shp(`data/${encodeURIComponent(file)}`)
-    .then(gj => {
-      layer.addData(gj);
-      if (!map._fit) { map.fitBounds(layer.getBounds()); map._fit = true; }
-    })
-    .catch(err => console.error(`Erro ao ler ${file}:`, err));
+  const wb      = XLSX.read(buffer, { type: 'array' });
+  const sheet   = wb.Sheets[wb.SheetNames[0]];
+  const rawData = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false });
 
-  layer.addTo(map);
-  regionLayers[name] = layer;
-});
+  if (rawData.length === 0) throw new Error('Planilha vazia.');
 
-document.querySelectorAll('.region-filter').forEach(cb =>
-  cb.onchange = e => e.target.checked
-    ? map.addLayer(regionLayers[e.target.dataset.region])
-    : map.removeLayer(regionLayers[e.target.dataset.region])
-);
+  /* — normaliza cabeçalhos — */
+  const cab     = rawData[0].map(s => String(s).trim().toUpperCase());
+  const idx     = (arr, name) => arr.indexOf(name);   // helper
 
-/* ---------------------------------------------------------
- * 3. MALHA DE RODOVIAS – PLANILHA EXCEL
- * --------------------------------------------------------- */
-const excelFile = 'planilha.xlsx';
+  let rc  = idx(cab, 'RC');
+  let sp  = idx(cab, 'SP');
+  let km  = idx(cab, 'KM');
+  let lat = idx(cab, 'LAT');
+  let lon = idx(cab, 'LON');
 
-fetch(`data/${encodeURIComponent(excelFile)}`)
-  .then(r => r.arrayBuffer())
-  .then(parseExcel)
-  .catch(() => alert(`Falha ao baixar ${excelFile}.`));
+  /* Caso tenha só “LAT,LON”  --------------------------------------- */
+  const latlon = idx(cab, 'LAT,LON');
+  if ((lat === -1 || lon === -1) && latlon !== -1) {
+    // substitui um cabeçalho por dois
+    cab.splice(latlon, 1, 'LAT', 'LON');
+    // percorre as linhas (ignora cabeçalho = linha 0) e divide valores
+    for (let i = 1; i < rawData.length; i++) {
+      const cel = rawData[i][latlon];
+      if (cel == null) continue;
+      const [la, lo] = String(cel).split(/[,; ]+/).map(t => t.trim());
+      rawData[i].splice(latlon, 1, parseFloat(la), parseFloat(lo));
+    }
+    lat = latlon;
+    lon = latlon + 1;
+  }
 
-function idx(header, key) {
-  return header.findIndex(h => h.replace(/\s+/g,'').toUpperCase() === key);
-}
-
-function parseExcel(buf) {
-  if (!window.XLSX) { alert('SheetJS não carregou.'); return; }
-
-  const sheet = XLSX.read(buf, { type:'array' }).Sheets;
-  const data  = XLSX.utils.sheet_to_json(sheet[Object.keys(sheet)[0]], { header:1, defval:null });
-  const head  = data[0].map(h => (h || '').toString().trim());
-
-  const rc  = idx(head,'RC');
-  const sp  = idx(head,'SP');
-  const km  = idx(head,'KM');
-  const lat = idx(head,'LAT');
-  const lon = idx(head,'LON');
-
-  if ([rc,sp,km,lat,lon].includes(-1)) {
+  /* valida again */
+  if ([rc, sp, km, lat, lon].includes(-1)) {
     alert('Cabeçalhos RC, SP, KM, LAT, LON não encontrados.');
-    console.table(head);
-    return;
+    console.table(cab);
+    throw new Error('Cabeçalhos ausentes');
   }
 
-  const roads = {}, toNum = v => parseFloat(String(v).replace(',','.'));
-  for (let i=1;i<data.length;i++){
-    const row=data[i], la=toNum(row[lat]), lo=toNum(row[lon]);
-    if (isNaN(la)||isNaN(lo)) continue;
-    const key=`${row[rc]} ${row[sp]}`.trim();
-    (roads[key]??=[]).push({la,lo,seq:+row[km]||i});
-  }
+  /* converte p/ objeto amigável ------------------------------------ */
+  return rawData.slice(1).map(l => ({
+    rc  : l[rc],
+    sp  : l[sp],
+    km  : parseFloat(l[km]),
+    lat : parseFloat(l[lat]),
+    lon : parseFloat(l[lon])
+  }));
+}
 
-  const roadLayers={};
-  Object.entries(roads).forEach(([name,pts])=>{
-    pts.sort((a,b)=>a.seq-b.seq);
-    roadLayers[name]=L.polyline(pts.map(p=>[p.la,p.lo]),
-                                {color:'#666',weight:3}).addTo(map);
+/* ------------------------------------------------------------------ */
+/* 2. Construção do mapa com Leaflet                                  */
+/* ------------------------------------------------------------------ */
+function construirMapa (pts) {
+  const map = L.map('map').setView([-23.8, -48.5], 8);
+
+  /* camada base OSM ------------------------------------------------- */
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+
+  /* agrupa pontos por rodovia (RC + SP) ----------------------------- */
+  const grupos = {};
+  pts.forEach(p => {
+    const chave = `${p.rc} | ${p.sp}`;
+    if (!grupos[chave]) grupos[chave] = [];
+    grupos[chave].push(p);
   });
 
-  /* filtros de rodovia */
-  const box=document.getElementById('rodovia-filters');
-  Object.keys(roadLayers).sort().forEach(name=>{
-    const lb=document.createElement('label');
-    const cb=document.createElement('input');
-    cb.type='checkbox'; cb.checked=true;
-    cb.onchange=e=>e.target.checked
-      ? map.addLayer(roadLayers[name])
-      : map.removeLayer(roadLayers[name]);
-    lb.append(cb,' ',name); box.append(lb);
+  /* desenha cada rodovia ------------------------------------------- */
+  Object.entries(grupos).forEach(([label, arr]) => {
+    // ordena por KM para a linha não “zig-zaguear”
+    arr.sort((a, b) => a.km - b.km);
+
+    const linha = L.polyline(
+      arr.map(p => [p.lat, p.lon]),
+      { color: '#666', weight: 3, opacity: 0.9 }
+    ).addTo(map);
+
+    linha.bindPopup(`<b>${label}</b>`);
   });
+
+  /* ajusta a visão                                                  */
+  const bounds = pts.map(p => [p.lat, p.lon]);
+  if (bounds.length) map.fitBounds(bounds);
 }
