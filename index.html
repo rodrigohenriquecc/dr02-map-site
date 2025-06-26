@@ -5,45 +5,33 @@
   <title>DR-02 • Mapa de Trechos</title>
 
   <!-- Leaflet ------------------------------------------------------->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    crossorigin=""
-  />
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    crossorigin=""
-    defer
-  ></script>
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          defer></script>
 
-  <!-- SheetJS (Excel) --------------------------------------------->
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.2/xlsx.full.min.js"
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-    defer
-  ></script>
+  <!-- SheetJS (Excel) – versão que existe -------------------------->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
+          defer></script>
 
-  <!-- Estilo mínimo para ocupar a tela inteira -->
+  <!-- Estilo básico -->
   <style>
-    html, body { height: 100%; margin: 0; }
-    #map { height: 100%; width: 100%; }
-    #loading{
-      position:absolute;top:1rem;left:50%;transform:translateX(-50%);
-      padding:.6rem 1rem;background:#fff;border-radius:.5rem;
-      box-shadow:0 1px 6px rgba(0,0,0,.2);z-index:999;
-    }
-    #loading.hidden{display:none;}
+    html,body{height:100%;margin:0}
+    #map{height:100%;width:100%}
+    #loading{position:absolute;top:1rem;left:50%;transform:translateX(-50%);
+             padding:.6rem 1rem;background:#fff;border-radius:.5rem;
+             box-shadow:0 1px 6px rgba(0,0,0,.2);z-index:999}
+    #loading.hidden{display:none}
   </style>
 </head>
 <body>
   <div id="loading">Carregando planilha…</div>
   <div id="map"></div>
 
-  <!-- Seu código principal ----------------------------------------->
+  <!-- Seu JS principal (garanta que o arquivo exista nesse caminho) -->
   <script src="script.js" defer></script>
 
-  <!-- Esconde o aviso assim que o DOM estiver pronto --------------->
+  <!-- esconde o aviso assim que DOM pronto -->
   <script>
     document.addEventListener('DOMContentLoaded',
       () => document.getElementById('loading').classList.add('hidden'));
