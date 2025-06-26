@@ -2,22 +2,21 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>DR-02 • Mapa de Trechos</title>
+  <title>DR-02 • Mapa de Trechos e Regiões</title>
 
-  <!-- Leaflet ------------------------------------------------------->
-  <link rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-          defer></script>
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 
-  <!-- SheetJS (Excel) --------------------------------------------->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
-          defer></script>
+  <!-- SheetJS (Excel) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
 
-  <!-- Estilo básico -->
+  <!-- shp.js (lê shapefile ZIP no browser) -->
+  <script src="https://cdn.jsdelivr.net/npm/shpjs@3.6.2/dist/shp.min.js" defer></script>
+
   <style>
     html,body{height:100%;margin:0}
-    #map{height:100%;width:100%}
+    #map{height:100%}
     #loading{
       position:absolute;top:1rem;left:50%;transform:translateX(-50%);
       padding:.6rem 1rem;background:#fff;border-radius:.5rem;
@@ -26,13 +25,11 @@
   </style>
 </head>
 <body>
-  <div id="loading">Carregando planilha…</div>
+  <div id="loading">Carregando dados…</div>
   <div id="map"></div>
 
-  <!-- Seu JS principal (agora dentro da pasta js/) ----------------->
   <script src="js/script.js" defer></script>
 
-  <!-- Esconde o aviso assim que o DOM estiver pronto --------------->
   <script>
     document.addEventListener('DOMContentLoaded',
       () => document.getElementById('loading').classList.add('hidden'));
