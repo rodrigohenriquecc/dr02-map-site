@@ -10,7 +10,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           defer></script>
 
-  <!-- SheetJS (Excel) – versão que existe -------------------------->
+  <!-- SheetJS (Excel) --------------------------------------------->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
           defer></script>
 
@@ -18,9 +18,10 @@
   <style>
     html,body{height:100%;margin:0}
     #map{height:100%;width:100%}
-    #loading{position:absolute;top:1rem;left:50%;transform:translateX(-50%);
-             padding:.6rem 1rem;background:#fff;border-radius:.5rem;
-             box-shadow:0 1px 6px rgba(0,0,0,.2);z-index:999}
+    #loading{
+      position:absolute;top:1rem;left:50%;transform:translateX(-50%);
+      padding:.6rem 1rem;background:#fff;border-radius:.5rem;
+      box-shadow:0 1px 6px rgba(0,0,0,.2);z-index:999}
     #loading.hidden{display:none}
   </style>
 </head>
@@ -28,10 +29,10 @@
   <div id="loading">Carregando planilha…</div>
   <div id="map"></div>
 
-  <!-- Seu JS principal (garanta que o arquivo exista nesse caminho) -->
-  <script src="script.js" defer></script>
+  <!-- Seu JS principal (agora dentro da pasta js/) ----------------->
+  <script src="js/script.js" defer></script>
 
-  <!-- esconde o aviso assim que DOM pronto -->
+  <!-- Esconde o aviso assim que o DOM estiver pronto --------------->
   <script>
     document.addEventListener('DOMContentLoaded',
       () => document.getElementById('loading').classList.add('hidden'));
