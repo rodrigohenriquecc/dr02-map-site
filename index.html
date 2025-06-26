@@ -1,71 +1,73 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Mapa Interativo – DR.02</title>
+  <meta charset="utf-8" />
+  <title>DR-02 • Mapa de Trechos</title>
 
-  <!-- Leaflet -->
+  <!-- Leaflet (mapas) ------------------------------------------------>
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha384-C7WDMEXV8p/Oy9Xybx1OdYCbqBpaKkG5XMgSS0wJXoPUmeXH2hUTphlpve5uRq6s"
+    crossorigin=""
   />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha384-u6ZJ5KYLvU90Y4bHyQyfY0s2ct3hJ7+jpQmi9vFJlgbiY/vMnj5uuWYFzJgCIfkG"
+    crossorigin=""
+    defer
+  ></script>
 
-  <!-- CSS do projeto -->
-  <link rel="stylesheet" href="css/style.css" />
+  <!-- SheetJS (Excel) ----------------------------------------------->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.2/xlsx.full.min.js"
+    integrity="sha512-ktpEOtxYUKM6mxkvo2+eAFuGJIV0V1xGL6pQCOpC7w/LX8ahDhdfLZy6sXpmKaWZKPxDkZH49v9Zvt0p3Ft7HA=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+    defer
+  ></script>
+
+  <!-- Estilos mínimos ----------------------------------------------->
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, sans-serif;
+    }
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+    /* mensagem de carregamento */
+    #loading {
+      position: absolute;
+      top: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: .6rem 1rem;
+      background: #fff;
+      border-radius: .5rem;
+      box-shadow: 0 1px 6px rgba(0,0,0,.2);
+      z-index: 999;
+    }
+    #loading.hidden { display: none; }
+  </style>
 </head>
 <body>
-  <h1>Mapa Interativo – DR.02</h1>
+  <!-- Indicador de carregamento -->
+  <div id="loading">Carregando planilha…</div>
 
-  <div id="container">
-    <!-- Sidebar fixa -->
-    <aside id="sidebar">
-      <h2>Filtros</h2>
+  <!-- Mapa -->
+  <div id="map"></div>
 
-      <fieldset>
-        <legend>Regiões</legend>
-        <label><input type="checkbox" class="region-filter" data-region="RC 2.1" checked> RC 2.1</label>
-        <label><input type="checkbox" class="region-filter" data-region="RC 2.2" checked> RC 2.2</label>
-        <label><input type="checkbox" class="region-filter" data-region="RC 2.4" checked> RC 2.4</label>
-        <label><input type="checkbox" class="region-filter" data-region="RC 2.5" checked> RC 2.5</label>
-        <label><input type="checkbox" class="region-filter" data-region="RC 2.6+2.8" checked> RC 2.6+2.8</label>
-        <label><input type="checkbox" class="region-filter" data-region="RC 2.7" checked> RC 2.7</label>
-        <label><input type="checkbox" class="region-filter" data-region="CGR.02 Unificada" checked> CGR.02 Unificada</label>
-      </fieldset>
+  <!-- Seu script -->
+  <script src="script.js" defer></script>
 
-      <fieldset>
-        <legend>Rodovias</legend>
-        <input id="road-search" type="search" placeholder="Buscar rodovia…">
-        <div id="rodovia-filters"></div>
-      </fieldset>
-    </aside>
-
-    <!-- Mapa -->
-    <div id="map"></div>
-  </div>
-
-  <!-- Bibliotecas -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/shpjs@latest/dist/shp.min.js"></script>
-  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-
-  <!-- Configuração da planilha -->
+  <!-- Esconde o “loading” quando DOM pronto ------------------------->
   <script>
-    // URL do arquivo e nome exato da aba no Excel (case-sensitive!)
-    const excelUrl = 'planilha.xlsx';
-    const sheetName = 'Planilha';
-  </script>
-
-  <!-- Seu script principal -->
-  <script src="js/script.js"></script>
-
-  <!-- Filtro de busca por rodovia -->
-  <script>
-    document.getElementById('road-search').addEventListener('input', e => {
-      const q = e.target.value.toLowerCase();
-      document.querySelectorAll('#rodovia-filters label').forEach(lb => {
-        lb.style.display = lb.textContent.toLowerCase().includes(q) ? 'block' : 'none';
-      });
-    });
+    document.addEventListener('DOMContentLoaded', () =>
+      document.getElementById('loading').classList.add('hidden')
+    );
   </script>
 </body>
 </html>
