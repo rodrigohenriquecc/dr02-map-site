@@ -1,31 +1,42 @@
 /* global L, XLSX, shp */
 
-document.addEventListener('DOMContentLoaded', init);
+/* ---------------------------------------------------------- */
+/* CONFIGURAÇÕES                                              */
+/* ---------------------------------------------------------- */
+const LIMITE_METROS = 2000;   // quebra a polilinha se pular > 2 km
 
-let mapa,  rodoviaDatas = {},  // { rotulo: [{km,lat,lon}, …] }
-    poliesRodovias = {},       // rotulo → L.Polyline (todas as KMs)
-    camadaRecorte;             // L.Polyline recortada (Km filter)
+/* ---------------------------------------------------------- */
+/* VARIÁVEIS GLOBAIS                                          */
+/* ---------------------------------------------------------- */
+let mapa;
+const rodoviaDatas   = {};    // { rotulo: [{km,lat,lon}, …] }
+const gruposRodovia  = {};    // rotulo → L.FeatureGroup (linhas+marcadores)
+let camadaRecorte    = null;  // polilinha vermelha do filtro Km
 
-async function init () {
+/* ---------------------------------------------------------- */
+/* INICIALIZAÇÃO                                              */
+/* ---------------------------------------------------------- */
+document.addEventListener('DOMContentLoaded', async () => {
   mapa = criarMapaBase();
+
   const rcLayers = await carregarRCs(mapa);
-  await carregarRodovias(mapa);           // popula rodoviaDatas + poliesRodovias
-  criarPainelRodovia();                   // cria filtro lateral
+  await carregarRodovias(mapa);      // popula rodoviaDatas + gruposRodovia
+  criarPainelRodovia();              // painel lateral com filtros
 
   L.control.layers(null, rcLayers, { position:'topright', collapsed:false })
     .addTo(mapa);
 
-  // Ajusta o zoom para caber tudo (RCs + rodovias)
-  const grupoTudo = L.featureGroup([
+  // zoom geral
+  const tudo = L.featureGroup([
     ...Object.values(rcLayers),
-    ...Object.values(poliesRodovias)
+    ...Object.values(gruposRodovia)
   ]);
-  if (grupoTudo.getLayers().length) mapa.fitBounds(grupoTudo.getBounds());
-}
+  if (tudo.getLayers().length) mapa.fitBounds(tudo.getBounds());
+});
 
-/* ------------------------------------------------------------------ */
-/* 1. Mapa base                                                       */
-/* ------------------------------------------------------------------ */
+/* ---------------------------------------------------------- */
+/* MAPA BASE                                                  */
+/* ---------------------------------------------------------- */
 function criarMapaBase () {
   const map = L.map('map').setView([-23.8,-48.5], 8);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -35,9 +46,9 @@ function criarMapaBase () {
   return map;
 }
 
-/* ------------------------------------------------------------------ */
-/* 2. Carrega RCs (shapefiles ZIP ou GeoJSON)                         */
-/* ------------------------------------------------------------------ */
+/* ---------------------------------------------------------- */
+/* CARREGA SHAPEFILES DAS REGIÕES (RCs)                       */
+/* ---------------------------------------------------------- */
 async function carregarRCs (map) {
   const arquivos = [
     { nome:'RC 2.1', arquivo:'data/RC_2.1.zip' },
@@ -48,7 +59,7 @@ async function carregarRCs (map) {
     { nome:'RC 2.7', arquivo:'data/RC_2.7.zip' }
   ];
 
-  const rcLayers = {};
+  const camadas = {};
   for (const {nome,arquivo} of arquivos) {
     try {
       const geo = await shp(arquivo);
@@ -57,19 +68,19 @@ async function carregarRCs (map) {
         style:{ color:cor, weight:1, fillColor:cor, fillOpacity:0.25 }
       }).addTo(map);
       layer.bindPopup(`<b>${nome}</b>`);
-      rcLayers[nome] = layer;
+      camadas[nome] = layer;
     } catch (e) {
       console.error(`Falha ao ler ${arquivo}`, e);
     }
   }
-  return rcLayers;
+  return camadas;
 }
 
-/* ------------------------------------------------------------------ */
-/* 3. Carrega planilha e desenha rodovias                              */
-/* ------------------------------------------------------------------ */
+/* ---------------------------------------------------------- */
+/* CARREGA PLANILHA E DESENHA RODOVIAS                        */
+/* ---------------------------------------------------------- */
 async function carregarRodovias (map) {
-  const buf = await fetch('planilha.xlsx').then(r => r.arrayBuffer());
+  const buf = await fetch('planilha.xlsx').then(r=>r.arrayBuffer());
   const wb  = XLSX.read(buf, { type:'array' });
   const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],
                                        { header:1, blankrows:false });
@@ -91,44 +102,71 @@ async function carregarRodovias (map) {
     alert('Cabeçalhos RC, SP, KM, LAT, LON não encontrados.'); return;
   }
 
+  // agrupa dados
   raw.slice(1).forEach(l=>{
     const rot=`${l[rc]} | ${l[sp]}`;
     if(!rodoviaDatas[rot]) rodoviaDatas[rot]=[];
     rodoviaDatas[rot].push({ km:+l[km], lat:+l[lat], lon:+l[lon] });
   });
 
-  // Desenha cada rodovia completa
-  Object.entries(rodoviaDatas).forEach(([rot,pts])=>{
+  // desenha cada rodovia com segmentação e marcadores
+  Object.entries(rodoviaDatas).forEach(([rot, pts])=>{
     pts.sort((a,b)=>a.km-b.km);
-    poliesRodovias[rot] = L.polyline(
-      pts.map(p=>[p.lat,p.lon]),
-      {color:'#555',weight:3,opacity:0.9}
-    ).bindPopup(`<b>${rot}</b>`).addTo(map);
+
+    const segmentos=[[]];
+    for(let i=0;i<pts.length;i++){
+      const p=pts[i];
+      if(i>0){
+        const ant=pts[i-1];
+        const dist=distanciaMetros(ant.lat,ant.lon,p.lat,p.lon);
+        if(dist > LIMITE_METROS) segmentos.push([]);
+      }
+      segmentos[segmentos.length-1].push([p.lat,p.lon]);
+    }
+
+    const group=L.featureGroup().addTo(map);
+
+    segmentos.forEach(coords=>{
+      L.polyline(coords,{color:'#555',weight:3,opacity:0.9})
+        .bindPopup(`<b>${rot}</b>`).addTo(group);
+    });
+
+    const primeiro=pts[0], ultimo=pts[pts.length-1];
+    L.circleMarker([primeiro.lat,primeiro.lon],{
+      radius:6,color:'#090',fillColor:'#0f0',fillOpacity:0.85
+    }).bindTooltip(`${rot} • Início Km ${primeiro.km}`,{direction:'top'})
+      .addTo(group);
+
+    L.circleMarker([ultimo.lat,ultimo.lon],{
+      radius:6,color:'#900',fillColor:'#f00',fillOpacity:0.85
+    }).bindTooltip(`${rot} • Final Km ${ultimo.km}`,{direction:'top'})
+      .addTo(group);
+
+    gruposRodovia[rot]=group;
   });
 }
 
-/* ------------------------------------------------------------------ */
-/* 4. Painel de filtro de rodovia + Km                                */
-/* ------------------------------------------------------------------ */
+/* ---------------------------------------------------------- */
+/* PAINEL DE FILTRO RODOVIA + KM                              */
+/* ---------------------------------------------------------- */
 function criarPainelRodovia () {
   const RodControl = L.Control.extend({
     options:{ position:'topleft' },
-    onAdd: function(){
-      const div = L.DomUtil.create('div','leaflet-bar');
+    onAdd(){
+      const div=L.DomUtil.create('div','leaflet-bar');
       div.style.background='#fff';
       div.style.padding='8px';
       div.style.minWidth='160px';
-      div.style.maxWidth='220px';
-      div.innerHTML = `
+      div.innerHTML=`
         <label style="font-weight:bold">Rodovia:</label><br>
-        <select id="selRod" style="width:100%; margin-bottom:4px;">
+        <select id="selRod" style="width:100%;margin-bottom:4px;">
           <option value="">(todas)</option>
           ${Object.keys(rodoviaDatas).sort().map(r=>`<option>${r}</option>`).join('')}
         </select>
-        <label style="font-weight:bold">Km&nbsp;inicial:</label>
+        <label style="font-weight:bold">Km inicial:</label>
         <input id="kmIni" type="number" style="width:100%;margin-bottom:4px;"
-               placeholder="(vazio = 0)">
-        <label style="font-weight:bold">Km&nbsp;final:</label>
+               placeholder="(vazio)">
+        <label style="font-weight:bold">Km final:</label>
         <input id="kmFim" type="number" style="width:100%;">
       `;
       L.DomEvent.disableClickPropagation(div);
@@ -137,46 +175,22 @@ function criarPainelRodovia () {
   });
   mapa.addControl(new RodControl());
 
-  // listeners
+  // eventos
   document.getElementById('selRod').addEventListener('change', aplicarFiltro);
   document.getElementById('kmIni').addEventListener('input', aplicarFiltro);
   document.getElementById('kmFim').addEventListener('input', aplicarFiltro);
 }
 
 function aplicarFiltro(){
-  const rodSel = document.getElementById('selRod').value;
-  const kmIni  = parseFloat(document.getElementById('kmIni').value);
-  const kmFim  = parseFloat(document.getElementById('kmFim').value);
+  const rodSel=document.getElementById('selRod').value;
+  const kmIni=parseFloat(document.getElementById('kmIni').value);
+  const kmFim=parseFloat(document.getElementById('kmFim').value);
 
-  // 1. mostra / esconde polilinhas completas
-  Object.entries(poliesRodovias).forEach(([rot,poly])=>{
-    if(!rodSel || rot===rodSel) { poly.addTo(mapa); }
-    else { mapa.removeLayer(poly); }
+  // mostra/esconde grupos completos
+  Object.entries(gruposRodovia).forEach(([rot,grp])=>{
+    if(!rodSel || rot===rodSel) grp.addTo(mapa);
+    else mapa.removeLayer(grp);
   });
 
-  // 2. remove recorte anterior
-  if(camadaRecorte){ mapa.removeLayer(camadaRecorte); camadaRecorte=null; }
-
-  // 3. cria recorte se rodovia selecionada e KM informado
-  if(rodSel && (!isNaN(kmIni) || !isNaN(kmFim))){
-    const pts = rodoviaDatas[rodSel].filter(p=>{
-      return (isNaN(kmIni) || p.km>=kmIni) &&
-             (isNaN(kmFim)  || p.km<=kmFim);
-    });
-    if(pts.length){
-      camadaRecorte = L.polyline(
-        pts.map(p=>[p.lat,p.lon]),
-        {color:'#d00',weight:5,opacity:1}
-      ).addTo(mapa);
-      mapa.fitBounds(camadaRecorte.getBounds(), { maxZoom: 14 });
-    }
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/* Util – cor pastel aleatória                                        */
-/* ------------------------------------------------------------------ */
-function corAleatoria(){
-  const h=Math.random()*360;
-  return `hsl(${h},70%,60%)`;
-}
+  // remove recorte anterior
+  if(camadaRecorte){ mapa.removeLayer(cama
