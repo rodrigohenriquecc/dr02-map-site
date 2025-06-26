@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', init);
 
 async function init () {
   try {
-    const pontos = await lerExcel('planilha.xlsx');   // mesmo nome do arquivo no GitHub
+    const pontos = await lerExcel('planilha.xlsx');   // arquivo deve estar na raiz
     construirMapa(pontos);
   } catch (err) {
     console.error(err);
@@ -17,9 +17,9 @@ async function init () {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* 1. Leitura e saneamento da planilha                                */
-/* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------
+   1. Leitura e saneamento da planilha
+------------------------------------------------------------------ */
 async function lerExcel (url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Não foi possível baixar “${url}”`);
@@ -41,7 +41,7 @@ async function lerExcel (url) {
   let lat = idx(cab, 'LAT');
   let lon = idx(cab, 'LON');
 
-  /* Caso tenha só “LAT,LON”  --------------------------------------- */
+  /* Caso tenha só “LAT,LON” --------------------------------------- */
   const latlon = idx(cab, 'LAT,LON');
   if ((lat === -1 || lon === -1) && latlon !== -1) {
     // substitui um cabeçalho por dois
@@ -57,14 +57,14 @@ async function lerExcel (url) {
     lon = latlon + 1;
   }
 
-  /* valida again */
+  /* valida de novo */
   if ([rc, sp, km, lat, lon].includes(-1)) {
     alert('Cabeçalhos RC, SP, KM, LAT, LON não encontrados.');
     console.table(cab);
     throw new Error('Cabeçalhos ausentes');
   }
 
-  /* converte p/ objeto amigável ------------------------------------ */
+  /* converte p/ objeto amigável ----------------------------------- */
   return rawData.slice(1).map(l => ({
     rc  : l[rc],
     sp  : l[sp],
@@ -74,19 +74,19 @@ async function lerExcel (url) {
   }));
 }
 
-/* ------------------------------------------------------------------ */
-/* 2. Construção do mapa com Leaflet                                  */
-/* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------
+   2. Construção do mapa com Leaflet
+------------------------------------------------------------------ */
 function construirMapa (pts) {
   const map = L.map('map').setView([-23.8, -48.5], 8);
 
-  /* camada base OSM ------------------------------------------------- */
+  /* camada base OSM ------------------------------------------------ */
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap'
   }).addTo(map);
 
-  /* agrupa pontos por rodovia (RC + SP) ----------------------------- */
+  /* agrupa pontos por rodovia (RC + SP) ---------------------------- */
   const grupos = {};
   pts.forEach(p => {
     const chave = `${p.rc} | ${p.sp}`;
@@ -94,9 +94,9 @@ function construirMapa (pts) {
     grupos[chave].push(p);
   });
 
-  /* desenha cada rodovia ------------------------------------------- */
+  /* desenha cada rodovia ------------------------------------------ */
   Object.entries(grupos).forEach(([label, arr]) => {
-    // ordena por KM para a linha não “zig-zaguear”
+    // ordena por KM para polilinha não “zig-zaguear”
     arr.sort((a, b) => a.km - b.km);
 
     const linha = L.polyline(
@@ -107,7 +107,7 @@ function construirMapa (pts) {
     linha.bindPopup(`<b>${label}</b>`);
   });
 
-  /* ajusta a visão                                                  */
+  /* ajusta a visão ------------------------------------------------- */
   const bounds = pts.map(p => [p.lat, p.lon]);
   if (bounds.length) map.fitBounds(bounds);
 }
