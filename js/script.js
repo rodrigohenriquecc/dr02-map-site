@@ -64,7 +64,7 @@ async function carregarRodovias(){
   if(!raw.length) return;
 
   const H=raw[0].map(s=>String(s).trim().toUpperCase()), idx=h=>H.indexOf(h);
-  let rc=idx('RC'), sp=idx('SP'), km=idx('KM'), la=idx('LAT'), lo=idx('LON');
+  let sp=idx('SP'), km=idx('KM'), la=idx('LAT'), lo=idx('LON');
   const latlon=idx('LAT,LON');
   if((la===-1||lo===-1)&&latlon!==-1){
     H.splice(latlon,1,'LAT','LON');
@@ -74,10 +74,11 @@ async function carregarRodovias(){
     }
     la=latlon; lo=latlon+1;
   }
-  if([rc,sp,km,la,lo].includes(-1)){alert('Cabeçalhos ausentes');return;}
+  if([sp,km,la,lo].includes(-1)){alert('Cabeçalhos SP, KM, LAT, LON ausentes');return;}
 
+  /* ---- agrupa por rodovia (apenas SP) ---- */
   raw.slice(1).forEach(r=>{
-    const rot=`${r[rc]} | ${r[sp]}`;
+    const rot=String(r[sp]).trim();           // <<< AGORA SÓ “SP 250”, p.ex.
     (rodoviaDados[rot]??=[]).push({km:+r[km],lat:+r[la],lon:+r[lo]});
   });
 
@@ -97,13 +98,13 @@ async function carregarRodovias(){
     seg.forEach(c=>L.polyline(c,{color:'#555',weight:3,opacity:.9})
                  .bindPopup(`<b>${rot}</b>`).addTo(grp));
     grp.addTo(mapa); rodOverlays[rot]=grp;
-    layerControl.addOverlay(grp,rot);
+    layerControl.addOverlay(grp,rot);         // continua filtrável
 
     const mid=pts[Math.floor(pts.length/2)];
     rodLabels[rot]=L.marker([mid.lat,mid.lon],{
       icon:L.divIcon({className:'rod-label',html:rot,iconSize:null}),
       interactive:false
-    }).addTo(mapa);
+    }).addTo(mapa);                            // rótulo fixo (não filtrável)
   }
 }
 
