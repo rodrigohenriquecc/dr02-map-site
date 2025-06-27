@@ -10,13 +10,15 @@
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 
-  <!-- libs p/ ler KMZ -->
+  <!-- JSZip p/ descompactar .kmz -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
           defer></script>
-  <script src="https://unpkg.com/togeojson@0.16.0/dist/togeojson.min.js"
+
+  <!-- toGeoJSON — via jsDelivr (resolve o 404) -->
+  <script src="https://cdn.jsdelivr.net/npm/togeojson@0.16.0/dist/togeojson.min.js"
           defer></script>
 
-  <!-- shp.js (regiões RC em .zip) -->
+  <!-- shp.js -->
   <script src="https://cdn.jsdelivr.net/npm/shpjs@3.6.2/dist/shp.min.js"
           defer></script>
 
@@ -29,9 +31,7 @@
       font:700 11px/1 Arial,Helvetica,sans-serif;
       background:#fff;padding:2px 4px;border-radius:3px;
       box-shadow:0 0 2px rgba(0,0,0,.35);pointer-events:none}
-    @media(max-width:600px){
-      .rc-label{font-size:12px}.rod-label{font-size:10px}
-    }
+    @media(max-width:600px){.rc-label{font-size:12px}.rod-label{font-size:10px}}
   </style>
 </head>
 <body>
