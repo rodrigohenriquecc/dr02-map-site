@@ -1,144 +1,73 @@
-/* global L, XLSX, shp */
+/* global L, L_KMZ */
 
-const LIMITE_METROS = 2000;
-let mapa, layerControl;
-const rcOverlays={}, rcLabels={}, rodOverlays={}, rodLabels={}, rodoviaDados={};
-let linhaRecorte=null;
+/* Lista de arquivos KMZ já presentes no diretório do site
+   └► coloque outros nomes aqui caso tenha mais rodovias                    */
+const KMZ_FILES = [
+  './data/SP_181_Separado.kmz',
+  './data/SP_250_Separado.kmz'
+];
 
-document.addEventListener('DOMContentLoaded', async()=>{
-  mapa=L.map('map')
-        .addLayer(L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-          {maxZoom:19,attribution:'&copy; OpenStreetMap'}));
+/* ---------------------------------------------------------- */
+/*   INICIALIZA O MAPA                                        */
+/* ---------------------------------------------------------- */
+document.addEventListener('DOMContentLoaded', () => {
+  const mapa = L.map('map').setView([-23.8, -48.5], 7);
 
-  layerControl=L.control.layers(null,{},
-    {position:'topright',collapsed:window.innerWidth<=600}).addTo(mapa);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom : 19,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(mapa);
 
-  await carregarRCs();
-  await carregarRodovias();
-  aplicarMascaraRC();
-  criarPainelKm();
-});
+  /* painéis de camadas                                        */
+  const kmzGroup   = {};          // título do arquivo  → camada Leaflet
+  const labelGroup = {};          // título do arquivo  → L.marker rótulo
 
-/* ---------- RCs (contorno + rótulo) ----------------------- */
-async function carregarRCs(){
-  const arq=[{n:'RC 2.1',f:'data/RC_2.1.zip'},{n:'RC 2.2',f:'data/RC_2.2.zip'},
-             {n:'RC 2.4',f:'data/RC_2.4.zip'},{n:'RC 2.5',f:'data/RC_2.5.zip'},
-             {n:'RC 2.6 + 2.8',f:'data/RC_2.6_2.8.zip'},{n:'RC 2.7',f:'data/RC_2.7.zip'}];
-  for(const {n,f} of arq){
-    try{
-      const geo=await shp(f);
-      rcOverlays[n]=L.geoJSON(geo,{style:{color:'#000',weight:2.5,fill:false}})
-                      .bindPopup(`<b>${n}</b>`).addTo(mapa);
-      const c=rcOverlays[n].getBounds().getCenter();
-      rcLabels[n]=L.marker(c,{
-        icon:L.divIcon({className:'rc-label',html:n,iconSize:null}),interactive:false
-      }).addTo(mapa);
-    }catch(e){console.error('RC',f,e);}
-  }
-  if(Object.keys(rcOverlays).length){
-    mapa.fitBounds(L.featureGroup(Object.values(rcOverlays)).getBounds());
-  }
-}
+  const painel = L.control.layers(null, null, {
+    position: 'topright', collapsed: false
+  }).addTo(mapa);
 
-/* ---------- Rodovias + rótulo ----------------------------- */
-async function carregarRodovias(){
-  const buf=await fetch('planilha.xlsx').then(r=>r.arrayBuffer());
-  const wb = XLSX.read(buf,{type:'array'});
-  const raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],
-                                     {header:1,blankrows:false});
-  if(!raw.length) return;
+  /* ---------------------------------------------------------- */
+  /*   CARREGA TODOS OS KMZ                                     */
+  /* ---------------------------------------------------------- */
+  KMZ_FILES.forEach(file => {
+    const layerKMZ = new L.KMZLayer(file);
 
-  const H=raw[0].map(s=>String(s).trim().toUpperCase()), i=h=>H.indexOf(h);
-  let rc=i('RC'),
-      sp=[i('SP'), i('RODOVIA'), i('ROD.')].find(x=>x!==-1), // <-- ajuste
-      km=i('KM'), la=i('LAT'), lo=i('LON');
-  const latlon=i('LAT,LON');
-  if((la===-1||lo===-1)&&latlon!==-1){
-    H.splice(latlon,1,'LAT','LON');
-    for(let r=1;r<raw.length;r++){
-      const [y,x]=String(raw[r][latlon]).split(/[,; ]+/);
-      raw[r].splice(latlon,1,+y,+x);
-    }
-    la=latlon; lo=latlon+1;
-  }
-  if([sp,km,la,lo].includes(-1)){alert('Cabeçalhos SP/RODOVIA, KM, LAT, LON ausentes');return;}
+    layerKMZ.on('load', e => {
+      const camada = e.layer;                 // grupo já convertido
+      const titulo = file.split('/').pop().replace(/_/g,' ').replace(/\.kmz$/i,'');
 
-  raw.slice(1).forEach(r=>{
-    const chave=`${r[rc]||''} | ${r[sp]}`.trim();
-    (rodoviaDados[chave]??=[]).push({
-      km:+r[km],lat:+r[la],lon:+r[lo],sig:String(r[sp]).trim()});
-  });
+      /* Adiciona a camada principal (todas as polilinhas / pontos)         */
+      camada.addTo(mapa);
+      kmzGroup[titulo] = camada;
+      painel.addOverlay(camada, `📄 ${titulo}`);
 
-  for(const [rot,pts] of Object.entries(rodoviaDados)){
-    pts.sort((a,b)=>a.km-b.km);
-    const seg=[[]];
-    for(let j=0;j<pts.length;j++){
-      if(j){
-        const a=pts[j-1],b=pts[j];
-        if(dist(a.lat,a.lon,b.lat,b.lon)>LIMITE_METROS) seg.push([]);
+      /* Gera rótulos: um no centro de cada polilinha                      */
+      camada.eachLayer(l => {
+        if (l.getBounds && l.getBounds().isValid()) {
+          const c = l.getBounds().getCenter();
+          const sigla = /SP\s*\d+/i.exec(titulo) || ['Rodovia'];
+          const marker = L.marker(c, {
+            icon: L.divIcon({className:'kmz-label', html: sigla[0], iconSize:null}),
+            interactive: false
+          }).addTo(mapa);
+          (labelGroup[titulo] ||= L.layerGroup()).addLayer(marker);
+        }
+      });
+
+      /* Mostra rótulos como opção extra                                 */
+      if (labelGroup[titulo]) {
+        labelGroup[titulo].addTo(mapa);
+        painel.addOverlay(labelGroup[titulo], `🏷️ ${titulo} (rótulo)`);
       }
-      seg.at(-1).push([pts[j].lat,pts[j].lon]);
-    }
-    const grp=L.featureGroup();
-    seg.forEach(c=>L.polyline(c,{color:'#555',weight:3,opacity:.9})
-                 .bindPopup(`<b>${rot}</b>`).addTo(grp));
-    grp.addTo(mapa); rodOverlays[rot]=grp; layerControl.addOverlay(grp,rot);
 
-    const m=pts[Math.floor(pts.length/2)];
-    rodLabels[rot]=L.marker([m.lat,m.lon],{
-      icon:L.divIcon({className:'rod-label',html:pts[0].sig,iconSize:null}),
-      interactive:false
-    }).addTo(mapa);
-  }
-}
+      /* Ajusta zoom global depois que todos os arquivos carregarem       */
+      if (Object.keys(kmzGroup).length === KMZ_FILES.length) {
+        const tudo = L.featureGroup(Object.values(kmzGroup));
+        mapa.fitBounds(tudo.getBounds());
+      }
+    });
 
-/* ---------- Máscara RC ------------------------------------ */
-function aplicarMascaraRC(){
-  const g=L.featureGroup(Object.values(rcOverlays));
-  if(!g.getLayers().length) return;
-  const b=g.getBounds(),[[S,W],[N,E]]=[[b.getSouth(),b.getWest()],[b.getNorth(),b.getEast()]];
-  layerControl.addOverlay(
-    L.geoJSON({type:'Feature',geometry:{type:'Polygon',coordinates:[
-      [[-180,-90],[-180,90],[180,90],[180,-90],[-180,-90]],
-      [[W,S],[W,N],[E,N],[E,S],[W,S]]]}},
-      {stroke:false,fillColor:'#000',fillOpacity:.4,interactive:false}).addTo(mapa),
-    '⛶ Área RC');
-}
-
-/* ---------- Painel Km ------------------------------------- */
-function criarPainelKm(){
-  const btn=L.DomUtil.create('button','toggle-btn',document.body);btn.textContent='≡';
-  const card=L.DomUtil.create('div','rodovia-card',document.body);
-  const opts=Object.keys(rodoviaDados).sort().map(r=>`<option>${r}</option>`).join('');
-  card.innerHTML=`
-    <label>Rodovia:</label><select id="selRod"><option value="">(todas)</option>${opts}</select>
-    <label>Km inicial:</label><input id="kmIni" type="number" placeholder="vazio = 0">
-    <label>Km final:</label><input id="kmFim" type="number" placeholder="∞">`;
-  L.DomEvent.disableClickPropagation(card);
-  let open=true;btn.onclick=()=>{open=!open;card.style.display=open?'block':'none';};
-  ['change','input','input'].forEach((ev,j)=>
-    document.getElementById(['selRod','kmIni','kmFim'][j]).addEventListener(ev,filtrarKm));
-}
-
-/* ---------- Filtro Km ------------------------------------- */
-function filtrarKm(){
-  const rod=document.getElementById('selRod').value;
-  const ki=parseFloat(document.getElementById('kmIni').value);
-  const kf=parseFloat(document.getElementById('kmFim').value);
-  if(linhaRecorte){mapa.removeLayer(linhaRecorte);linhaRecorte=null;}
-  if(rod&&(!isNaN(ki)||!isNaN(kf))){
-    const pts=rodoviaDados[rod].filter(p=>(isNaN(ki)||p.km>=ki)&&(isNaN(kf)||p.km<=kf));
-    if(pts.length){
-      linhaRecorte=L.polyline(pts.sort((a,b)=>a.km-b.km).map(p=>[p.lat,p.lon]),
-        {color:'#d00',weight:5,opacity:1}).addTo(mapa);
-      mapa.fitBounds(linhaRecorte.getBounds(),{maxZoom:14});
-    }
-  }
-}
-
-/* ---------- Util ------------------------------------------ */
-function dist(a,b,c,d){
-  const R=6371000,t=Math.PI/180,p=(c-a)*t,q=(d-b)*t,
-        h=Math.sin(p/2)**2+Math.cos(a*t)*Math.cos(c*t)*Math.sin(q/2)**2;
-  return 2*R*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
-}
+    /* Inicia download do KMZ                                            */
+    layerKMZ.addTo(mapa);
+  });
+});
