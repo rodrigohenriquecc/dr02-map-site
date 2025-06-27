@@ -1,23 +1,23 @@
 /* global L, XLSX, shp */
 
-/* ---------- CONFIG ---------- */
-const LIMITE_METROS = 2000;
+/* ---------------- CONFIG ---------------- */
+const LIMITE_METROS = 2000;             // quebra polilinha se salto > 2 km
 
-/* ---------- VARS ------------ */
+/* ---------------- VARS ------------------ */
 let mapa, layerControl;
-const rcOverlays   = {};
-const rodOverlays  = {};
-const rodoviaDatas = {};
-let   camadaRecorte = null;
+const rcOverlays   = {};                // RC → camada
+const rodOverlays  = {};                // Rodovia → camada
+const rodoviaDatas = {};                // dados para filtro Km
+let   camadaRecorte = null;             // polilinha vermelha (filtro Km)
 
-/* ---------- START ----------- */
+/* ---------------- START ----------------- */
 document.addEventListener('DOMContentLoaded', async () => {
   mapa = L.map('map').setView([-23.8,-48.5],8)
           .addLayer(L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
             maxZoom:19, attribution:'&copy; OpenStreetMap'
           }));
 
-  await carregarRCs();
+  await carregarRCs();          // bordas pretas sem preenchimento
   await carregarRodovias();
 
   const isMobile = window.innerWidth <= 600;
@@ -29,11 +29,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   aplicarMascaraRC();
   criarPainelRodovia();
 
-  const all = L.featureGroup(Object.values({...rcOverlays, ...rodOverlays}));
-  if (all.getLayers().length) mapa.fitBounds(all.getBounds());
+  const all=L.featureGroup(Object.values({...rcOverlays,...rodOverlays}));
+  if(all.getLayers().length) mapa.fitBounds(all.getBounds());
 });
 
-/* ---------- RCs ------------- */
+/* -------- REGIÕES (RC) – sem fill & contorno preto -------- */
 async function carregarRCs(){
   const files=[
     {n:'RC 2.1',f:'data/RC_2.1.zip'},
@@ -45,15 +45,15 @@ async function carregarRCs(){
   ];
   for(const {n,f} of files){
     try{
-      const g = await shp(f);
-      const c = corAleatoria();
-      rcOverlays[n] = L.geoJSON(g,{style:{color:c,weight:1,fillColor:c,fillOpacity:.25}})
-                        .bindPopup(`<b>${n}</b>`).addTo(mapa);
+      const geo=await shp(f);
+      rcOverlays[n]=L.geoJSON(geo,{
+        style:{color:'#000',weight:2.5,fill:false}      // <<< ajuste aqui
+      }).bindPopup(`<b>${n}</b>`).addTo(mapa);
     }catch(e){console.error('Erro RC',f,e);}
   }
 }
 
-/* ---------- Rodovias -------- */
+/* -------- Rodovias (planilha) ------------------------------ */
 async function carregarRodovias(){
   const buf=await fetch('planilha.xlsx').then(r=>r.arrayBuffer());
   const wb = XLSX.read(buf,{type:'array'});
@@ -69,7 +69,7 @@ async function carregarRodovias(){
       const [la,lo]=String(raw[i][latlon]).split(/[,; ]+/);
       raw[i].splice(latlon,1,parseFloat(la),parseFloat(lo));
     }
-    lat=latlon; lon=latlon+1;
+    lat=latlon;lon=latlon+1;
   }
   if([rc,sp,km,lat,lon].includes(-1)){alert('Cabeçalhos ausentes');return;}
 
@@ -84,8 +84,8 @@ async function carregarRodovias(){
     const seg=[[]];
     for(let i=0;i<pts.length;i++){
       if(i){
-        const a=pts[i-1], b=pts[i];
-        if(distanciaMetros(a.lat,a.lon,b.lat,b.lon) > LIMITE_METROS) seg.push([]);
+        const a=pts[i-1],b=pts[i];
+        if(dist(a.lat,a.lon,b.lat,b.lon)>LIMITE_METROS) seg.push([]);
       }
       seg.at(-1).push([pts[i].lat,pts[i].lon]);
     }
@@ -93,7 +93,7 @@ async function carregarRodovias(){
     const grp=L.featureGroup();
     seg.forEach(c=>L.polyline(c,{color:'#555',weight:3,opacity:.9})
                  .bindPopup(`<b>${rot}</b>`).addTo(grp));
-    const i=pts[0], f=pts.at(-1);
+    const i=pts[0],f=pts.at(-1);
     L.circleMarker([i.lat,i.lon],{radius:6,color:'#090',fillColor:'#0f0',fillOpacity:.9})
       .bindTooltip(`Início Km ${i.km}`,{direction:'top'}).addTo(grp);
     L.circleMarker([f.lat,f.lon],{radius:6,color:'#900',fillColor:'#f00',fillOpacity:.9})
@@ -104,11 +104,11 @@ async function carregarRodovias(){
   });
 }
 
-/* ---------- Máscara área RC ---- */
+/* -------- Máscara área RC --------------------------------- */
 function aplicarMascaraRC(){
   const g=L.featureGroup(Object.values(rcOverlays));
   if(!g.getLayers().length) return;
-  const b=g.getBounds(), [[S,W],[N,E]]=[[b.getSouth(),b.getWest()],[b.getNorth(),b.getEast()]];
+  const b=g.getBounds(),[[S,W],[N,E]]=[[b.getSouth(),b.getWest()],[b.getNorth(),b.getEast()]];
   const mask=L.geoJSON({
     type:'Feature',
     geometry:{type:'Polygon',coordinates:[
@@ -119,9 +119,9 @@ function aplicarMascaraRC(){
   layerControl.addOverlay(mask,'⛶ Área RC');
 }
 
-/* ---------- Cartão (≡) -------- */
+/* -------- Cartão filtros Km (≡) ---------------------------- */
 function criarPainelRodovia(){
-  const btn=L.DomUtil.create('button','toggle-btn',document.body); btn.textContent='≡';
+  const btn=L.DomUtil.create('button','toggle-btn',document.body);btn.textContent='≡';
   const card=L.DomUtil.create('div','rodovia-card',document.body);
   const opts=Object.keys(rodoviaDatas).sort().map(r=>`<option>${r}</option>`).join('');
   card.innerHTML=`
@@ -129,12 +129,12 @@ function criarPainelRodovia(){
     <label>Km inicial:</label><input id="kmIni" type="number" placeholder="vazio = 0">
     <label>Km final:</label><input id="kmFim" type="number" placeholder="∞">`;
   L.DomEvent.disableClickPropagation(card);
-  let open=true; btn.onclick=()=>{open=!open;card.style.display=open?'block':'none';};
+  let open=true;btn.onclick=()=>{open=!open;card.style.display=open?'block':'none';};
   ['change','input','input'].forEach((ev,i)=>
     document.getElementById(['selRod','kmIni','kmFim'][i]).addEventListener(ev,aplicarFiltroKm));
 }
 
-/* ---------- Filtro Km -------- */
+/* -------- Filtro Km --------------------------------------- */
 function aplicarFiltroKm(){
   const rod=document.getElementById('selRod').value;
   const ki=parseFloat(document.getElementById('kmIni').value);
@@ -150,11 +150,11 @@ function aplicarFiltroKm(){
   }
 }
 
-/* ---------- Util ------------- */
-function distanciaMetros(lat1,lon1,lat2,lon2){
-  const R=6371000,d=Math.PI/180;
-  const p=(lat2-lat1)*d,q=(lon2-lon1)*d;
-  const h=Math.sin(p/2)**2+Math.cos(lat1*d)*Math.cos(lat2*d)*Math.sin(q/2)**2;
+/* -------- Util -------------------------------------------- */
+function dist(a,b,c,d){
+  const R=6371000,dg=Math.PI/180;
+  const p=(c-a)*dg,q=(d-b)*dg,
+        h=Math.sin(p/2)**2+Math.cos(a*dg)*Math.cos(c*dg)*Math.sin(q/2)**2;
   return 2*R*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
 }
 const corAleatoria=()=>`hsl(${Math.random()*360},70%,60%)`;
