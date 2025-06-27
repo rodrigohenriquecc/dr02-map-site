@@ -2,25 +2,31 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>Mapa • Rodovias (KMZ local)</title>
+  <title>DR-02 • Regiões + Rodovias (KMZ)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Leaflet core -->
+  <!-- Leaflet núcleo -->
   <link rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 
-  <!-- Plug-in para ler KML / KMZ diretamente -->
+  <!-- plug-in para abrir KML/KMZ -->
   <script src="https://unpkg.com/leaflet-kmz@0.0.6/dist/leaflet-kmz.min.js"
+          defer></script>
+
+  <!-- shp.js para ler .zip (shapefile) -->
+  <script src="https://cdn.jsdelivr.net/npm/shpjs@3.6.2/dist/shp.min.js"
           defer></script>
 
   <style>
     html,body,#map{height:100%;margin:0}
-    .kmz-label{
+    .rc-label{
+      font:600 14px/1 Arial,Helvetica,sans-serif;
+      color:#000;text-shadow:0 0 3px #fff;pointer-events:none}
+    .rod-label{
       font:700 11px/1 Arial,Helvetica,sans-serif;
       background:#fff;padding:2px 4px;border-radius:3px;
-      box-shadow:0 0 2px rgba(0,0,0,.35);pointer-events:none
-    }
+      box-shadow:0 0 2px rgba(0,0,0,.35);pointer-events:none}
   </style>
 </head>
 <body>
