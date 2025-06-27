@@ -1,39 +1,29 @@
 /* global L, XLSX, shp */
 
-/* ---------- CONFIG ---------- */
 const LIMITE_METROS = 2000;
 
-/* ---------- VARS ------------ */
 let mapa, layerControl;
-const rcOverlays  = {}, rcLabels  = {};
-const rodOverlays = {}, rodLabels = {};
-const rodoviaDados = {};
-let   linhaRecorte = null;
+const rcOverlays={}, rcLabels={}, rodOverlays={}, rodLabels={}, rodoviaDados={};
+let linhaRecorte=null;
 
-/* ---------- START ----------- */
-document.addEventListener('DOMContentLoaded', async () => {
-  mapa = L.map('map')
-           .setView([-23.8,-48.5],8)
-           .addLayer(L.tileLayer(
-             'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-             { maxZoom:19, attribution:'&copy; OpenStreetMap' }));
+document.addEventListener('DOMContentLoaded', async()=>{
+  mapa=L.map('map')
+        .addLayer(L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          {maxZoom:19,attribution:'&copy; OpenStreetMap'}));
 
-  layerControl = L.control.layers(null, {},
-    { position:'topright', collapsed:window.innerWidth<=600 }).addTo(mapa);
+  layerControl=L.control.layers(null,{},{
+    position:'topright',collapsed:window.innerWidth<=600}).addTo(mapa);
 
-  await carregarRCs();
+  await carregarRCs();          // já faz fitBounds correto
   await carregarRodovias();
 
-  aplicarMascaraRC();
+  aplicarMascaraRC();           // agora não interfere no zoom
   criarPainelKm();
-
-  mapa.fitBounds(
-    L.featureGroup(Object.values({...rcOverlays,...rodOverlays})).getBounds());
 });
 
-/* ---------- RCs -------------------------------------------------- */
+/* ------------ RCs (contorno + rótulo) -------------------- */
 async function carregarRCs(){
-  const files=[
+  const arq=[
     {n:'RC 2.1',f:'data/RC_2.1.zip'},
     {n:'RC 2.2',f:'data/RC_2.2.zip'},
     {n:'RC 2.4',f:'data/RC_2.4.zip'},
@@ -41,80 +31,82 @@ async function carregarRCs(){
     {n:'RC 2.6 + 2.8',f:'data/RC_2.6_2.8.zip'},
     {n:'RC 2.7',f:'data/RC_2.7.zip'}
   ];
-  for(const {n,f} of files){
+  for(const {n,f} of arq){
     try{
       const geo=await shp(f);
       rcOverlays[n]=L.geoJSON(geo,{style:{color:'#000',weight:2.5,fill:false}})
                       .bindPopup(`<b>${n}</b>`).addTo(mapa);
-      const centro=rcOverlays[n].getBounds().getCenter();
-      rcLabels[n]=L.marker(centro,{
+      const c=rcOverlays[n].getBounds().getCenter();
+      rcLabels[n]=L.marker(c,{
         icon:L.divIcon({className:'rc-label',html:n,iconSize:null}),
         interactive:false
       }).addTo(mapa);
     }catch(e){console.error('RC',f,e);}
   }
+
+  /* —— define zoom apenas pelas RCs —— */
+  if(Object.keys(rcOverlays).length){
+    const rcBounds=L.featureGroup(Object.values(rcOverlays)).getBounds();
+    mapa.fitBounds(rcBounds);
+  }
 }
 
-/* ---------- RODOVIAS -------------------------------------------- */
+/* ------------ Rodovias + rótulo --------------------------- */
 async function carregarRodovias(){
   const buf=await fetch('planilha.xlsx').then(r=>r.arrayBuffer());
-  const wb = XLSX.read(buf,{type:'array'});
+  const wb=XLSX.read(buf,{type:'array'});
   const raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],
                                      {header:1,blankrows:false});
   if(!raw.length) return;
 
-  const H=raw[0].map(s=>String(s).trim().toUpperCase()), idx=h=>H.indexOf(h);
-  let rc=idx('RC'), sp=idx('SP'), km=idx('KM'), la=idx('LAT'), lo=idx('LON');
-  const latlon=idx('LAT,LON');
+  const H=raw[0].map(s=>String(s).trim().toUpperCase()), i=h=>H.indexOf(h);
+  let rc=i('RC'),sp=i('SP'),km=i('KM'),la=i('LAT'),lo=i('LON');
+  const latlon=i('LAT,LON');
   if((la===-1||lo===-1)&&latlon!==-1){
     H.splice(latlon,1,'LAT','LON');
     for(let r=1;r<raw.length;r++){
       const [y,x]=String(raw[r][latlon]).split(/[,; ]+/);
       raw[r].splice(latlon,1,+y,+x);
     }
-    la=latlon; lo=latlon+1;
+    la=latlon;lo=latlon+1;
   }
   if([rc,sp,km,la,lo].includes(-1)){alert('Cabeçalhos ausentes');return;}
 
-  /* ---- agrupa por rodovia (chave completa) ---- */
   raw.slice(1).forEach(r=>{
-    const rotCompleto=`${r[rc]} | ${r[sp]}`.trim();   // painel / dados
-    (rodoviaDados[rotCompleto]??=[]).push({
-      km:+r[km], lat:+r[la], lon:+r[lo],
-      rodSigla:String(r[sp]).trim()                   // só “SP 250”
+    const chave=`${r[rc]} | ${r[sp]}`;
+    (rodoviaDados[chave]??=[]).push({
+      km:+r[km],lat:+r[la],lon:+r[lo],
+      sig:String(r[sp]).trim()
     });
   });
 
-  /* ---- desenha cada rodovia ---- */
-  for(const [rotCompleto,pts] of Object.entries(rodoviaDados)){
+  for(const [rot,pts] of Object.entries(rodoviaDados)){
     pts.sort((a,b)=>a.km-b.km);
 
     const seg=[[]];
-    for(let i=0;i<pts.length;i++){
-      if(i){
-        const a=pts[i-1], b=pts[i];
+    for(let j=0;j<pts.length;j++){
+      if(j){
+        const a=pts[j-1],b=pts[j];
         if(dist(a.lat,a.lon,b.lat,b.lon)>LIMITE_METROS) seg.push([]);
       }
-      seg.at(-1).push([pts[i].lat,pts[i].lon]);
+      seg.at(-1).push([pts[j].lat,pts[j].lon]);
     }
 
     const grp=L.featureGroup();
     seg.forEach(c=>L.polyline(c,{color:'#555',weight:3,opacity:.9})
-                 .bindPopup(`<b>${rotCompleto}</b>`).addTo(grp));
-    grp.addTo(mapa); rodOverlays[rotCompleto]=grp;
-    layerControl.addOverlay(grp,rotCompleto);      // aparece no filtro
+                 .bindPopup(`<b>${rot}</b>`).addTo(grp));
+    grp.addTo(mapa); rodOverlays[rot]=grp;
+    layerControl.addOverlay(grp,rot);
 
-    /* rótulo com apenas a sigla rodoviária */
-    const mid = pts[Math.floor(pts.length/2)];
-    const sig = pts[0].rodSigla;                   // mesmo para toda a rodovia
-    rodLabels[rotCompleto]=L.marker([mid.lat,mid.lon],{
-      icon:L.divIcon({className:'rod-label',html:sig,iconSize:null}),
+    const m=pts[Math.floor(pts.length/2)];
+    rodLabels[rot]=L.marker([m.lat,m.lon],{
+      icon:L.divIcon({className:'rod-label',html:pts[0].sig,iconSize:null}),
       interactive:false
-    }).addTo(mapa);                                // não filtrável
+    }).addTo(mapa);
   }
 }
 
-/* ---------- Máscara fora da área RC ----------------------- */
+/* ------------ Máscara ------------------------------------- */
 function aplicarMascaraRC(){
   const g=L.featureGroup(Object.values(rcOverlays));
   if(!g.getLayers().length) return;
@@ -129,7 +121,7 @@ function aplicarMascaraRC(){
   layerControl.addOverlay(mask,'⛶ Área RC');
 }
 
-/* ---------- Cartão filtro Km ------------------------------ */
+/* ------------ Painel Km ----------------------------------- */
 function criarPainelKm(){
   const btn=L.DomUtil.create('button','toggle-btn',document.body);btn.textContent='≡';
   const card=L.DomUtil.create('div','rodovia-card',document.body);
@@ -148,7 +140,7 @@ function criarPainelKm(){
             .addEventListener(ev,filtrarKm));
 }
 
-/* ---------- Filtro Km ------------------------------------- */
+/* ------------ Filtro Km ----------------------------------- */
 function filtrarKm(){
   const rod=document.getElementById('selRod').value;
   const ki=parseFloat(document.getElementById('kmIni').value);
@@ -164,7 +156,7 @@ function filtrarKm(){
   }
 }
 
-/* ---------- Util ------------------------------------------ */
+/* ------------ Util ---------------------------------------- */
 function dist(a,b,c,d){
   const R=6371000,t=Math.PI/180,p=(c-a)*t,q=(d-b)*t,
         h=Math.sin(p/2)**2+Math.cos(a*t)*Math.cos(c*t)*Math.sin(q/2)**2;
