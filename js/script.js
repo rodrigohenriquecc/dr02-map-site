@@ -5,11 +5,11 @@ const LIMITE_METROS = 2000;
 
 /* ---------- VARS ----------- */
 let mapa, layerControl;
-const rcOverlays   = {};     // RC contorno
-const rcLabels     = {};     // RC texto
-const rodOverlays  = {};     // rodovia contorno
-const rodLabels    = {};     // rodovia texto
-const rodoviaDatas = {};     // p/ filtro Km
+const rcOverlays   = {};
+const rcLabels     = {};
+const rodOverlays  = {};
+const rodLabels    = {};
+const rodoviaDatas = {};
 let   camadaRecorte=null;
 
 /* ---------- START ---------- */
@@ -23,11 +23,8 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   await carregarRodovias();
 
   const mobile=window.innerWidth<=600;
-  layerControl=L.control.layers(
-    null,
-    {...rodOverlays, ...rodLabels, ⛶:null},   // só rodovias + rótulos
-    {position:'topright',collapsed:mobile}
-  ).addTo(mapa);
+  layerControl=L.control.layers(null, {}, {position:'topright',collapsed:mobile})
+                 .addTo(mapa);
 
   aplicarMascaraRC();
   criarPainelKm();
@@ -56,7 +53,6 @@ async function carregarRCs(){
         icon:L.divIcon({className:'rc-label',html:n,iconSize:null}),
         interactive:false
       }).addTo(mapa);
-      // não adicionamos rcOverlays / rcLabels ao layerControl ⇒ fixos
     }catch(e){console.error('Erro RC',f,e);}
   }
 }
@@ -68,9 +64,9 @@ async function carregarRodovias(){
   const raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,blankrows:false});
   if(!raw.length) return;
 
-  const H=raw[0].map(s=>String(s).trim().toUpperCase()), i=t=>H.indexOf(t);
-  let rc=i('RC'), sp=i('SP'), km=i('KM'), la=i('LAT'), lo=i('LON');
-  const latlon=i('LAT,LON');
+  const H=raw[0].map(s=>String(s).trim().toUpperCase()), ix=t=>H.indexOf(t);
+  let rc=ix('RC'),sp=ix('SP'),km=ix('KM'),la=ix('LAT'),lo=ix('LON');
+  const latlon=ix('LAT,LON');
   if((la===-1||lo===-1)&&latlon!==-1){
     H.splice(latlon,1,'LAT','LON');
     for(let r=1;r<raw.length;r++){
@@ -93,7 +89,7 @@ async function carregarRodovias(){
     for(let i=0;i<pts.length;i++){
       if(i){
         const a=pts[i-1],b=pts[i];
-        if(dist(a,b)>LIMITE_METROS) seg.push([]);
+        if(dist(a.lat,a.lon,b.lat,b.lon)>LIMITE_METROS) seg.push([]);
       }
       seg.at(-1).push([pts[i].lat,pts[i].lon]);
     }
@@ -102,14 +98,13 @@ async function carregarRodovias(){
     seg.forEach(c=>L.polyline(c,{color:'#555',weight:3,opacity:.9})
                  .bindPopup(`<b>${rot}</b>`).addTo(grp));
     grp.addTo(mapa); rodOverlays[rot]=grp;
+    layerControl.addOverlay(grp,rot);
 
-    /* label rodovia */
     const mid=pts[Math.floor(pts.length/2)];
     rodLabels[rot]=L.marker([mid.lat,mid.lon],{
       icon:L.divIcon({className:'rod-label',html:rot,iconSize:null}),
       interactive:false
     }).addTo(mapa);
-    layerControl.addOverlay(grp,rot);            // só contorno vai pro painel
     layerControl.addOverlay(rodLabels[rot],rot+' (rótulo)');
   });
 }
@@ -160,10 +155,9 @@ function filtrarKm(){
   }
 }
 
-/* ---------- Util -------------------- */
+/* ---------- Util ------------------- */
 function dist(a,b,c,d){
   const R=6371000,q=Math.PI/180,p=(c-a)*q,u=(d-b)*q,
         h=Math.sin(p/2)**2+Math.cos(a*q)*Math.cos(c*q)*Math.sin(u/2)**2;
   return 2*R*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
 }
-const corAleatoria=()=>`hsl(${Math.random()*360},70%,60%)`;
