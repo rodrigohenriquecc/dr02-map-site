@@ -12,19 +12,15 @@ let   linhaRecorte = null;
 
 /* ---------- START ----------- */
 document.addEventListener('DOMContentLoaded', async () => {
-  /* mapa */
   mapa = L.map('map')
            .setView([-23.8,-48.5],8)
            .addLayer(L.tileLayer(
              'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
              { maxZoom:19, attribution:'&copy; OpenStreetMap' }));
 
-  /* painel (criado antes dos dados) */
-  const mobile = window.innerWidth <= 600;
-  layerControl = L.control.layers(null, {}, {
-    position:'topright', collapsed:mobile }).addTo(mapa);
+  layerControl = L.control.layers(null, {},
+    { position:'topright', collapsed:window.innerWidth<=600 }).addTo(mapa);
 
-  /* dados */
   await carregarRCs();
   await carregarRodovias();
 
@@ -35,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     L.featureGroup(Object.values({...rcOverlays,...rodOverlays})).getBounds());
 });
 
-/* ---------- RCs (contorno + label fixo) ------------------- */
+/* ---------- RCs -------------------------------------------------- */
 async function carregarRCs(){
   const files=[
     {n:'RC 2.1',f:'data/RC_2.1.zip'},
@@ -50,18 +46,16 @@ async function carregarRCs(){
       const geo=await shp(f);
       rcOverlays[n]=L.geoJSON(geo,{style:{color:'#000',weight:2.5,fill:false}})
                       .bindPopup(`<b>${n}</b>`).addTo(mapa);
-
       const centro=rcOverlays[n].getBounds().getCenter();
       rcLabels[n]=L.marker(centro,{
         icon:L.divIcon({className:'rc-label',html:n,iconSize:null}),
         interactive:false
       }).addTo(mapa);
-      /* rótulos RC não entram no layerControl */
     }catch(e){console.error('RC',f,e);}
   }
 }
 
-/* ---------- Rodovias + label fixo ------------------------- */
+/* ---------- RODOVIAS -------------------------------------------- */
 async function carregarRodovias(){
   const buf=await fetch('planilha.xlsx').then(r=>r.arrayBuffer());
   const wb = XLSX.read(buf,{type:'array'});
@@ -102,16 +96,14 @@ async function carregarRodovias(){
     const grp=L.featureGroup();
     seg.forEach(c=>L.polyline(c,{color:'#555',weight:3,opacity:.9})
                  .bindPopup(`<b>${rot}</b>`).addTo(grp));
-    grp.addTo(mapa);
-    rodOverlays[rot]=grp;
-    layerControl.addOverlay(grp,rot);        // só contorno no painel
+    grp.addTo(mapa); rodOverlays[rot]=grp;
+    layerControl.addOverlay(grp,rot);
 
-    /* label da rodovia */
     const mid=pts[Math.floor(pts.length/2)];
     rodLabels[rot]=L.marker([mid.lat,mid.lon],{
       icon:L.divIcon({className:'rod-label',html:rot,iconSize:null}),
       interactive:false
-    }).addTo(mapa);                           // não entra no painel
+    }).addTo(mapa);
   }
 }
 
