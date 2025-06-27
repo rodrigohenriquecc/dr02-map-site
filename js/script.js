@@ -1,30 +1,29 @@
 /* global L, XLSX, shp */
 
 /* ---------------- CONFIG ---------------- */
-const LIMITE_METROS = 2000;             // quebra polilinha se salto > 2 km
+const LIMITE_METROS = 2000;          // novo segmento se pular > 2 km
 
-/* ---------------- VARS ------------------ */
+/* ---------------- VARIÁVEIS ------------- */
 let mapa, layerControl;
-const rcOverlays   = {};                // RC → camada
-const rodOverlays  = {};                // Rodovia → camada
-const rodoviaDatas = {};                // dados para filtro Km
-let   camadaRecorte = null;             // polilinha vermelha (filtro Km)
+const rcOverlays   = {};             // RC → camada polígono
+const rcLabels     = {};             // RC → L.Marker (texto)
+const rodOverlays  = {};             // Rodovia → camada
+const rodoviaDatas = {};             // dados p/ filtro Km
+let   camadaRecorte=null;
 
-/* ---------------- START ----------------- */
-document.addEventListener('DOMContentLoaded', async () => {
-  mapa = L.map('map').setView([-23.8,-48.5],8)
-          .addLayer(L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-            maxZoom:19, attribution:'&copy; OpenStreetMap'
-          }));
+/* ---------------- INÍCIO ---------------- */
+document.addEventListener('DOMContentLoaded', async ()=>{
+  mapa=L.map('map').setView([-23.8,-48.5],8)
+       .addLayer(L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+         maxZoom:19,attribution:'&copy; OpenStreetMap'
+       }));
 
-  await carregarRCs();          // bordas pretas sem preenchimento
+  await carregarRCs();
   await carregarRodovias();
 
-  const isMobile = window.innerWidth <= 600;
-  layerControl   = L.control.layers(
-      null, {...rodOverlays, ...rcOverlays},
-      {position:'topright', collapsed:isMobile}
-  ).addTo(mapa);
+  const mobile=window.innerWidth<=600;
+  layerControl=L.control.layers(null,{...rodOverlays,...rcOverlays,...rcLabels},
+                 {position:'topright',collapsed:mobile}).addTo(mapa);
 
   aplicarMascaraRC();
   criarPainelRodovia();
@@ -33,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if(all.getLayers().length) mapa.fitBounds(all.getBounds());
 });
 
-/* -------- REGIÕES (RC) – sem fill & contorno preto -------- */
+/* ---------- RCs (contorno preto + label) ------------------ */
 async function carregarRCs(){
   const files=[
     {n:'RC 2.1',f:'data/RC_2.1.zip'},
@@ -46,14 +45,24 @@ async function carregarRCs(){
   for(const {n,f} of files){
     try{
       const geo=await shp(f);
+
+      /* polígono */
       rcOverlays[n]=L.geoJSON(geo,{
-        style:{color:'#000',weight:2.5,fill:false}      // <<< ajuste aqui
+        style:{color:'#000',weight:2.5,fill:false}
       }).bindPopup(`<b>${n}</b>`).addTo(mapa);
+
+      /* rótulo */
+      const center=rcOverlays[n].getBounds().getCenter();
+      rcLabels[n]=L.marker(center,{
+        icon:L.divIcon({className:'rc-label',html:n,iconSize:null}),
+        interactive:false
+      }).addTo(mapa);
+
     }catch(e){console.error('Erro RC',f,e);}
   }
 }
 
-/* -------- Rodovias (planilha) ------------------------------ */
+/* ---------- RODOVIAS (planilha) ---------------------------- */
 async function carregarRodovias(){
   const buf=await fetch('planilha.xlsx').then(r=>r.arrayBuffer());
   const wb = XLSX.read(buf,{type:'array'});
@@ -61,7 +70,7 @@ async function carregarRodovias(){
   if(!raw.length) return;
 
   const H=raw[0].map(s=>String(s).trim().toUpperCase()), idx=t=>H.indexOf(t);
-  let rc=idx('RC'), sp=idx('SP'), km=idx('KM'), lat=idx('LAT'), lon=idx('LON');
+  let rc=idx('RC'),sp=idx('SP'),km=idx('KM'),lat=idx('LAT'),lon=idx('LON');
   const latlon=idx('LAT,LON');
   if((lat===-1||lon===-1)&&latlon!==-1){
     H.splice(latlon,1,'LAT','LON');
@@ -85,7 +94,7 @@ async function carregarRodovias(){
     for(let i=0;i<pts.length;i++){
       if(i){
         const a=pts[i-1],b=pts[i];
-        if(dist(a.lat,a.lon,b.lat,b.lon)>LIMITE_METROS) seg.push([]);
+        if(dist(a,b)>LIMITE_METROS) seg.push([]);
       }
       seg.at(-1).push([pts[i].lat,pts[i].lon]);
     }
@@ -93,6 +102,7 @@ async function carregarRodovias(){
     const grp=L.featureGroup();
     seg.forEach(c=>L.polyline(c,{color:'#555',weight:3,opacity:.9})
                  .bindPopup(`<b>${rot}</b>`).addTo(grp));
+
     const i=pts[0],f=pts.at(-1);
     L.circleMarker([i.lat,i.lon],{radius:6,color:'#090',fillColor:'#0f0',fillOpacity:.9})
       .bindTooltip(`Início Km ${i.km}`,{direction:'top'}).addTo(grp);
@@ -104,7 +114,7 @@ async function carregarRodovias(){
   });
 }
 
-/* -------- Máscara área RC --------------------------------- */
+/* ---------- Máscara --------------------------------------- */
 function aplicarMascaraRC(){
   const g=L.featureGroup(Object.values(rcOverlays));
   if(!g.getLayers().length) return;
@@ -119,7 +129,7 @@ function aplicarMascaraRC(){
   layerControl.addOverlay(mask,'⛶ Área RC');
 }
 
-/* -------- Cartão filtros Km (≡) ---------------------------- */
+/* ---------- Cartão (≡) ------------------------------------ */
 function criarPainelRodovia(){
   const btn=L.DomUtil.create('button','toggle-btn',document.body);btn.textContent='≡';
   const card=L.DomUtil.create('div','rodovia-card',document.body);
@@ -134,7 +144,7 @@ function criarPainelRodovia(){
     document.getElementById(['selRod','kmIni','kmFim'][i]).addEventListener(ev,aplicarFiltroKm));
 }
 
-/* -------- Filtro Km --------------------------------------- */
+/* ---------- Filtro Km ------------------------------------- */
 function aplicarFiltroKm(){
   const rod=document.getElementById('selRod').value;
   const ki=parseFloat(document.getElementById('kmIni').value);
@@ -143,18 +153,18 @@ function aplicarFiltroKm(){
   if(rod && (!isNaN(ki)||!isNaN(kf))){
     const pts=rodoviaDatas[rod].filter(p=>(isNaN(ki)||p.km>=ki)&&(isNaN(kf)||p.km<=kf));
     if(pts.length){
-      camadaRecorte=L.polyline(pts.sort((a,b)=>a.km-b.km).map(p=>[p.lat,p.lon]),
+      camadaRecorte=L.polyline(
+        pts.sort((a,b)=>a.km-b.km).map(p=>[p.lat,p.lon]),
         {color:'#d00',weight:5,opacity:1}).addTo(mapa);
       mapa.fitBounds(camadaRecorte.getBounds(),{maxZoom:14});
     }
   }
 }
 
-/* -------- Util -------------------------------------------- */
+/* ---------- Util ------------------------------------------ */
 function dist(a,b,c,d){
-  const R=6371000,dg=Math.PI/180;
-  const p=(c-a)*dg,q=(d-b)*dg,
-        h=Math.sin(p/2)**2+Math.cos(a*dg)*Math.cos(c*dg)*Math.sin(q/2)**2;
+  const R=6371000,q=Math.PI/180,p=(c-a)*q,u=(d-b)*q,
+        h=Math.sin(p/2)**2+Math.cos(a*q)*Math.cos(c*q)*Math.sin(u/2)**2;
   return 2*R*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
 }
 const corAleatoria=()=>`hsl(${Math.random()*360},70%,60%)`;
