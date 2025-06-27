@@ -16,31 +16,45 @@
   <script src="https://cdn.jsdelivr.net/npm/shpjs@3.6.2/dist/shp.min.js"
           defer></script>
 
-  <!-- Estilos responsivos (inalterados) -->
   <style>
     html,body{height:100%;margin:0}
     #map{height:100%;min-height:100vh}
 
+    /* cartão de filtros (desktop) */
     .rodovia-card{
       position:absolute;left:10px;bottom:60px;z-index:1001;
       background:#fff;border-radius:8px;padding:10px 12px;min-width:180px;
-      max-width:260px;font-size:14px;line-height:1.3;box-shadow:0 2px 8px rgba(0,0,0,.15)
+      max-width:260px;font-size:14px;line-height:1.3;
+      box-shadow:0 2px 8px rgba(0,0,0,.15)
     }
     .rodovia-card label{display:block;font-weight:600;margin-bottom:4px}
     .rodovia-card input,.rodovia-card select{
       width:100%;border:1px solid #ccc;border-radius:4px;padding:4px;
       margin-bottom:6px;box-sizing:border-box
     }
+
+    /* botão ≡ */
     .toggle-btn{
       position:absolute;left:10px;bottom:10px;z-index:1002;
       width:34px;height:34px;border:none;border-radius:6px;font-size:22px;
-      font-weight:700;cursor:pointer;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25)
+      font-weight:700;cursor:pointer;background:#fff;
+      box-shadow:0 1px 4px rgba(0,0,0,.25)
     }
+
+    /* rótulo RC */
+    .rc-label{
+      font:600 14px/1 Arial, Helvetica, sans-serif;
+      color:#000;text-shadow:0 0 3px #fff,0 0 3px #fff;
+      pointer-events:none
+    }
+
+    /* ajustes mobile */
     @media (max-width:600px){
       .rodovia-card{left:50%;bottom:70px;transform:translateX(-50%);
                     width:90vw;max-width:90vw;font-size:15px}
       .toggle-btn {left:50%;bottom:16px;transform:translateX(-50%);
                    width:42px;height:42px;font-size:26px}
+      .rc-label   {font-size:12px}
     }
   </style>
 </head>
