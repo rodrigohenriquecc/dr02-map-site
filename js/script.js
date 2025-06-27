@@ -1,40 +1,39 @@
 /* global L, XLSX, shp */
 
-/* ---------------- CONFIG ---------------- */
+/* ---------- CONFIG ---------- */
 const LIMITE_METROS = 2000;
 
-/* ---------------- VARS ------------------ */
+/* ---------- VARS ------------ */
 let mapa, layerControl;
 const rcOverlays   = {};
 const rodOverlays  = {};
 const rodoviaDatas = {};
 let   camadaRecorte = null;
 
-/* ---------------- INÍCIO ---------------- */
+/* ---------- START ----------- */
 document.addEventListener('DOMContentLoaded', async () => {
   mapa = L.map('map').setView([-23.8,-48.5],8)
           .addLayer(L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-            maxZoom:19,attribution:'&copy; OpenStreetMap'
+            maxZoom:19, attribution:'&copy; OpenStreetMap'
           }));
 
   await carregarRCs();
   await carregarRodovias();
 
-  /* painel principal */
   const isMobile = window.innerWidth <= 600;
   layerControl   = L.control.layers(
       null, {...rodOverlays, ...rcOverlays},
-      {position:'topright',collapsed:isMobile}     // recolhido no celular
+      {position:'topright', collapsed:isMobile}
   ).addTo(mapa);
 
   aplicarMascaraRC();
   criarPainelRodovia();
 
   const all = L.featureGroup(Object.values({...rcOverlays, ...rodOverlays}));
-  if(all.getLayers().length) mapa.fitBounds(all.getBounds());
+  if (all.getLayers().length) mapa.fitBounds(all.getBounds());
 });
 
-/* ---------------- RCs ------------------- */
+/* ---------- RCs ------------- */
 async function carregarRCs(){
   const files=[
     {n:'RC 2.1',f:'data/RC_2.1.zip'},
@@ -54,23 +53,23 @@ async function carregarRCs(){
   }
 }
 
-/* ---------------- Rodovias ------------- */
+/* ---------- Rodovias -------- */
 async function carregarRodovias(){
   const buf=await fetch('planilha.xlsx').then(r=>r.arrayBuffer());
   const wb = XLSX.read(buf,{type:'array'});
   const raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,blankrows:false});
   if(!raw.length) return;
 
-  const H=raw[0].map(s=>String(s).trim().toUpperCase()), ix=t=>H.indexOf(t);
-  let rc=ix('RC'), sp=ix('SP'), km=ix('KM'), lat=ix('LAT'), lon=ix('LON');
-  const latlon=ix('LAT,LON');
+  const H=raw[0].map(s=>String(s).trim().toUpperCase()), idx=t=>H.indexOf(t);
+  let rc=idx('RC'), sp=idx('SP'), km=idx('KM'), lat=idx('LAT'), lon=idx('LON');
+  const latlon=idx('LAT,LON');
   if((lat===-1||lon===-1)&&latlon!==-1){
     H.splice(latlon,1,'LAT','LON');
     for(let i=1;i<raw.length;i++){
       const [la,lo]=String(raw[i][latlon]).split(/[,; ]+/);
       raw[i].splice(latlon,1,parseFloat(la),parseFloat(lo));
     }
-    lat=latlon;lon=latlon+1;
+    lat=latlon; lon=latlon+1;
   }
   if([rc,sp,km,lat,lon].includes(-1)){alert('Cabeçalhos ausentes');return;}
 
@@ -85,8 +84,8 @@ async function carregarRodovias(){
     const seg=[[]];
     for(let i=0;i<pts.length;i++){
       if(i){
-        const a=pts[i-1],b=pts[i];
-        if(dist(a,b)>LIMITE_METROS) seg.push([]);
+        const a=pts[i-1], b=pts[i];
+        if(distanciaMetros(a.lat,a.lon,b.lat,b.lon) > LIMITE_METROS) seg.push([]);
       }
       seg.at(-1).push([pts[i].lat,pts[i].lon]);
     }
@@ -105,7 +104,7 @@ async function carregarRodovias(){
   });
 }
 
-/* ---------------- Máscara área RC ---- */
+/* ---------- Máscara área RC ---- */
 function aplicarMascaraRC(){
   const g=L.featureGroup(Object.values(rcOverlays));
   if(!g.getLayers().length) return;
@@ -116,12 +115,11 @@ function aplicarMascaraRC(){
       [[-180,-90],[-180,90],[180,90],[180,-90],[-180,-90]],
       [[W,S],[W,N],[E,N],[E,S],[W,S]]
     ]}
-  },{stroke:false,fillColor:'#000',fillOpacity:.4,interactive:false})
-  .addTo(mapa);
+  },{stroke:false,fillColor:'#000',fillOpacity:.4,interactive:false}).addTo(mapa);
   layerControl.addOverlay(mask,'⛶ Área RC');
 }
 
-/* ---------------- Cartão filtros Km -- */
+/* ---------- Cartão (≡) -------- */
 function criarPainelRodovia(){
   const btn=L.DomUtil.create('button','toggle-btn',document.body); btn.textContent='≡';
   const card=L.DomUtil.create('div','rodovia-card',document.body);
@@ -136,13 +134,13 @@ function criarPainelRodovia(){
     document.getElementById(['selRod','kmIni','kmFim'][i]).addEventListener(ev,aplicarFiltroKm));
 }
 
-/* ---------------- Filtro Km --------- */
+/* ---------- Filtro Km -------- */
 function aplicarFiltroKm(){
   const rod=document.getElementById('selRod').value;
   const ki=parseFloat(document.getElementById('kmIni').value);
   const kf=parseFloat(document.getElementById('kmFim').value);
   if(camadaRecorte){mapa.removeLayer(camadaRecorte);camadaRecorte=null;}
-  if(rod&&(!isNaN(ki)||!isNaN(kf))){
+  if(rod && (!isNaN(ki)||!isNaN(kf))){
     const pts=rodoviaDatas[rod].filter(p=>(isNaN(ki)||p.km>=ki)&&(isNaN(kf)||p.km<=kf));
     if(pts.length){
       camadaRecorte=L.polyline(pts.sort((a,b)=>a.km-b.km).map(p=>[p.lat,p.lon]),
@@ -152,9 +150,8 @@ function aplicarFiltroKm(){
   }
 }
 
-/* ---------------- Util ------------- */
-const dist=(a,b)=>dist(a.lat,a.lon,b.lat,b.lon);
-function dist(lat1,lon1,lat2,lon2){
+/* ---------- Util ------------- */
+function distanciaMetros(lat1,lon1,lat2,lon2){
   const R=6371000,d=Math.PI/180;
   const p=(lat2-lat1)*d,q=(lon2-lon1)*d;
   const h=Math.sin(p/2)**2+Math.cos(lat1*d)*Math.cos(lat2*d)*Math.sin(q/2)**2;
