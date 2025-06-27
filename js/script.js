@@ -1,73 +1,88 @@
-/* global L, L_KMZ */
+/* global L, L_KMZ, shp */
 
-/* Lista de arquivos KMZ já presentes no diretório do site
-   └► coloque outros nomes aqui caso tenha mais rodovias                    */
-const KMZ_FILES = [
-  './data/SP_181_Separado.kmz',
-  './data/SP_250_Separado.kmz'
+/* -------------------------------------------------- */
+/*   ARQUIVOS LOCAIS                                  */
+/* -------------------------------------------------- */
+const RC_ZIPS = [
+  'data/RC_2.1.zip','data/RC_2.2.zip','data/RC_2.4.zip',
+  'data/RC_2.5.zip','data/RC_2.6_2.8.zip','data/RC_2.7.zip'
 ];
 
-/* ---------------------------------------------------------- */
-/*   INICIALIZA O MAPA                                        */
-/* ---------------------------------------------------------- */
-document.addEventListener('DOMContentLoaded', () => {
-  const mapa = L.map('map').setView([-23.8, -48.5], 7);
+const KMZ_FILES = [
+  'data/SP 181 Separado.kmz',
+  'data/SP 250 Separado.kmz'
+];
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom : 19,
-    attribution: '&copy; OpenStreetMap'
-  }).addTo(mapa);
+/* -------------------------------------------------- */
+/*   MAPA BASE                                        */
+/* -------------------------------------------------- */
+const mapa = L.map('map');
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  {maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(mapa);
 
-  /* painéis de camadas                                        */
-  const kmzGroup   = {};          // título do arquivo  → camada Leaflet
-  const labelGroup = {};          // título do arquivo  → L.marker rótulo
+const painel = L.control.layers(null,null,{collapsed:false}).addTo(mapa);
 
-  const painel = L.control.layers(null, null, {
-    position: 'topright', collapsed: false
-  }).addTo(mapa);
+/* grupos para calcular bounds quando tudo acabar      */
+const rcCamadas = {};
+const rodCamadas = {};
 
-  /* ---------------------------------------------------------- */
-  /*   CARREGA TODOS OS KMZ                                     */
-  /* ---------------------------------------------------------- */
-  KMZ_FILES.forEach(file => {
-    const layerKMZ = new L.KMZLayer(file);
+/* -------------------------------------------------- */
+/*   CARREGA RCS (shapefile .zip)                     */
+/* -------------------------------------------------- */
+Promise.all(RC_ZIPS.map(async zip=>{
+  try{
+    const geo = await shp(zip);
+    const nome = zip.match(/RC_[\d._]+/)[0].replace('_',' ');
+    const camada = L.geoJSON(geo,{
+      style:{color:'#000',weight:2.5,fill:false}
+    }).bindPopup(`<b>${nome}</b>`).addTo(mapa);
+    rcCamadas[nome]=camada;
+    painel.addOverlay(camada,`🗺️ ${nome}`);
 
-    layerKMZ.on('load', e => {
-      const camada = e.layer;                 // grupo já convertido
-      const titulo = file.split('/').pop().replace(/_/g,' ').replace(/\.kmz$/i,'');
+    /* rótulo no centro */
+    L.marker(camada.getBounds().getCenter(),{
+      icon:L.divIcon({className:'rc-label',html:nome,iconSize:null}),
+      interactive:false
+    }).addTo(mapa);
+  }catch(e){console.error('Erro lendo',zip,e);}
+})).then(reenquadrar);
 
-      /* Adiciona a camada principal (todas as polilinhas / pontos)         */
-      camada.addTo(mapa);
-      kmzGroup[titulo] = camada;
-      painel.addOverlay(camada, `📄 ${titulo}`);
+/* -------------------------------------------------- */
+/*   CARREGA KMZs                                     */
+/* -------------------------------------------------- */
+KMZ_FILES.forEach(arquivo=>{
+  const kmz = new L.KMZLayer(arquivo);
+  kmz.on('load',e=>{
+    const grupo = e.layer;
+    const titulo = arquivo.split('/').pop().replace('.kmz','');
+    grupo.addTo(mapa);
+    rodCamadas[titulo]=grupo;
+    painel.addOverlay(grupo,`📄 ${titulo}`);
 
-      /* Gera rótulos: um no centro de cada polilinha                      */
-      camada.eachLayer(l => {
-        if (l.getBounds && l.getBounds().isValid()) {
-          const c = l.getBounds().getCenter();
-          const sigla = /SP\s*\d+/i.exec(titulo) || ['Rodovia'];
-          const marker = L.marker(c, {
-            icon: L.divIcon({className:'kmz-label', html: sigla[0], iconSize:null}),
-            interactive: false
+    /* rótulos “SP 250” etc. */
+    grupo.eachLayer(l=>{
+      if(l.getBounds&&l.getBounds().isValid()){
+        const sigla = /SP\s*\d+/i.exec(titulo);
+        if(sigla){
+          L.marker(l.getBounds().getCenter(),{
+            icon:L.divIcon({className:'rod-label',html:sigla[0],iconSize:null}),
+            interactive:false
           }).addTo(mapa);
-          (labelGroup[titulo] ||= L.layerGroup()).addLayer(marker);
         }
-      });
-
-      /* Mostra rótulos como opção extra                                 */
-      if (labelGroup[titulo]) {
-        labelGroup[titulo].addTo(mapa);
-        painel.addOverlay(labelGroup[titulo], `🏷️ ${titulo} (rótulo)`);
-      }
-
-      /* Ajusta zoom global depois que todos os arquivos carregarem       */
-      if (Object.keys(kmzGroup).length === KMZ_FILES.length) {
-        const tudo = L.featureGroup(Object.values(kmzGroup));
-        mapa.fitBounds(tudo.getBounds());
       }
     });
 
-    /* Inicia download do KMZ                                            */
-    layerKMZ.addTo(mapa);
+    reenquadrar();              // se todas as entradas já chegaram
   });
+  kmz.addTo(mapa);              // inicia download
 });
+
+/* -------------------------------------------------- */
+/*   AJUSTA ZOOM APENAS QUANDO JÁ TEMOS ALGUMA COISA  */
+/* -------------------------------------------------- */
+function reenquadrar(){
+  const todas = {...rcCamadas,...rodCamadas};
+  if(Object.keys(todas).length===0) return;
+  const bounds = L.featureGroup(Object.values(todas)).getBounds();
+  if(bounds.isValid()) mapa.fitBounds(bounds);
+}
