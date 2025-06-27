@@ -64,7 +64,7 @@ async function carregarRodovias(){
   if(!raw.length) return;
 
   const H=raw[0].map(s=>String(s).trim().toUpperCase()), idx=h=>H.indexOf(h);
-  let sp=idx('SP'), km=idx('KM'), la=idx('LAT'), lo=idx('LON');
+  let rc=idx('RC'), sp=idx('SP'), km=idx('KM'), la=idx('LAT'), lo=idx('LON');
   const latlon=idx('LAT,LON');
   if((la===-1||lo===-1)&&latlon!==-1){
     H.splice(latlon,1,'LAT','LON');
@@ -74,21 +74,25 @@ async function carregarRodovias(){
     }
     la=latlon; lo=latlon+1;
   }
-  if([sp,km,la,lo].includes(-1)){alert('Cabeçalhos SP, KM, LAT, LON ausentes');return;}
+  if([rc,sp,km,la,lo].includes(-1)){alert('Cabeçalhos ausentes');return;}
 
-  /* ---- agrupa por rodovia (apenas SP) ---- */
+  /* ---- agrupa por rodovia (chave completa) ---- */
   raw.slice(1).forEach(r=>{
-    const rot=String(r[sp]).trim();           // <<< AGORA SÓ “SP 250”, p.ex.
-    (rodoviaDados[rot]??=[]).push({km:+r[km],lat:+r[la],lon:+r[lo]});
+    const rotCompleto=`${r[rc]} | ${r[sp]}`.trim();   // painel / dados
+    (rodoviaDados[rotCompleto]??=[]).push({
+      km:+r[km], lat:+r[la], lon:+r[lo],
+      rodSigla:String(r[sp]).trim()                   // só “SP 250”
+    });
   });
 
-  for(const [rot,pts] of Object.entries(rodoviaDados)){
+  /* ---- desenha cada rodovia ---- */
+  for(const [rotCompleto,pts] of Object.entries(rodoviaDados)){
     pts.sort((a,b)=>a.km-b.km);
 
     const seg=[[]];
     for(let i=0;i<pts.length;i++){
       if(i){
-        const a=pts[i-1],b=pts[i];
+        const a=pts[i-1], b=pts[i];
         if(dist(a.lat,a.lon,b.lat,b.lon)>LIMITE_METROS) seg.push([]);
       }
       seg.at(-1).push([pts[i].lat,pts[i].lon]);
@@ -96,15 +100,17 @@ async function carregarRodovias(){
 
     const grp=L.featureGroup();
     seg.forEach(c=>L.polyline(c,{color:'#555',weight:3,opacity:.9})
-                 .bindPopup(`<b>${rot}</b>`).addTo(grp));
-    grp.addTo(mapa); rodOverlays[rot]=grp;
-    layerControl.addOverlay(grp,rot);         // continua filtrável
+                 .bindPopup(`<b>${rotCompleto}</b>`).addTo(grp));
+    grp.addTo(mapa); rodOverlays[rotCompleto]=grp;
+    layerControl.addOverlay(grp,rotCompleto);      // aparece no filtro
 
-    const mid=pts[Math.floor(pts.length/2)];
-    rodLabels[rot]=L.marker([mid.lat,mid.lon],{
-      icon:L.divIcon({className:'rod-label',html:rot,iconSize:null}),
+    /* rótulo com apenas a sigla rodoviária */
+    const mid = pts[Math.floor(pts.length/2)];
+    const sig = pts[0].rodSigla;                   // mesmo para toda a rodovia
+    rodLabels[rotCompleto]=L.marker([mid.lat,mid.lon],{
+      icon:L.divIcon({className:'rod-label',html:sig,iconSize:null}),
       interactive:false
-    }).addTo(mapa);                            // rótulo fixo (não filtrável)
+    }).addTo(mapa);                                // não filtrável
   }
 }
 
