@@ -4,14 +4,14 @@
 let db = null, col = null, online = false;
 try {
   // ⚠️ Cole aqui suas chaves reais:
-  const firebaseConfig = {
-    apiKey:            "SUA_API_KEY",
-    authDomain:        "SEU_PROJETO.firebaseapp.com",
-    projectId:         "SEU_PROJETO",
-    storageBucket:     "SEU_PROJETO.appspot.com",
-    messagingSenderId: "SENDER_ID",
-    appId:             "APP_ID"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyC3cndupgSd9EayJP6edzQcrYBgZMG8F2s",
+  authDomain: "consorciolh-8b5bc.firebaseapp.com",
+  projectId: "consorciolh-8b5bc",
+  storageBucket: "consorciolh-8b5bc.firebasestorage.app",
+  messagingSenderId: "128910789036",
+  appId: "1:128910789036:web:d0c0b945f0bcd8ab2b1209"
+};
   firebase.initializeApp(firebaseConfig);
   db   = firebase.firestore();
   col  = db.collection("pontos");
