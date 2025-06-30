@@ -6,12 +6,12 @@ import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gsta
 /* ───── 0. Firebase config  ───── */
 /* preencha com as chaves do seu projeto */
 const firebaseConfig = {
-  apiKey:            "API_KEY",
-  authDomain:        "PROJECT.firebaseapp.com",
-  projectId:         "PROJECT",
-  storageBucket:     "PROJECT.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId:             "APP_ID"
+  apiKey: "AIzaSyC3cndupgSd9EayJP6edzQcrYBgZMG8F2s",
+  authDomain: "consorciolh-8b5bc.firebaseapp.com",
+  projectId: "consorciolh-8b5bc",
+  storageBucket: "consorciolh-8b5bc.firebasestorage.app",
+  messagingSenderId: "128910789036",
+  appId: "1:128910789036:web:d0c0b945f0bcd8ab2b1209"
 };
 const app   = initializeApp(firebaseConfig);
 const db    = getFirestore(app);
