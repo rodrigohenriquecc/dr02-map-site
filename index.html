@@ -16,20 +16,13 @@
   <script src="https://cdn.jsdelivr.net/npm/shpjs@3.6.2/dist/shp.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" defer></script>
 
-  <!-- Firebase v9 (modular) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" defer></script>
+  <!-- Firebase v9 *compat* (objeto global firebase) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" defer></script>
 
   <style>
     html,body,#map{height:100%;margin:0}
-    /* … estilos do botão ≡, + e painel kmCard mantidos … */
-    #btnSave{
-      position:absolute;bottom:80px;left:16px;z-index:650;
-      width:48px;height:48px;border:none;border-radius:50%;
-      background:#4caf50;color:#fff;font-size:22px;line-height:48px;
-      box-shadow:0 2px 6px #0004;cursor:pointer}
-    #btnSave:active{transform:scale(.92)}
-    @media(max-width:600px){#btnSave{bottom:80px}}
+    /* … estilos iguais aos da resposta anterior … */
   </style>
 </head>
 <body>
@@ -37,11 +30,11 @@
 
   <!-- botões -->
   <button id="btnToggle">≡</button>
-  <button id="btnCSV"   title="Importar CSV">+</button>
-  <button id="btnSave"  title="Salvar pontos">💾</button>
+  <button id="btnCSV"  title="Importar CSV">+</button>
+  <button id="btnSave" title="Salvar pontos">💾</button>
   <input  id="csvInput" type="file" accept=".csv" style="display:none"/>
 
-  <!-- painel localizar Km (igual) -->
+  <!-- painel localizar KM (mesmo HTML) -->
   <div id="kmCard"> … </div>
 
   <script src="js/script.js" defer></script>
