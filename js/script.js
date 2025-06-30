@@ -1,63 +1,74 @@
 /* global L, JSZip, shp, turf, Papa, firebase */
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-/* ───── 0. Firebase config  ───── */
-/* preencha com as chaves do seu projeto */
+/* ---------- 0. Firebase (compat) ---------- */
 const firebaseConfig = {
-  apiKey: "AIzaSyC3cndupgSd9EayJP6edzQcrYBgZMG8F2s",
-  authDomain: "consorciolh-8b5bc.firebaseapp.com",
-  projectId: "consorciolh-8b5bc",
-  storageBucket: "consorciolh-8b5bc.firebasestorage.app",
-  messagingSenderId: "128910789036",
-  appId: "1:128910789036:web:d0c0b945f0bcd8ab2b1209"
+  apiKey:            "SUA_API_KEY",
+  authDomain:        "SEU_PROJETO.firebaseapp.com",
+  projectId:         "SEU_PROJETO",
+  storageBucket:     "SEU_PROJETO.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId:             "APP_ID"
 };
-const app   = initializeApp(firebaseConfig);
-const db    = getFirestore(app);
-const colPt = collection(db, "pontos");
+firebase.initializeApp(firebaseConfig);
+const db  = firebase.firestore();
+const col = db.collection("pontos");
 
-/* ───── 1. listas RC / KMZ (mesmo conteúdo) ───── */
+/* ---------- 1. Listas RC / KMZ ---------- */
 const RC_ZIPS = [/* … */];
 const KMZ_FILES = [/* … */];
 
-/* ───── 2. meta-dados, mapa, UI  (idênticos ao último script) ───── */
-const metaRod={}, rcLayers={}, rodLayers={}, pontosLayer=L.layerGroup();
- /* ... todo o código que já existia ... */
+/* ---------- 2. Meta, mapa, UI (mesmo código) ---------- */
+const metaRod={}, rcLayers={}, rodLayers={}, pontosLayer=L.layerGroup().addTo(mapa);
+// ... todo o código de mapa, painéis, CSV e localização KM permanece ...
 
-/* ───── 3. CSV p/ pontos  (funções addPontoLinha & processCSV mantidas) ───── */
-
-/* ───── 4. ↘ carregar pontos salvos no Firestore ao iniciar ───── */
-getDocs(colPt).then(q=>{
-  q.forEach(d=>{
-    addPontoLinha(d.data());             // estrutura já bate com função
-  });
+/* ---------- 3. Carregar pontos existentes ---------- */
+col.get().then(snap=>{
+  snap.forEach(doc=>addPontoLinha(doc.data()));
   if(Object.keys(pontosLayer._layers).length)
     mapa.fitBounds(pontosLayer.getBounds());
 });
 
-/* ───── 5. salvar pontos atuais no Firestore  ───── */
+/* ---------- 4. Salvar pontos ---------- */
 document.getElementById('btnSave').onclick = async ()=>{
-  /* sobrescreve coleção inteira (até 500 docs gratuitos) */
   const pts = Object.values(pontosLayer._layers);
   if(!pts.length){ alert('Nenhum ponto para salvar'); return; }
 
-  /* remove tudo e grava de novo */
-  const snap = await getDocs(colPt);
-  await Promise.all(snap.docs.map(d=>firebase.firestore().deleteDoc(d.ref)));
+  /* apaga coleção e regrava */
+  const snap = await col.get();
+  const batchDel = db.batch();
+  snap.forEach(d=>batchDel.delete(d.ref));
+  await batchDel.commit();
 
-  await Promise.all(pts.map((m,i)=>{
-    const d=m.getLatLng();
-    const data={
-      Rodovia : m.options.title.split('|')[0],
-      KM      : m.options.title.split('|')[1],
-      Obs     : m.getPopup().getContent().split('<br>')[1],
-      Cor     : m.options.color,
-      Raio    : m.options.radius,
-      LAT     : d.lat,
-      LON     : d.lng
-    };
-    return setDoc(doc(colPt,String(i)), data);
-  }));
+  const batchAdd = db.batch();
+  pts.forEach((m,i)=>{
+    const meta = m.options.meta;              // guardado na criação
+    batchAdd.set(col.doc(String(i)), meta);
+  });
+  await batchAdd.commit();
   alert('Pontos salvos!');
 };
+
+/* ---------- 5. CSV -> pontos ---------- */
+function addPontoLinha(l){
+  const {Rodovia,KM,Obs,Cor,Raio} = l;
+  const lyr = rodLayers[Rodovia];
+  if(!lyr) return;
+
+  const kmVal=parseFloat(KM), meta=metaRod[Rodovia];
+  if(!meta||isNaN(kmVal)||kmVal<meta.kmIni||kmVal>meta.kmFim) return;
+
+  const line = lyr.toGeoJSON().features.find(f=>f.geometry.type==='LineString');
+  const pt   = turf.along(line, kmVal-meta.kmIni, {units:'kilometers'});
+  const [lon,lat]=pt.geometry.coordinates;
+
+  const marker = L.circleMarker([lat,lon],{
+    radius: parseFloat(Raio)||6,
+    color:  Cor||'#1976d2', weight:2,
+    fillColor: Cor||'#1976d2', fillOpacity:1
+  }).bindPopup(`<b>${Rodovia}</b> Km ${KM}<br>${Obs||''}`)
+    .addTo(pontosLayer);
+
+  /* guarda meta para salvar depois */
+  marker.options.meta = {Rodovia,KM,Obs,Cor,Raio};
+}
+/* resto do código (processCSV, drag-and-drop, kmlToGeoJSON, etc.) permanece igual */
