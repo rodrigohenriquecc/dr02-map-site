@@ -82,7 +82,7 @@ async function carregarData() {
     try {
       const geo  = await shp(zip);
       const nome = zip.match(/RC_[\d._]+/)[0].replace("_", " ");
-      const lyr  = L.geoJSON(geo, {style: {color:"#000", weight:2.5, fill:false}})
+      const lyr  = L.geoJSON(geo, {style: {color: "#000", weight: 2.5, fill: false}})
                      .addTo(mapa);
       rcLayers[nome] = lyr;
       addLabel(lyr.getBounds().getCenter(), nome, "rc-label");
@@ -91,7 +91,7 @@ async function carregarData() {
     }
   }
 
-  // 2.2 Rodovias dinamicamente via metaRod keys
+  // 2.2 Rodovias via metaRod keys
   for (const id of Object.keys(metaRod)) {
     const path = `data/${id}.kmz`;
     try {
@@ -99,16 +99,18 @@ async function carregarData() {
       if (!resp.ok) { console.warn("KMZ não encontrado:", path); continue; }
       const buf = await resp.arrayBuffer();
       const zip = await JSZip.loadAsync(buf);
-      const kml = Object.keys(zip.files).find(n => n.toLowerCase().endsWith(".kml"));
+      const kml = Object.keys(zip.files)
+                      .find(n => n.toLowerCase().endsWith(".kml"));
       if (!kml) { console.warn("KMZ sem KML:", path); continue; }
       const txt = await zip.file(kml).async("string");
       const geo = kmlToGeoJSON(txt);
       const lyr = L.geoJSON(geo, {
-        style: {color:"#555", weight:3, opacity:0.9},
+        style: {color: "#555", weight: 3, opacity: 0.9},
         filter: f => f.geometry.type === "LineString"
       }).addTo(mapa);
       rodLayers[id] = lyr;
-      addLabel(lyr.getBounds().getCenter(), id, "rod-label");
+      const label = id.includes('_') ? id.split('_')[1] : id;
+      addLabel(lyr.getBounds().getCenter(), label, "rod-label");
     } catch(e) {
       console.error("KMZ", path, e);
     }
@@ -121,13 +123,11 @@ async function carregarData() {
 
 // ─── 3. Monta UI & handlers ─────────────────────────────────────
 function initUI() {
-  // KM panel
   const kmCard = document.getElementById("kmCard");
   if (!isMobile) kmCard.style.display = "block";
   document.getElementById("btnToggle").onclick = () =>
     kmCard.style.display = (kmCard.style.display === "block" ? "none" : "block");
 
-  // upload menu
   const menu = document.getElementById("uploadMenu");
   document.getElementById("btnCSV").onclick = () =>
     menu.style.display = (menu.style.display === "block" ? "none" : "block");
@@ -143,7 +143,6 @@ function initUI() {
     };
   });
 
-  // file inputs
   document.getElementById("csvPointsInput").onchange = e =>
     e.target.files[0] && processPointsCSV(e.target.files[0]);
   document.getElementById("csvHeatInput").onchange   = e =>
@@ -151,7 +150,6 @@ function initUI() {
   document.getElementById("csvLineInput").onchange   = e =>
     e.target.files[0] && processLineCSV(e.target.files[0]);
 
-  // KM locator
   const sel = document.getElementById("selRod");
   sel.innerHTML = '<option value="">(selecione)</option>' +
     Object.keys(rodLayers).sort().map(r => `<option>${r}</option>`).join("");
@@ -162,7 +160,6 @@ function initUI() {
   };
   document.getElementById("btnKm").onclick = localizarKm;
 
-  // save points
   document.getElementById("btnSave").onclick = salvarFirestore;
 }
 
@@ -243,10 +240,7 @@ function processLineCSV(file) {
         const p1   = turf.along(line, rel1, {units:"kilometers"});
         const slice= turf.lineSlice(p0, p1, line);
         L.geoJSON(slice, {
-          style: {
-            color: r.Cor || "#f00",
-            weight: parseFloat(r.Espessura) || 4
-          }
+          style: { color: r.Cor || "#f00", weight: parseFloat(r.Espessura) || 4 }
         }).bindPopup(`<b>${r.Rodovia}</b><br>Km ${km0}–${km1}<br>${r.Obs||""}`)
           .addTo(grp);
       });
@@ -264,60 +258,4 @@ function localizarKm() {
   if (!rod || isNaN(km) || !meta || km < meta.kmIni || km > meta.kmFim) {
     return alert("Informe rodovia válida e Km dentro do intervalo.");
   }
-  const line = rodLayers[rod].toGeoJSON().features.find(f => f.geometry.type==="LineString");
-  const pt   = turf.along(line, km - meta.kmIni, {units:"kilometers"});
-  const [lon, lat] = pt.geometry.coordinates;
-  L.popup().setLatLng([lat, lon])
-           .setContent(`<b>${rod}</b><br>KM ${km.toFixed(3)}`)
-           .openOn(mapa);
-  mapa.setView([lat, lon], 15);
-}
-
-// ─── 8. Firestore load & save ─────────────────────────────────
-function carregarFirestore() {
-  col.get().then(snap => {
-    snap.forEach(d => addPonto(d.data()));
-    zoomGlobal();
-  }).catch(e => console.warn("Firestore off-line:", e.message));
-}
-
-async function salvarFirestore() {
-  if (!online) {
-    return alert("Firestore off-line ou não configurado.");
-  }
-  const pts = Object.values(pontosLayer._layers);
-  if (!pts.length) {
-    return alert("Nenhum ponto para salvar.");
-  }
-  try {
-    const snap = await col.get();
-    const bd   = db.batch();
-    snap.forEach(d => bd.delete(d.ref));
-    await bd.commit();
-    const ba   = db.batch();
-    pts.forEach((m,i) => ba.set(col.doc(String(i)), m.options.meta));
-    await ba.commit();
-    alert("✅ Dados salvos com sucesso!");
-  } catch(e) {
-    console.error(e);
-    alert("Erro ao salvar. Verifique domínio e regras Firestore.");
-  }
-}
-
-// ─── 9. KML → GeoJSON helper ───────────────────────────────────
-function kmlToGeoJSON(txt) {
-  const dom = new DOMParser().parseFromString(txt, "text/xml");
-  const feats = [];
-  [...dom.getElementsByTagName("Placemark")].forEach(pm => {
-    const line = pm.getElementsByTagName("LineString")[0];
-    if (line) {
-      const coords = line.getElementsByTagName("coordinates")[0].textContent
-        .trim().split(/\s+/).map(s => s.split(",").map(Number).slice(0,2));
-      if (coords.length>1) feats.push({
-        type: "Feature",
-        geometry: {type: "LineString", coordinates: coords}
-      });
-    }
-  });
-  return {type:"FeatureCollection", features: feats};
-}
+  const line = rodLayers[rod].toGeoJSON().features.find(f => f.geometry.type===\
