@@ -5,14 +5,16 @@
   <title>DR-02 • Rodovias + KM</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-  <!-- favicon invisível (remove 404) -->
+  <!-- favicon invisível -->
   <link rel="icon" href="data:;,">
 
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <!-- Heat plugin -->
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js" defer></script>
 
-  <!-- libs: JSZip, Turf, shp.js, PapaParse -->
+  <!-- libs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7.2.0/turf.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/shpjs@3.6.2/dist/shp.min.js" defer></script>
@@ -24,22 +26,28 @@
 
   <style>
     html,body,#map{height:100%;margin:0}
-    .rc-label{font:600 14px/1 Arial;color:#000;text-shadow:0 0 3px #fff;pointer-events:none}
-    .rod-label{font:700 11px/1 Arial;background:#fff;padding:2px 4px;border-radius:3px;
+    .rc-label{font:600 14px Arial;color:#000;text-shadow:0 0 3px #fff;pointer-events:none}
+    .rod-label{font:700 11px Arial;background:#fff;padding:2px 4px;border-radius:3px;
                box-shadow:0 0 2px #0003;pointer-events:none}
     .fab{position:absolute;z-index:650;width:48px;height:48px;border:none;border-radius:50%;
          box-shadow:0 2px 6px #0004;color:#fff;font-size:26px;line-height:48px;cursor:pointer}
     #btnToggle{bottom:16px;right:16px;background:#1976d2}
     #btnCSV   {bottom:16px;left:16px;background:#ff5722;font-size:28px}
+    #uploadMenu{position:absolute;left:16px;bottom:72px;z-index:660;
+                background:#fff;padding:8px;border-radius:6px;
+                box-shadow:0 2px 6px #0004;display:none}
+    #uploadMenu button{display:block;width:100%;margin:4px 0;padding:6px}
     #btnSave  {bottom:80px;left:16px;background:#4caf50;font-size:22px}
     .fab:active{transform:scale(.9)}
-    #kmCard{position:absolute;bottom:76px;right:16px;z-index:640;background:#fff;
+
+    #kmCard{position:absolute;bottom:76px;right:16px;z-index:641;background:#fff;
             padding:10px 12px;border-radius:8px;box-shadow:0 2px 6px #0004;
             font:14px Arial;width:260px}
     #kmCard label{display:block;margin-top:6px;font-weight:600}
     #kmCard input,#kmCard select{width:100%;padding:4px;margin-top:2px}
     #kmCard button{margin-top:8px;padding:4px 8px;width:100%}
     #infoKm{margin-top:4px;color:#555;font-size:13px}
+
     @media(max-width:600px){
       .rc-label{font-size:12px}.rod-label{font-size:10px}
       #kmCard{display:none;width:90%;left:5%;right:5%;bottom:70px}
@@ -49,13 +57,24 @@
 <body>
   <div id="map"></div>
 
-  <!-- botões flutuantes -->
+  <!-- floating buttons -->
   <button id="btnToggle" class="fab">≡</button>
   <button id="btnCSV"    class="fab" title="Importar CSV">+</button>
   <button id="btnSave"   class="fab" title="Salvar pontos">💾</button>
-  <input  id="csvInput"  type="file" accept=".csv" style="display:none"/>
 
-  <!-- painel localizar KM -->
+  <!-- menu de escolha de importação -->
+  <div id="uploadMenu">
+    <button data-mode="points">Pontos de interesse</button>
+    <button data-mode="heatmap">Mapa de Calor</button>
+    <button data-mode="line">Linhas por trecho</button>
+  </div>
+
+  <!-- hidden inputs -->
+  <input id="csvPointsInput" type="file" accept=".csv" style="display:none"/>
+  <input id="csvHeatInput"   type="file" accept=".csv" style="display:none"/>
+  <input id="csvLineInput"   type="file" accept=".csv" style="display:none"/>
+
+  <!-- localizar KM panel -->
   <div id="kmCard">
     <label>Rodovia:</label>
     <select id="selRod"><option value="">(carregando…)</option></select>
