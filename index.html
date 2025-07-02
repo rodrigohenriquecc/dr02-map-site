@@ -33,12 +33,14 @@
          box-shadow:0 2px 6px #0004;color:#fff;font-size:26px;line-height:48px;cursor:pointer}
     #btnToggle{bottom:16px;right:16px;background:#1976d2}
     #btnCSV   {bottom:16px;left:16px;background:#ff5722;font-size:28px}
+    #btnSave  {bottom:80px;left:16px;background:#4caf50;font-size:22px}
+    .fab:active{transform:scale(.9)}
+
     #uploadMenu{position:absolute;left:16px;bottom:72px;z-index:660;
                 background:#fff;padding:8px;border-radius:6px;
                 box-shadow:0 2px 6px #0004;display:none}
     #uploadMenu button{display:block;width:100%;margin:4px 0;padding:6px}
-    #btnSave  {bottom:80px;left:16px;background:#4caf50;font-size:22px}
-    .fab:active{transform:scale(.9)}
+    #uploadMenu hr{margin:8px 0;border:none;border-top:1px solid #ccc}
 
     #kmCard{position:absolute;bottom:76px;right:16px;z-index:641;background:#fff;
             padding:10px 12px;border-radius:8px;box-shadow:0 2px 6px #0004;
@@ -62,14 +64,18 @@
   <button id="btnCSV"    class="fab" title="Importar CSV">+</button>
   <button id="btnSave"   class="fab" title="Salvar pontos">💾</button>
 
-  <!-- menu de escolha de importação -->
+  <!-- menu de escolha de importação/limpeza -->
   <div id="uploadMenu">
     <button data-mode="points">Pontos de interesse</button>
     <button data-mode="heatmap">Mapa de Calor</button>
     <button data-mode="line">Linhas por trecho</button>
+    <hr/>
+    <button id="btnClearPoints">Limpar Pontos</button>
+    <button id="btnClearHeatmap">Limpar Heatmap</button>
+    <button id="btnClearLines">Limpar Linhas</button>
   </div>
 
-  <!-- hidden inputs -->
+  <!-- inputs ocultos -->
   <input id="csvPointsInput" type="file" accept=".csv" style="display:none"/>
   <input id="csvHeatInput"   type="file" accept=".csv" style="display:none"/>
   <input id="csvLineInput"   type="file" accept=".csv" style="display:none"/>
