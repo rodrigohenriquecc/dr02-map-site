@@ -1,116 +1,77 @@
-**index.html**
-
-```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mapa DR02</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <meta charset="utf-8"/>
+  <title>DR-02 • Rodovias + KM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <!-- Heatmap -->
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js" defer></script>
+  <!-- JSZip, shp.js, Turf -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/shpjs@3.6.2/dist/shp.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7.2.0/turf.min.js" defer></script>
+  <!-- PapaParse & SheetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+  <!-- Firebase compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" defer></script>
+
   <style>
-    #map { height: 100vh; }
-    #controls { position: absolute; top: 10px; left: 10px; z-index: 1000; display: flex; gap: 5px; }
-    #uploadMenu { position: absolute; top: 50px; left: 10px; background: white; padding: 5px; border: 1px solid #ccc; display: none; z-index: 1000; }
-    #uploadMenu button { display: block; margin-bottom: 5px; width: 160px; }
-    #selRod { padding: 4px; }
+    html, body, #map { height:100%; margin:0; padding:0 }
+    .fab {
+      position:absolute; width:48px; height:48px;
+      border:none; border-radius:50%;
+      color:#fff; font-size:28px; line-height:48px;
+      text-align:center; cursor:pointer;
+      box-shadow:0 2px 6px rgba(0,0,0,0.3);
+      z-index:700;
+    }
+    #btnCSV { bottom:16px; left:16px; background:#ff5722 }
+    #selRod {
+      position:absolute; top:16px; right:16px;
+      z-index:700; padding:4px 8px; font-size:14px;
+    }
+    #uploadMenu {
+      position:absolute; left:16px; bottom:72px;
+      z-index:700; background:#fff; border-radius:6px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.3);
+      display:none; padding:8px;
+    }
+    #uploadMenu button {
+      display:block; width:100%; margin:4px 0; padding:6px;
+      font-size:14px;
+    }
   </style>
 </head>
 <body>
-  <div id="controls">
-    <button id="btnCSV" title="Adicionar Dados">➕</button>
-    <select id="selRod" title="Filtrar Rodovia">
-      <option value="">Todas Rodovias</option>
-    </select>
-  </div>
+
+  <div id="map"></div>
+
+  <!-- botão + para importar -->
+  <button id="btnCSV" class="fab" title="Importar dados">＋</button>
+  <!-- filtro de rodovias -->
+  <select id="selRod"><option value="">(todas)</option></select>
+
+  <!-- menu de upload -->
   <div id="uploadMenu">
     <button data-mode="points">Pontos de interesse</button>
     <button data-mode="heatmap">Mapa de calor</button>
     <button data-mode="line">Linhas por trecho</button>
   </div>
 
-  <input type="file" id="csvPointsInput" accept=".xlsx,.csv" style="display:none" />
-  <input type="file" id="csvHeatInput"   accept=".xlsx,.csv" style="display:none" />
-  <input type="file" id="csvLineInput"   accept=".xlsx,.csv" style="display:none" />
+  <!-- inputs ocultos -->
+  <input id="csvPointsInput" type="file" accept=".xlsx,.xls" style="display:none"/>
+  <input id="csvHeatInput"   type="file" accept=".xlsx,.xls" style="display:none"/>
+  <input id="csvLineInput"   type="file" accept=".xlsx,.xls" style="display:none"/>
 
-  <div id="map"></div>
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.2.2/jszip.min.js"></script>
-  <script src="https://unpkg.com/shpjs@latest/dist/shp.min.js"></script>
-  <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.1/papaparse.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
-  <script src="js/script.js"></script>
+  <script src="js/script.js" defer></script>
 </body>
 </html>
-```
-
----
-
-**script.js**
-
-```js
-/* global L, JSZip, shp, turf, XLSX, Papa, firebase */
-
-// 0) Firebase compat
-let db=null,col=null,online=false;
-try{
-  const firebaseConfig={
-    apiKey:"...",
-    authDomain:"...",
-    projectId:"...",
-    storageBucket:"...",
-    messagingSenderId:"...",
-    appId:"..."
-  };
-  firebase.initializeApp(firebaseConfig);
-  db=firebase.firestore(); col=db.collection("pontos"); online=true;
-}catch(e){console.warn("Firestore off-line",e);}
-
-// 1) Mapa e Panes
-const isMobile=matchMedia("(max-width:600px)").matches;
-const mapa=L.map("map").setView([-23.8,-48.5],7);
-mapa.createPane("shapefilePane"); mapa.getPane("shapefilePane").style.zIndex=400;
-mapa.createPane("rodoviasPane"); mapa.getPane("rodoviasPane").style.zIndex=450;
-mapa.createPane("overlayPane"); mapa.getPane("overlayPane").style.zIndex=500;
-
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OSM"}).addTo(mapa);
-L.control.layers(null,null,{collapsed:isMobile}).addTo(mapa);
-
-// 2) Globais/Helpers
-const metaRod={},rcLayers={},rodLayers={},pontosLayer=L.layerGroup([],{pane:"overlayPane"}).addTo(mapa);
-let heatLayer=null,lineLayer=null;
-function addLabel(latlng,text,cls){L.marker(latlng,{pane:"overlayPane",icon:L.divIcon({className:cls,html:text}),interactive:false}).addTo(mapa);}
-function zoomGlobal(){const all=[...Object.values(rcLayers),...Object.values(rodLayers),...pontosLayer.getLayers()];const b=L.featureGroup(all).getBounds();if(b.isValid())mapa.fitBounds(b);}
-
-// 3) Carrega metaRod
-Papa.parse("https://docs.google.com/.../output=csv",{download:true,header:true,skipEmptyLines:true,
-  complete:({data})=>{data.forEach(r=>{const kmI=parseFloat(r.kmIni.replace(",",".")),kmF=parseFloat(r.kmFim.replace(",","."));const [iLa,iLo]=r.LatLonIni.split(",").map(Number),[fLa,fLo]=r.LatLonFim.split(",").map(Number);metaRod[r.id]={kmIni:kmI,iniLat:iLa,iniLon:iLo,kmFim:kmF,fimLat:fLa,fimLon:fLo};});carregarData();}
-});
-
-// 4) Carrega RC e KMZ
-async function carregarData(){
-  const rcZips=["data/RC_2.1.zip","data/RC_2.2.zip","data/RC_2.4.zip","data/RC_2.5.zip","data/RC_2.6_2.8.zip","data/RC_2.7.zip"];
-  for(const p of rcZips){try{const geo=await shp(p);const name=p.match(/RC_[\d._]+/)[0].replace("_"," ");L.geoJSON(geo,{pane:"shapefilePane",style:{color:"#000",weight:2.5,fill:false}}).addTo(mapa);rcLayers[name]=true;}catch{} }
-  for(const id in metaRod){try{const resp=await fetch(`data/${id}.kmz`);if(!resp.ok)continue;const buf=await resp.arrayBuffer();const zip=await JSZip.loadAsync(buf);const k=Object.keys(zip.files).find(f=>f.toLowerCase().endsWith(".kml"));const txt=await zip.file(k).async("string");const geo=kmlToGeoJSON(txt);L.geoJSON(geo,{pane:"rodoviasPane",style:{color:"#555",weight:3,opacity:0.9}}).addTo(mapa);rodLayers[id]=true;}catch{} }
-  zoomGlobal();
-}
-
-// 5) UI: Botão + e filtro
-const btnCSV=document.getElementById("btnCSV"),menu=document.getElementById("uploadMenu"),selRod=document.getElementById("selRod");
-btnCSV.onclick=()=>menu.style.display=menu.style.display===`block`?`none`:`block`;
-selRod.onchange=()=>{
-  Object.keys(rodLayers).forEach(id=>{const layer=rodLayers[id];if(layer){mapa.hasLayer(layer)&&mapa.removeLayer(layer);}});
-  const sel=selRod.value; if(sel&&rodLayers[sel])mapa.addLayer(rodLayers[sel]);
-};
-
-// 6) Line input
-document.getElementById("csvLineInput").onchange=e=>e.target.files[0]&&processLineExcel(e.target.files[0]);
-
-function processLineExcel(file){const fr=new FileReader();fr.onload=e=>{const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});const ws=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(ws,{defval:""});if(lineLayer)mapa.removeLayer(lineLayer);const grp=L.layerGroup([],{pane:"rodoviasPane"}).addTo(mapa);rows.forEach(rw=>{const key=rw.Rodovia,seg=rodLayers[key];if(!seg)return;const m=metaRod[key],km0=parseFloat(rw["Km Inicial"].replace(",",".")),km1=parseFloat(rw["Km Final"].replace(",","."));if(!m||isNaN(km0)||isNaN(km1))return;let geo=seg.toGeoJSON();let feat=geo.features.find(f=>f.geometry.type==='LineString');if(!feat){const ml=geo.features.find(f=>f.geometry.type==='MultiLineString');feat={type:'Feature',geometry:{type:'LineString',coordinates:ml.geometry.coordinates.flat()}};}const p0=turf.along(feat,km0-m.kmIni,{units:'kilometers'}),p1=turf.along(feat,km1-m.kmIni,{units:'kilometers'}),slice=turf.lineSlice(p0,p1,feat);L.geoJSON(slice,{pane:"rodoviasPane",style:{color:rw.Cor||"#f00",weight:parseFloat(rw.Espessura)||4}}).addTo(grp);});lineLayer=grp;zoomGlobal();};fr.readAsArrayBuffer(file);}
-
-// 7) helper KML→GeoJSON
-function kmlToGeoJSON(xml){const dom=new DOMParser().parseFromString(xml,'text/xml'),out=[];Array.from(dom.getElementsByTagName('Placemark')).forEach(pm=>{const ls=pm.getElementsByTagName('LineString')[0];if(!ls)return;const coords=ls.getElementsByTagName('coordinates')[0].textContent.trim().split(/\s+/).map(s=>s.split(',').map(Number).slice(0,2));if(coords.length>1)out.push({type:'Feature',geometry:{type:'LineString',coordinates}});});return{type:'FeatureCollection',features:out};}
-```
