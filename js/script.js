@@ -36,7 +36,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 L.control.layers(null,null,{collapsed:isMobile}).addTo(mapa);
 
 // 2) Helpers
-def function addLabel(latlng, text, cls) {
+function addLabel(latlng, text, cls) {
   const m = L.marker(latlng, {
     icon: L.divIcon({ className: cls, html: text, iconSize: null }),
     interactive: false
