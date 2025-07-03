@@ -162,25 +162,101 @@ function initUI() {
 }
 
 // 5) Pontos de interesse
-function processPointsCSV(file) {
-  Papa.parse(file, { header:true, skipEmptyLines:true, complete:({data})=>{
-    pontosLayer.clearLayers(); data.forEach(addPonto);
-    if (Object.keys(pontosLayer._layers).length) mapa.fitBounds(pontosLayer.getBounds());
+function processPointsCSV(file){
+  Papa.parse(file,{header:true,skipEmptyLines:true,complete:({data})=>{
+    pontosLayer.clearLayers();
+    data.forEach(d=>{
+      // fallback match rodovia key
+      let key = d.Rodovia;
+      let seg = rodLayers[key];
+      if(!seg){
+        const matchKey = Object.keys(rodLayers).find(k=>k.endsWith("_"+d.Rodovia));
+        if(matchKey){ seg = rodLayers[matchKey]; key = matchKey; }
+      }
+      const m = metaRod[key];
+      const km = parseFloat(d.KM.replace(",","."));
+      if(!seg||!m||isNaN(km)||km < m.kmIni||km > m.kmFim) return;
+      const rel = km - m.kmIni;
+      const line = seg.toGeoJSON().features.find(f=>f.geometry.type==='LineString');
+      const pt = turf.along(line, rel, {units:'kilometers'});
+      const [lon,lat] = pt.geometry.coordinates;
+      L.circleMarker([lat,lon],{
+        radius:parseFloat(d.Raio)||6,
+        color:d.Cor||'#1976d2', weight:2,
+        fillColor:d.Cor||'#1976d2', fillOpacity:1
+      }).bindPopup(`<b>${key}</b><br>Km ${d.KM}<br>${d.Obs||''}`)
+        .addTo(pontosLayer);
+    });
+    if(Object.keys(pontosLayer._layers).length) mapa.fitBounds(pontosLayer.getBounds());
   }});
-}
-function addPonto(d) {
-  const km = parseFloat(d.KM.replace(',','.')),
-        seg=rodLayers[d.Rodovia], m=metaRod[d.Rodovia];
-  if (!seg||!m||isNaN(km)||km<m.kmIni||km>m.kmFim) return;
-  const rel = km - m.kmIni;
-  const line = seg.toGeoJSON().features.find(f=>f.geometry.type==='LineString');
-  const pt = turf.along(line, rel, {units:'kilometers'}), [lon,lat]=pt.geometry.coordinates;
-  L.circleMarker([lat,lon],{ radius:parseFloat(d.Raio)||6, color:d.Cor||'#1976d2', weight:2, fillColor:d.Cor||'#1976d2', fillOpacity:1 })
-    .bindPopup(`<b>${d.Rodovia}</b><br>Km ${d.KM}<br>${d.Obs||''}`)
-    .addTo(pontosLayer);
 }
 
 // 6) Mapa de Calor
+function processHeatCSV(file){
+  Papa.parse(file,{header:true,skipEmptyLines:true,complete:({data})=>{
+    if(heatLayer) mapa.removeLayer(heatLayer);
+    const pts=[];
+    data.forEach(r=>{
+      let key = r.Rodovia;
+      let seg = rodLayers[key];
+      if(!seg){
+        const matchKey = Object.keys(rodLayers).find(k=>k.endsWith("_"+r.Rodovia));
+        if(matchKey){ seg = rodLayers[matchKey]; key = matchKey; }
+      }
+      const m = metaRod[key];
+      if(!seg||!m) return;
+      const km0=parseFloat(r['Km Inicial'].replace(',','.'));
+      const km1=parseFloat(r['Km Final'].replace(',','.'));
+      if(isNaN(km0)||isNaN(km1)) return;
+      const rel0 = km0 - m.kmIni;
+      const rel1 = km1 - m.kmIni;
+      const line = seg.toGeoJSON().features.find(f=>f.geometry.type==='LineString');
+      const p0 = turf.along(line, rel0, {units:'kilometers'});
+      const p1 = turf.along(line, rel1, {units:'kilometers'});
+      const slice = turf.lineSlice(p0,p1,line);
+      const Ls = turf.length(slice,{units:'kilometers'});
+      const samples = Math.ceil(Ls*5)+1;
+      for(let i=0;i<=samples;i++){
+        const p = turf.along(slice, Ls*(i/samples), {units:'kilometers'});
+        pts.push([p.geometry.coordinates[1],p.geometry.coordinates[0],1]);
+      }
+    });
+    heatLayer = L.heatLayer(pts,{radius:25,blur:15}).addTo(mapa);
+    zoomGlobal();
+  }});
+}
+
+// 7) Linhas por trecho
+function processLineCSV(file){
+  Papa.parse(file,{header:true,skipEmptyLines:true,complete:({data})=>{
+    if(lineLayer) mapa.removeLayer(lineLayer);
+    const grp = L.layerGroup().addTo(mapa);
+    data.forEach(r=>{
+      let key = r.Rodovia;
+      let seg = rodLayers[key];
+      if(!seg){
+        const matchKey = Object.keys(rodLayers).find(k=>k.endsWith("_"+r.Rodovia));
+        if(matchKey){ seg = rodLayers[matchKey]; key = matchKey; }
+      }
+      const m = metaRod[key];
+      if(!seg||!m) return;
+      const km0=parseFloat(r['Km Inicial'].replace(',','.'));
+      const km1=parseFloat(r['Km Final'].replace(',','.'));
+      if(isNaN(km0)||isNaN(km1)) return;
+      const rel0=km0 - m.kmIni;
+      const rel1=km1 - m.kmIni;
+      const lineFeat = seg.toGeoJSON().features.find(f=>f.geometry.type==='LineString');
+      const p0 = turf.along(lineFeat, rel0, {units:'kilometers'});
+      const p1 = turf.along(lineFeat, rel1, {units:'kilometers'});
+      const slice = turf.lineSlice(p0,p1,lineFeat);
+      L.geoJSON(slice,{style:{color:r.Cor||'#f00',weight:parseFloat(r.Espessura)||4}})
+        .bindPopup(`<b>${key}</b><br>Km ${km0}–${km1}<br>${r.Obs||''}`)
+        .addTo(grp);
+    });
+    lineLayer = grp;
+    zoomGlobal();
+  }});
+}
 function processHeatCSV(file) {
   Papa.parse(file,{header:true,skipEmptyLines:true,complete:({data})=>{
     if (heatLayer) mapa.removeLayer(heatLayer);
