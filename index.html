@@ -18,19 +18,19 @@
   <script src="https://cdn.jsdelivr.net/npm/shpjs@3.6.2/dist/shp.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7.2.0/turf.min.js" defer></script>
 
-  <!-- PapaParse e SheetJS -->
+  <!-- PapaParse & SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
 
-  <!-- toGeoJSON (oficial) -->
-  <script src="https://unpkg.com/togeojson@0.16.0/dist/togeojson.js" defer></script>
+  <!-- toGeoJSON oficial (KML→GeoJSON) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.js" defer></script> :contentReference[oaicite:0]{index=0}
 
   <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" defer></script>
 
   <style>
-    html,body,#map { height:100%; margin:0; padding:0 }
+    html, body, #map { height:100%; margin:0; padding:0 }
     .fab {
       position:absolute; width:48px; height:48px; border:none;
       border-radius:50%; color:#fff; font-size:28px; line-height:48px;
@@ -39,4 +39,19 @@
     }
     #btnCSV { bottom:16px; left:16px; background:#ff5722 }
     #selRod {
-      position:absolute; top:16px; right:
+      position:absolute; top:16px; right:16px;
+      z-index:700; padding:4px 8px; font-size:14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- botão recarregar dados -->
+  <button id="btnCSV" class="fab" title="Recarregar dados">⟳</button>
+  <!-- filtro de rodovias -->
+  <select id="selRod"><option value="">(todas)</option></select>
+
+  <script src="js/script.js" defer></script>
+</body>
+</html>
