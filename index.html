@@ -36,8 +36,8 @@
 
     /* cartão de camadas */
     .layer-card{
-      position:absolute; top:16px; left:16px;
-      background:#fff; border-radius:6px; padding:8px 10px;
+      position:absolute; top:16px; left:66px;
+      background:#ffffff; border-radius:6px; padding:8px 10px;
       z-index:760; font:14px/20px Arial,Helvetica,sans-serif;
     }
     .layer-card label{cursor:pointer}
@@ -47,7 +47,6 @@
       font-size:14px; line-height:22px; cursor:pointer;
       vertical-align:middle;
     }
-
     /* botão flutuante recarregar */
     .fab{
       position:absolute; bottom:16px; left:16px; z-index:750;
@@ -55,12 +54,22 @@
       background:#ff5722; color:#fff; font:28px/48px sans-serif;
       text-align:center; cursor:pointer;
     }
-
     /* seletor de rodovias */
     #selRod{
-      position:absolute; top:16px; right:16px; z-index:750;
+      position:absolute; top:13px; right:16px; z-index:950;
       padding:4px 8px; font-size:14px;
     }
+    /* rótulo das rodovias */
+.rod-label{
+  background:#fff;          /* fundo branco */
+  padding:2px 4px;          /* pequena margem interna */
+  border-radius:4px;
+  font-weight:bold;
+  font-size:12px;
+  line-height:14px;
+  white-space:nowrap;
+  pointer-events:none;      /* não captura cliques */
+}
   </style>
 </head>
 <body>
