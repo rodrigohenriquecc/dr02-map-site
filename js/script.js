@@ -29,34 +29,37 @@ const mapa = L.map("map").setView([-23.8,-48.5],7);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   {maxZoom:19,attribution:"© OpenStreetMap"}).addTo(mapa);
 
-// helpers
-function addLabel(latlng, txt, cls){
-  try{
-    L.marker(latlng,{
-      pane:"overlayPane",
-      icon:L.divIcon({className:cls,html:txt,iconSize:null}),
-      interactive:false
-    }).addTo(mapa);
-  }catch(e){ console.warn("Label falhou:",txt,e); }
-}
-function zoomGlobal(){
-  const g=L.featureGroup([
-    ...Object.values(rcLayers),
-    ...Object.values(rodoviasLayers),
-    ...pontosLayer.getLayers()
-  ]);
-  const b=g.getBounds();
-  if(b.isValid()) mapa.fitBounds(b);
-}
-
-// ── 2) dados globais ───────────────────────────────────────
+// ── 2) Globals & helpers ──────────────────────────────────
 const metaRod={}, rcLayers={}, rodoviasLayers={};
 const pontosLayer=L.layerGroup([], {pane:"overlayPane"}).addTo(mapa);
 let heatLayer=null, lineLayer=null;
 
-// ── 3) Planilhas (CSV) ─────────────────────────────────────
-const META_URL ="https://docs.google.com/spreadsheets/d/1-vQJbINXlmAzhf-XItfu0pOp31WtaG9Md0MLVAJ2uAs/export?format=csv&gid=411284139";
-Papa.parse(META_URL,{
+const addLabel=(latlng,txt,cls)=>{
+  L.marker(latlng,{
+    pane:"overlayPane",
+    icon:L.divIcon({className:cls,html:txt,iconSize:null}),
+    interactive:false
+  }).addTo(mapa);
+};
+const zoomGlobal=()=> {
+  const b=L.featureGroup([
+    ...Object.values(rcLayers),
+    ...Object.values(rodoviasLayers),
+    ...pontosLayer.getLayers()
+  ]).getBounds();
+  if(b.isValid()) mapa.fitBounds(b);
+};
+
+// ── 3) URLs CSV ────────────────────────────────────────────
+const SHEETS={
+  meta : "https://docs.google.com/spreadsheets/d/1-vQJbINXlmAzhf-XItfu0pOp31WtaG9Md0MLVAJ2uAs/export?format=csv&gid=411284139",
+  points: "https://docs.google.com/spreadsheets/d/1eBgwX744ZF4gqGz5AjvPtEre1WBdfR9h/export?format=csv",
+  heat  : "https://docs.google.com/spreadsheets/d/1W61josvM1UanGOSUurj1qSZTvpL4ovzf/export?format=csv",
+  lines : "https://docs.google.com/spreadsheets/d/14dAXHzNvDQb8gFgOZCeTnOOcgWEpqaoA/export?format=csv"
+};
+
+// ── 4) Entry point ────────────────────────────────────────
+Papa.parse(SHEETS.meta,{
   download:true, header:true, skipEmptyLines:true,
   complete:({data})=>{
     data.forEach(r=>{
@@ -70,50 +73,116 @@ Papa.parse(META_URL,{
   }
 });
 
-// ── 4) Shapefiles RC  +  KMZ rodovias ──────────────────────
+// ── 5) Shapefiles + KMZ ───────────────────────────────────
 async function carregarData(){
 
-  // 4-A  RC
+  // --- RC ---
   for(const p of [
     "data/RC_2.1.zip","data/RC_2.2.zip","data/RC_2.4.zip",
     "data/RC_2.5.zip","data/RC_2.6_2.8.zip","data/RC_2.7.zip"
   ]){
     try{
-      const geoRC = await shp(p);
-      const name  = p.match(/RC_[\d._]+/)[0].replace("_"," ");
-      const lyrRC = L.geoJSON(geoRC,{
+      const geo = await shp(p);
+      const name= p.match(/RC_[\d._]+/)[0].replace("_"," ");
+      rcLayers[name]=L.geoJSON(geo,{
         pane:"shapefilePane",
         style:{color:"#000",weight:2.5,fill:false}
       }).addTo(mapa);
-      rcLayers[name]=lyrRC;
-      addLabel(lyrRC.getBounds().getCenter(), name, "rc-label");  // ← voltou
-    }catch(e){ console.error("RC falhou:",p,e); }
+      addLabel(rcLayers[name].getBounds().getCenter(),name,"rc-label");
+    }catch(e){ console.error("RC falhou:",p,e);}
   }
 
-  // 4-B  KMZ (apenas linhas)
-  if(typeof toGeoJSON==="undefined"){
-    alert("Biblioteca toGeoJSON não carregou.");
-    return;
-  }
+  // --- KMZ rodovias ---
   for(const id of Object.keys(metaRod)){
     try{
       const resp=await fetch(`data/${id}.kmz`);
       if(!resp.ok) continue;
-      const zip=await JSZip.loadAsync(await resp.arrayBuffer());
-      const kml=Object.keys(zip.files).find(f=>f.toLowerCase().endsWith(".kml"));
-      const geoKMZ=toGeoJSON.kml(
+      const zip = await JSZip.loadAsync(await resp.arrayBuffer());
+      const kml = Object.keys(zip.files).find(f=>f.toLowerCase().endsWith(".kml"));
+      const geo = toGeoJSON.kml(
         new DOMParser().parseFromString(await zip.file(kml).async("string"),"text/xml")
       );
-      const lyrRod=L.geoJSON(geoKMZ,{
+      rodoviasLayers[id]=L.geoJSON(geo,{
         pane:"rodoviasPane",
         filter:f=>f.geometry &&
                  (f.geometry.type==="LineString"||f.geometry.type==="MultiLineString"),
         style:{color:"#555",weight:3,opacity:0.9}
       }).addTo(mapa);
-      rodoviasLayers[id]=lyrRod;
-      addLabel(lyrRod.getBounds().getCenter(), id.split("_")[1], "rod-label"); // ← voltou
-    }catch(e){ console.error("KMZ falhou:",id,e); }
+      addLabel(rodoviasLayers[id].getBounds().getCenter(),id.split("_")[1],"rod-label");
+    }catch(e){ console.error("KMZ falhou:",id,e);}
   }
 
-  zoomGlobal();   // … (resto do fluxo: pontos, heat, linhas)
+  // filtro rodovias
+  const sel=document.getElementById("selRod");
+  sel.innerHTML='<option value="">(todas)</option>'+
+    Object.keys(rodoviasLayers).sort()
+      .map(id=>`<option value="${id}">${id.split("_")[1]}</option>`).join("");
+  sel.onchange=()=> {
+    const v=sel.value;
+    Object.entries(rodoviasLayers)
+      .forEach(([id,lyr])=> (v===""||id===v)?mapa.addLayer(lyr):mapa.removeLayer(lyr));
+  };
+
+  // carrega planilhas
+  reloadSheets();
+
+  zoomGlobal();
 }
+
+// ── 6) Recarregar planilhas online ─────────────────────────
+function reloadSheets(){
+  pontosLayer.clearLayers();
+  if(heatLayer) mapa.removeLayer(heatLayer);
+  if(lineLayer) mapa.removeLayer(lineLayer);
+
+  loadPoints(); loadHeat(); loadLines();
+}
+
+// botão ⟳ sempre ativo (DOM já existe)
+document.addEventListener("DOMContentLoaded",()=>{
+  const btn=document.getElementById("btnCSV");
+  if(btn) btn.onclick=reloadSheets;
+});
+
+// ── 7) Pontos ------------------------------------------------
+function loadPoints(){
+  Papa.parse(SHEETS.points,{
+    download:true, header:true, skipEmptyLines:true,
+    complete:({data})=>{
+      data.forEach(d=>{
+        let key=d.Rodovia, seg=rodoviasLayers[key];
+        if(!seg){
+          const mk=Object.keys(rodoviasLayers).find(k=>k.endsWith("_"+d.Rodovia));
+          if(mk) seg=rodoviasLayers[mk], key=mk;
+        }
+        const m=metaRod[key], km=parseFloat(d.KM.replace(",","."));
+        if(!seg||!m||isNaN(km)||km<m.kmIni||km>m.kmFim) return;
+        const rel=km-m.kmIni,
+              line=seg.toGeoJSON().features.find(f=>f.geometry.type==="LineString"),
+              pt=turf.along(line,rel,{units:"kilometers"});
+        L.circleMarker([pt.geometry.coordinates[1],pt.geometry.coordinates[0]],{
+          pane:"overlayPane",
+          radius:parseFloat(d.Raio)||6,
+          color:d.Cor||"#1976d2",
+          weight:2, fillColor:d.Cor||"#1976d2", fillOpacity:1
+        }).bindPopup(`<b>${key}</b><br>Km ${d.KM}<br>${d.Obs||""}`)
+          .addTo(pontosLayer);
+      });
+    }
+  });
+}
+
+// ── 8) Heatmap ----------------------------------------------
+function loadHeat(){
+  Papa.parse(SHEETS.heat,{
+    download:true, header:true, skipEmptyLines:true,
+    complete:({data})=>{
+      if(heatLayer) mapa.removeLayer(heatLayer);
+      const pts=[];
+      data.forEach(r=>{
+        let key=r.Rodovia, seg=rodoviasLayers[key];
+        if(!seg){
+          const mk=Object.keys(rodoviasLayers).find(k=>k.endsWith("_"+r.Rodovia));
+          if(mk) seg=rodoviasLayers[mk], key=mk;
+        }
+<|diff_marker|> COMroutePRINTF畟
