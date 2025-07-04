@@ -113,10 +113,18 @@ async function carregarData(){
       const kml=Object.keys(zip.files).find(f=>f.toLowerCase().endsWith(".kml"));
       const xml=await zip.file(kml).async("string");
       const geo=toGeoJSON.kml(new DOMParser().parseFromString(xml,"text/xml"));
-      const lyr=L.geoJSON(geo,{
-        pane:"rodoviasPane",
-        style:{color:"#555",weight:3,opacity:0.9}
-      }).addTo(mapa);
+    const geo = toGeoJSON.kml(dom);
+const lyr = L.geoJSON(geo, {
+  pane: "rodoviasPane",
+
+  // 💡  Só desenha LineString / MultiLineString
+  filter: f =>
+    f.geometry &&
+    (f.geometry.type === "LineString" ||
+     f.geometry.type === "MultiLineString"),
+
+  style: { color: "#555", weight: 3, opacity: 0.9 }
+}).addTo(mapa);
       rodLayers[id]=lyr;
       addLabel(lyr.getBounds().getCenter(),id.split("_")[1],"rod-label");
     }catch(e){ console.error("KMZ falhou:",id,e); }
