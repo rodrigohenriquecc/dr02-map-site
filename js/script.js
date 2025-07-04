@@ -68,10 +68,10 @@ const refreshVis=()=>{
 
 // ═══════════════════════ 3) CSV URLs
 const SHEETS={
-  meta  :"https://docs.google.com/spreadsheets/d/1-vQJbINXlmAzhf-XItfu0pOp31WtaG9Md0MLVAJ2uAs/export?format=csv&gid=411284139",
-  points:"https://docs.google.com/spreadsheets/d/1eBgwX744ZF4gqGz5AjvPtEre1WBdfR9h/export?format=csv",
-  heat  :"https://docs.google.com/spreadsheets/d/1W61josvM1UanGOSUurj1qSZTvpL4ovzf/export?format=csv",
-  lines :"https://docs.google.com/spreadsheets/d/14dAXHzNvDQb8gFgOZCeTnOOcgWEpqaoA/export?format=csv"
+  meta  :"https://docs.google.com/spreadsheets/d/1LT419Yedoh9u15KDQgHv7goFsTZAqC4R/edit?usp=sharing&ouid=111774944277553757611&rtpof=true&sd=true",
+  points:"https://docs.google.com/spreadsheets/d/1Nm1909nrPRQPsuSG2UaG8N0MoUY3UE_h/edit?usp=sharing&ouid=111774944277553757611&rtpof=true&sd=true",
+  heat  :"https://docs.google.com/spreadsheets/d/1sqLLP11iEzVXdQG1Shdsl3lhEMTrIhmL/edit?usp=sharing&ouid=111774944277553757611&rtpof=true&sd=true",
+  lines :"https://docs.google.com/spreadsheets/d/1OLH_S7Kxi4f6lv4l1MtskQEeIIvo97Eb/edit?usp=sharing&ouid=111774944277553757611&rtpof=true&sd=true"
 };
 
 // ═══════════════════════ 4) metaRod → base
