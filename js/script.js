@@ -142,8 +142,11 @@ async function loadMalha() {
         style: { color: "#555", weight: 3, opacity: 0.9 },
       }).addTo(mapa);
 
-      addLabel(rodLayers[id].getBounds().getCenter(), id.split(" ")[0], "rod-label");
-    });
+addLabel(
+  rodLayers[id].getBounds().getCenter(),
+  id.replaceAll("_", " ").trim(),
+  "rod-label"
+);
 
     // Ajusta o mapa para exibir toda a malha
     const bounds = L.featureGroup(Object.values(rodLayers)).getBounds();
