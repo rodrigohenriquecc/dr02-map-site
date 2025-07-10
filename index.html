@@ -105,10 +105,28 @@
       color: #333;
     }
 
+    /* Botão customizado para upload */
+    .custom-upload-btn {
+      display: inline-block;
+      background: linear-gradient(90deg, #1976d2 60%, #42a5f5 100%);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 1px 4px #1976d222;
+      margin-top: 4px;
+      margin-bottom: 2px;
+      transition: background 0.2s, box-shadow 0.2s;
+      text-align: center;
+    }
+    .custom-upload-btn:hover {
+      background: linear-gradient(90deg, #1251a3 60%, #1976d2 100%);
+    }
     .import-label input[type="file"] {
-      margin-top: 2px;
-      font-size: 13px;
-      padding: 4px 0;
+      display: none;
     }
 
     /* Botão flutuante para abrir/esconder importação */
@@ -298,14 +316,17 @@
 
     <label class="import-label">
       <span>Pontos de Interesse:</span>
+      <button type="button" class="custom-upload-btn" onclick="document.getElementById('csvInput').click()">Escolher arquivo</button>
       <input type="file" id="csvInput" accept=".csv" />
     </label>
     <label class="import-label">
       <span>Mapa de Calor:</span>
+      <button type="button" class="custom-upload-btn" onclick="document.getElementById('heatmapCsvInput').click()">Escolher arquivo</button>
       <input type="file" id="heatmapCsvInput" accept=".csv" />
     </label>
     <label class="import-label">
       <span>Linhas por Trecho:</span>
+      <button type="button" class="custom-upload-btn" onclick="document.getElementById('linhasTrechoCsvInput').click()">Escolher arquivo</button>
       <input type="file" id="linhasTrechoCsvInput" accept=".csv" />
     </label>
   </div>
@@ -449,8 +470,8 @@
         kmSelect.innerHTML = '';
         arr.forEach(p => {
           const opt = document.createElement('option');
-          opt.value = p.km;
-          opt.textContent = p.km;
+          opt.value = p.km.toFixed(3);
+          opt.textContent = p.km.toFixed(3);
           kmSelect.appendChild(opt);
         });
         kmSelect.disabled = !arr.length;
@@ -482,8 +503,8 @@
           alert('Selecione uma rodovia e um Km válido!');
           return;
         }
-        let km = parseFloat(kmSelect.value);
-        let ponto = arr.find(p => p.km === km);
+        let km = parseFloat(kmSelect.value.replace(',', '.'));
+        let ponto = arr.find(p => p.km.toFixed(3) === km.toFixed(3));
         let usouProximo = false;
         if (!ponto) {
           // Busca o mais próximo
@@ -492,14 +513,25 @@
           usouProximo = true;
         }
         if (usouProximo) {
-          msgKmProximo.textContent = `Km não disponível. Mostrando informações do Km mais próximo: ${ponto.km}`;
+          msgKmProximo.textContent = `Km não disponível. Mostrando informações do Km mais próximo: ${ponto.km.toFixed(3)}`;
           msgKmProximo.style.display = '';
         }
         // Mostra marcador e link
         if (window.filtroMarker && window.mapa) window.mapa.removeLayer(window.filtroMarker);
         if (window.mapa) {
-          window.filtroMarker = L.marker([ponto.lat, ponto.lon], { pane: "overlayPane" }).addTo(window.mapa);
+          // Ícone customizado para destaque (corrige pane para 'markerPane')
+          const customIcon = L.icon({
+            iconUrl: 'https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-red.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            shadowSize: [41, 41]
+          });
+          window.filtroMarker = L.marker([ponto.lat, ponto.lon], { pane: "markerPane", icon: customIcon }).addTo(window.mapa);
           window.mapa.setView([ponto.lat, ponto.lon], 15, { animate: true });
+          // Animação rápida para chamar atenção
+          setTimeout(() => { window.filtroMarker.setZIndexOffset(1000); }, 100);
         }
         link.href = ponto.urlMaps && ponto.urlMaps.startsWith('http') ? ponto.urlMaps : `https://www.google.com/maps?q=${ponto.lat},${ponto.lon}`;
         link.textContent = `Ver no Google Maps (${ponto.lat.toFixed(6)}, ${ponto.lon.toFixed(6)})`;
@@ -507,7 +539,7 @@
         // Mostra quadro de informações detalhadas
         let infoHtml = `<div style='font-size:14px;text-align:left;margin-bottom:6px;'>`;
         infoHtml += `<b>Rodovia:</b> ${rod}<br>`;
-        infoHtml += `<b>Km:</b> ${ponto.km}<br>`;
+        infoHtml += `<b>Km:</b> ${ponto.km.toFixed(3)}<br>`;
         infoHtml += `<b>Município:</b> ${ponto.municipio || '-'}<br>`;
         infoHtml += `<b>Tipo de pavimento:</b> ${ponto.tipo || '-'}<br>`;
         if (ponto.rc) infoHtml += `<b>RC:</b> ${ponto.rc}<br>`;
@@ -516,11 +548,11 @@
           infoHtml += `<a href='${ponto.urlMaps}' target='_blank' style='color:#1976d2;font-size:13px;'>Abrir no Google Maps</a><br>`;
         }
         infoHtml += `</div>`;
-        // Exibe a(s) foto(s) diretamente no quadro, respeitando largura máxima
+        // Exibe link para foto do local, se houver URL válida
         if (ponto.urlFoto && ponto.urlFoto.length > 4) {
           const fotos = ponto.urlFoto.split(',').map(f => f.trim()).filter(f => f.startsWith('http'));
           fotos.forEach((foto, i) => {
-            infoHtml += `<img src='${foto}' alt='Foto do Km' style='max-width:100%;max-width:320px;max-height:180px;border-radius:6px;box-shadow:0 1px 6px #0002;margin-bottom:4px;display:block;margin-left:auto;margin-right:auto;'>`;
+            infoHtml += `<a href='${foto}' target='_blank' style='display:block;margin:8px auto 8px auto;color:#1976d2;font-size:15px;font-weight:600;text-align:center;text-decoration:underline;'>Ver foto do local</a>`;
           });
         }
         quadroFoto.innerHTML = infoHtml;
@@ -539,13 +571,13 @@
         // Adiciona opções ao datalist para autocomplete
         arr.forEach(ponto => {
           const option = document.createElement('option');
-          option.value = ponto.km;
+          option.value = ponto.km.toFixed(3);
           kmList.appendChild(option);
         });
         // Se o valor atual não estiver na lista, adiciona como opção "outro valor"
-        if (!arr.some(ponto => ponto.km.toString() === valorAtual)) {
+        if (!arr.some(ponto => ponto.km.toFixed(3) === parseFloat(valorAtual).toFixed(3))) {
           const option = document.createElement('option');
-          option.value = valorAtual;
+          option.value = parseFloat(valorAtual).toFixed(3);
           kmList.appendChild(option);
         }
       });
