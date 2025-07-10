@@ -516,11 +516,11 @@
           infoHtml += `<a href='${ponto.urlMaps}' target='_blank' style='color:#1976d2;font-size:13px;'>Abrir no Google Maps</a><br>`;
         }
         infoHtml += `</div>`;
-        // Exibe múltiplas fotos se houver (separadas por vírgula)
+        // Exibe a(s) foto(s) diretamente no quadro, respeitando largura máxima
         if (ponto.urlFoto && ponto.urlFoto.length > 4) {
           const fotos = ponto.urlFoto.split(',').map(f => f.trim()).filter(f => f.startsWith('http'));
           fotos.forEach((foto, i) => {
-            infoHtml += `<img src='${foto}' alt='Foto do Km' style='max-width:100%;max-height:180px;border-radius:6px;box-shadow:0 1px 6px #0002;margin-bottom:4px;'><br><a href='${foto}' target='_blank' style='color:#1976d2;font-size:13px;'>Abrir foto ${fotos.length > 1 ? (i+1) : ''} em nova aba</a><br>`;
+            infoHtml += `<img src='${foto}' alt='Foto do Km' style='max-width:100%;max-width:320px;max-height:180px;border-radius:6px;box-shadow:0 1px 6px #0002;margin-bottom:4px;display:block;margin-left:auto;margin-right:auto;'>`;
           });
         }
         quadroFoto.innerHTML = infoHtml;
