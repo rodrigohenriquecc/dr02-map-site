@@ -384,6 +384,3 @@ function reloadSheets() {
   loadPoints();
   loadHeat();
 }
-
-...
-// (o resto do código permanece inalterado)
