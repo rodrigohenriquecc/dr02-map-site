@@ -1,7 +1,2 @@
-Rodovia,Km Inicial,Km Final,Cor,Espessura
-SP 250 Vang,160.000,165.000,#ff0000,8
-SP 268 Vang,150.000,155.000,#ff0000,6
-SP 270 Vang,180.000,185.000,#ff0000,4
-SP 181 Jon,1.000,9.000,#0000FF,8
-SP 270 Vale,250.000,270.000,#ffffff,9
-SP 270 Vang,190.000,210.000,#0000FF,9
+lat_inicio,lng_inicio,lat_fim,lng_fim,cor 
+-23.550,-46.633,-23.560,-46.643,#ff0000 
