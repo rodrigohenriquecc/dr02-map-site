@@ -135,6 +135,12 @@ async function carregarTodosDados() {
     dados.mapaDeCalor = calor;
     dados.pontosDeInteresse = pontos;
     
+    // Debug: mostra dados carregados
+    console.log("📊 DADOS CARREGADOS:");
+    console.log("🛣️ Linhas por Trecho:", dados.linhasPorTrecho);
+    console.log("🔥 Mapa de Calor:", dados.mapaDeCalor);
+    console.log("📍 Pontos de Interesse:", dados.pontosDeInteresse);
+    
     // Renderiza os dados no mapa
     renderizarLinhasPorTrecho();
     renderizarMapaDeCalor();
@@ -169,47 +175,51 @@ async function carregarTodosDados() {
  */
 function renderizarLinhasPorTrecho() {
   console.log("🛣️ Renderizando linhas por trecho...");
+  console.log("📊 Dados recebidos:", dados.linhasPorTrecho);
   
   layers.linhas.clearLayers();
   
   dados.linhasPorTrecho.forEach((linha, index) => {
     try {
-      const kmInicial = parseFloat(linha.km_inicial);
-      const kmFinal = parseFloat(linha.km_final);
+      const rodovia = linha.rodovia || `Rodovia ${index + 1}`;
+      const kmInicial = parseFloat(linha.km_inicial) || 0;
+      const kmFinal = parseFloat(linha.km_final) || 0;
       const cor = linha.cor || '#0000FF';
       const espessura = parseInt(linha.espessura) || 3;
       
-      // Para demonstração, criamos uma linha simples
-      // Em produção, você integraria com dados de coordenadas reais
-      const latInicial = -23.8 + (index * 0.1);
-      const latFinal = latInicial + 0.05;
-      const lngInicial = -48.5 + (index * 0.1);
-      const lngFinal = lngInicial + 0.05;
+      console.log(`🛣️ Processando linha: ${rodovia}, Km ${kmInicial}-${kmFinal}, Cor: ${cor}, Espessura: ${espessura}`);
+      
+      // TEMPORÁRIO: Coordenadas baseadas em região São Paulo
+      // TODO: Integrar com sistema de coordenadas real baseado em rodovia e Km
+      const latBase = -23.5 - (index * 0.15);
+      const lngBase = -46.6 + (index * 0.2);
       
       const linha_geom = L.polyline([
-        [latInicial, lngInicial],
-        [latFinal, lngFinal]
+        [latBase, lngBase],
+        [latBase - 0.05, lngBase + 0.1]
       ], {
         color: cor,
         weight: espessura,
-        pane: 'rodoviasPane'
+        pane: 'rodoviasPane',
+        opacity: 0.8
       });
       
       linha_geom.bindPopup(`
-        <strong>🛣️ ${linha.rodovia}</strong><br>
-        📍 Km ${kmInicial} - ${kmFinal}<br>
+        <strong>🛣️ ${rodovia}</strong><br>
+        📍 Km ${kmInicial.toFixed(3)} - ${kmFinal.toFixed(3)}<br>
         🎨 Cor: ${cor}<br>
-        📏 Espessura: ${espessura}
+        📏 Espessura: ${espessura}px<br>
+        <small>📄 Dados da planilha: Linhas por Trecho</small>
       `);
       
       layers.linhas.addLayer(linha_geom);
       
     } catch (error) {
-      console.error(`Erro ao renderizar linha ${index}:`, error);
+      console.error(`Erro ao renderizar linha ${index}:`, error, linha);
     }
   });
   
-  console.log(`✅ ${dados.linhasPorTrecho.length} linhas renderizadas`);
+  console.log(`✅ ${dados.linhasPorTrecho.length} linhas por trecho renderizadas`);
 }
 
 /**
@@ -217,29 +227,40 @@ function renderizarLinhasPorTrecho() {
  */
 function renderizarMapaDeCalor() {
   console.log("🔥 Renderizando mapa de calor...");
+  console.log("📊 Dados recebidos:", dados.mapaDeCalor);
   
   if (layers.calor) {
     mapa.removeLayer(layers.calor);
   }
   
-  // Prepara dados para o heatmap
+  // Prepara dados para o heatmap usando dados reais da planilha
   const pontosCalor = dados.mapaDeCalor.map((item, index) => {
-    const lat = -23.8 + (index * 0.05);
-    const lng = -48.5 + (index * 0.05);
-    const intensidade = 0.8; // Intensidade base
+    const rodovia = item.rodovia || `Rodovia ${index + 1}`;
+    const kmInicial = parseFloat(item.km_inicial) || 0;
+    const kmFinal = parseFloat(item.km_final) || 0;
+    
+    console.log(`🔥 Processando ponto de calor: ${rodovia}, Km ${kmInicial}-${kmFinal}`);
+    
+    // TEMPORÁRIO: Coordenadas baseadas em região São Paulo  
+    // TODO: Integrar com sistema de coordenadas real baseado em rodovia e Km
+    const lat = -23.6 - (index * 0.1);
+    const lng = -46.8 + (index * 0.15);
+    const intensidade = 0.9; // Intensidade alta para destaque
     
     return [lat, lng, intensidade];
   });
   
   if (pontosCalor.length > 0) {
     layers.calor = L.heatLayer(pontosCalor, {
-      radius: 25,
-      blur: 15,
+      radius: 30,
+      blur: 20,
       maxZoom: 17,
       pane: 'overlayPane'
     }).addTo(mapa);
     
     console.log(`✅ Mapa de calor criado com ${pontosCalor.length} pontos`);
+  } else {
+    console.log("⚠️ Nenhum dado para mapa de calor");
   }
 }
 
@@ -248,40 +269,47 @@ function renderizarMapaDeCalor() {
  */
 function renderizarPontosDeInteresse() {
   console.log("📍 Renderizando pontos de interesse...");
+  console.log("📊 Dados recebidos:", dados.pontosDeInteresse);
   
   layers.pontos.clearLayers();
   
   dados.pontosDeInteresse.forEach((ponto, index) => {
     try {
-      const km = parseFloat(ponto.km);
+      const rodovia = ponto.rodovia || `Rodovia ${index + 1}`;
+      const km = parseFloat(ponto.km) || 0;
+      const obs = ponto.obs || 'Ponto de interesse';
       const cor = ponto.cor || '#FF0000';
       const opacidade = parseFloat(ponto.opacidade) || 0.8;
       const raio = parseInt(ponto.raio) || 30;
       
-      // Para demonstração, calculamos coordenadas baseadas no índice
-      // Em produção, você usaria coordenadas reais baseadas na rodovia e km
-      const lat = -23.8 + (index * 0.08);
-      const lng = -48.5 + (index * 0.08);
+      console.log(`📍 Processando ponto: ${rodovia} Km ${km}, ${obs}, Cor: ${cor}, Raio: ${raio}m`);
+      
+      // TEMPORÁRIO: Coordenadas baseadas em região São Paulo
+      // TODO: Integrar com sistema de coordenadas real baseado em rodovia e Km
+      const lat = -23.4 - (index * 0.12);
+      const lng = -46.4 + (index * 0.18);
       
       const circulo = L.circle([lat, lng], {
         color: cor,
         fillColor: cor,
         fillOpacity: opacidade,
         radius: raio,
-        pane: 'overlayPane'
+        pane: 'overlayPane',
+        weight: 2
       });
       
       circulo.bindPopup(`
-        <strong>📍 ${ponto.obs}</strong><br>
-        🛣️ ${ponto.rodovia} - Km ${km}<br>
-        🎨 ${cor} (${(opacidade * 100).toFixed(0)}%)<br>
-        📏 Raio: ${raio}m
+        <strong>📍 ${obs}</strong><br>
+        🛣️ ${rodovia} - Km ${km.toFixed(3)}<br>
+        🎨 ${cor} (${(opacidade * 100).toFixed(0)}% opacidade)<br>
+        📏 Raio: ${raio}m<br>
+        📄 <small>Dados da planilha: Pontos de Interesse</small>
       `);
       
       layers.pontos.addLayer(circulo);
       
     } catch (error) {
-      console.error(`Erro ao renderizar ponto ${index}:`, error);
+      console.error(`Erro ao renderizar ponto ${index}:`, error, ponto);
     }
   });
   
