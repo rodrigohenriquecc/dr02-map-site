@@ -25,6 +25,50 @@ const layers = {
   calor: null
 };
 
+// ═══════════════════════ 2.1) Dados km a km da malha oficial
+let pontosMalhaOficial = [];
+let indexMalhaOficial = {};
+
+/**
+ * Carrega PLANILHA BI - OFICIAL.csv e indexa por rodovia e km
+ */
+async function carregarMalhaOficial() {
+  try {
+    const response = await fetch('PLANILHA BI - OFICIAL.csv');
+    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    const csvText = await response.text();
+    return new Promise((resolve, reject) => {
+      Papa.parse(csvText, {
+        header: true,
+        skipEmptyLines: true,
+        delimiter: ';',
+        transform: (value) => value.trim(),
+        complete: (results) => {
+          pontosMalhaOficial = results.data;
+          indexMalhaOficial = {};
+          pontosMalhaOficial.forEach((row) => {
+            const rodovia = row.SP?.trim();
+            const kmStr = row['KM ']?.replace(',', '.');
+            const km = parseFloat(kmStr);
+            if (!rodovia || isNaN(km)) return;
+            if (!indexMalhaOficial[rodovia]) indexMalhaOficial[rodovia] = {};
+            indexMalhaOficial[rodovia][kmStr] = row;
+          });
+          console.log(`✅ PLANILHA BI - OFICIAL carregada: ${pontosMalhaOficial.length} pontos`);
+          resolve();
+        },
+        error: (error) => {
+          console.error('❌ Erro no parsing da PLANILHA BI - OFICIAL:', error);
+          reject(error);
+        }
+      });
+    });
+  } catch (error) {
+    console.error('❌ Erro ao carregar PLANILHA BI - OFICIAL:', error);
+    throw error;
+  }
+}
+
 // Variáveis para shapefiles
 const rcLayers = {};
 const rodLayers = {};
@@ -142,50 +186,57 @@ async function carregarMetadadosRodovias() {
  * @returns {Object|null} - {lat, lng} ou null se não encontrado
  */
 function obterCoordenadaReal(rodovia, km) {
+  // Tenta buscar na PLANILHA BI - OFICIAL para máxima precisão
+  if (indexMalhaOficial[rodovia]) {
+    // Busca exata
+    let ponto = indexMalhaOficial[rodovia][km.toString()];
+    if (!ponto) {
+      // Busca aproximada (caso decimal ou erro de separador)
+      const kmStr = km.toFixed(1).replace('.', ',');
+      ponto = indexMalhaOficial[rodovia][kmStr];
+      if (!ponto) {
+        // Busca pelo km mais próximo
+        const kms = Object.keys(indexMalhaOficial[rodovia]).map(k => parseFloat(k.replace(',', '.')));
+        const kmMaisProx = kms.reduce((prev, curr) => Math.abs(curr - km) < Math.abs(prev - km) ? curr : prev, kms[0]);
+        ponto = indexMalhaOficial[rodovia][kmMaisProx.toString().replace('.', ',')];
+      }
+    }
+    if (ponto && ponto.LOCALIZAÇÃO) {
+      const [lat, lng] = ponto.LOCALIZAÇÃO.split(',').map(c => parseFloat(c.trim()));
+      if (!isNaN(lat) && !isNaN(lng)) {
+        return { lat, lng, ponto };
+      }
+    }
+  }
+  // Fallback: sistema antigo
+  // ...existing code...
   if (!metadadosRodovias[rodovia]) {
-    // Tenta variações do nome da rodovia
     const rodoviaLimpa = rodovia.replace(/ Vang| Jon| Madri| Obragen| Ellenco| Vale/g, '').trim();
     const possiveisNomes = Object.keys(metadadosRodovias).filter(r => 
       r.includes(rodoviaLimpa) || rodoviaLimpa.includes(r.split(' ')[0] + ' ' + r.split(' ')[1])
     );
-    
     if (possiveisNomes.length === 0) {
       console.warn(`⚠️ Rodovia não encontrada nos metadados: ${rodovia}`);
       return null;
     }
-    
-    rodovia = possiveisNomes[0]; // Usa a primeira correspondência
+    rodovia = possiveisNomes[0];
   }
-  
   const trechos = metadadosRodovias[rodovia];
   if (!trechos || trechos.length === 0) return null;
-  
-  // Procura o trecho que contém o km desejado
   const trecho = trechos.find(t => km >= t.kmInicial && km <= t.kmFinal);
-  
   if (!trecho) {
-    // Se não encontrar trecho exato, usa o mais próximo
     const trechoProximo = trechos.reduce((prev, curr) => {
       const distPrev = Math.min(Math.abs(km - prev.kmInicial), Math.abs(km - prev.kmFinal));
       const distCurr = Math.min(Math.abs(km - curr.kmInicial), Math.abs(km - curr.kmFinal));
       return distPrev < distCurr ? prev : curr;
     });
-    
-    console.warn(`⚠️ Km ${km} fora dos trechos de ${rodovia}. Usando trecho mais próximo: ${trechoProximo.kmInicial}-${trechoProximo.kmFinal}`);
-    
-    // Usa o ponto mais próximo do trecho
     const distInicial = Math.abs(km - trechoProximo.kmInicial);
     const distFinal = Math.abs(km - trechoProximo.kmFinal);
-    
     return distInicial < distFinal ? trechoProximo.coordInicial : trechoProximo.coordFinal;
   }
-  
-  // Interpola linearmente entre as coordenadas inicial e final do trecho
   const progresso = (km - trecho.kmInicial) / (trecho.kmFinal - trecho.kmInicial);
-  
   const lat = trecho.coordInicial.lat + (trecho.coordFinal.lat - trecho.coordInicial.lat) * progresso;
   const lng = trecho.coordInicial.lng + (trecho.coordFinal.lng - trecho.coordInicial.lng) * progresso;
-  
   return { lat, lng };
 }
 
@@ -270,37 +321,32 @@ async function carregarTodosDados() {
   try {
     // Carrega metadados primeiro para ter coordenadas disponíveis
     console.log("📍 Carregando metadados das rodovias...");
-    await carregarMetadadosRodovias();
-    
+    await Promise.all([
+      carregarMetadadosRodovias(),
+      carregarMalhaOficial()
+    ]);
     // Carrega todos os CSVs em paralelo
     const [linhas, calor, pontos] = await Promise.all([
       carregarCSV(CSV_URLS.linhasPorTrecho, 'Linhas por Trecho'),
       carregarCSV(CSV_URLS.mapaDeCalor, 'Mapa de Calor'),
       carregarCSV(CSV_URLS.pontosDeInteresse, 'Pontos de Interesse')
     ]);
-    
     dados.linhasPorTrecho = linhas;
     dados.mapaDeCalor = calor;
     dados.pontosDeInteresse = pontos;
-    
     // Debug: mostra dados carregados
     console.log("📊 DADOS CARREGADOS:");
     console.log("🛣️ Linhas por Trecho:", dados.linhasPorTrecho);
     console.log("🔥 Mapa de Calor:", dados.mapaDeCalor);
     console.log("📍 Pontos de Interesse:", dados.pontosDeInteresse);
-    
     // Renderiza os dados no mapa
     renderizarLinhasPorTrecho();
     renderizarMapaDeCalor();
     renderizarPontosDeInteresse();
-    
     console.log("🎉 Todos os dados carregados e renderizados com sucesso!");
     mostrarNotificacao("✅ Dados atualizados com sucesso!", "success");
-    
   } catch (error) {
     console.error("💥 Erro ao carregar dados:", error);
-    
-    // Mensagem específica baseada no tipo de erro
     let mensagem = "Erro ao carregar dados.";
     if (error.message.includes('não está pública')) {
       mensagem = "🔒 Planilhas não públicas. Configure permissões no Google Drive.";
@@ -311,7 +357,6 @@ async function carregarTodosDados() {
     } else if (error.message.includes('HTTP')) {
       mensagem = `📡 Erro no servidor: ${error.message}`;
     }
-    
     mostrarNotificacao(mensagem, "error");
   }
 }
@@ -337,35 +382,48 @@ function renderizarLinhasPorTrecho() {
       
       console.log(`🛣️ Processando linha: ${rodovia}, Km ${kmInicial}-${kmFinal}, Cor: ${cor}, Espessura: ${espessura}`);
       
-      // Obtém coordenadas reais para início e fim do trecho
-      const coordInicial = obterCoordenadaReal(rodovia, kmInicial);
-      const coordFinal = obterCoordenadaReal(rodovia, kmFinal);
-      
-      let pontos;
-      if (coordInicial && coordFinal) {
-        pontos = [
-          [coordInicial.lat, coordInicial.lng],
-          [coordFinal.lat, coordFinal.lng]
-        ];
-        console.log(`✅ Coordenadas reais: ${coordInicial.lat.toFixed(6)},${coordInicial.lng.toFixed(6)} → ${coordFinal.lat.toFixed(6)},${coordFinal.lng.toFixed(6)}`);
-      } else {
-        // Fallback: coordenadas baseadas em região São Paulo
-        const latBase = -23.5 - (index * 0.15);
-        const lngBase = -46.6 + (index * 0.2);
-        pontos = [
-          [latBase, lngBase],
-          [latBase - 0.05, lngBase + 0.1]
-        ];
-        console.warn(`⚠️ Usando coordenadas fallback para ${rodovia}`);
+      // Gera pontos intermediários para máxima precisão (malha oficial)
+      let pontos = [];
+      if (indexMalhaOficial[rodovia]) {
+        // Seleciona todos os pontos entre kmInicial e kmFinal
+        const kms = Object.keys(indexMalhaOficial[rodovia])
+          .map(k => parseFloat(k.replace(',', '.')))
+          .filter(k => k >= kmInicial && k <= kmFinal)
+          .sort((a, b) => a - b);
+        kms.forEach(k => {
+          const ponto = indexMalhaOficial[rodovia][k.toString().replace('.', ',')];
+          if (ponto && ponto.LOCALIZAÇÃO) {
+            const [lat, lng] = ponto.LOCALIZAÇÃO.split(',').map(c => parseFloat(c.trim()));
+            if (!isNaN(lat) && !isNaN(lng)) pontos.push([lat, lng]);
+          }
+        });
       }
-      
+      // Se não encontrou pontos, usa sistema antigo
+      if (pontos.length < 2) {
+        const coordInicial = obterCoordenadaReal(rodovia, kmInicial);
+        const coordFinal = obterCoordenadaReal(rodovia, kmFinal);
+        if (coordInicial && coordFinal) {
+          pontos = [
+            [coordInicial.lat, coordInicial.lng],
+            [coordFinal.lat, coordFinal.lng]
+          ];
+        } else {
+          // Fallback: coordenadas baseadas em região São Paulo
+          const latBase = -23.5 - (index * 0.15);
+          const lngBase = -46.6 + (index * 0.2);
+          pontos = [
+            [latBase, lngBase],
+            [latBase - 0.05, lngBase + 0.1]
+          ];
+        }
+      }
       const linha_geom = L.polyline(pontos, {
         color: cor,
         weight: espessura,
         pane: 'rodoviasPane',
         opacity: 0.8
       });
-      
+      // Popup detalhado
       linha_geom.bindPopup(`
         <strong>🛣️ ${rodovia}</strong><br>
         📍 Km ${kmInicial.toFixed(3)} - ${kmFinal.toFixed(3)}<br>
@@ -373,7 +431,6 @@ function renderizarLinhasPorTrecho() {
         📏 Espessura: ${espessura}px<br>
         <small>📄 Dados da planilha: Linhas por Trecho</small>
       `);
-      
       layers.linhas.addLayer(linha_geom);
       
     } catch (error) {
@@ -460,19 +517,17 @@ function renderizarPontosDeInteresse() {
       
       // Obtém coordenadas reais baseadas na rodovia e Km
       const coordReal = obterCoordenadaReal(rodovia, km);
-      let lat, lng;
-      
+      let lat, lng, pontoInfo;
       if (coordReal) {
         lat = coordReal.lat;
         lng = coordReal.lng;
+        pontoInfo = coordReal.ponto;
         console.log(`✅ Coordenada real encontrada: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
       } else {
-        // Fallback: coordenadas baseadas em região São Paulo (mantido para compatibilidade)
         lat = -23.4 - (index * 0.12);
         lng = -46.4 + (index * 0.18);
         console.warn(`⚠️ Usando coordenada fallback para ${rodovia} Km ${km}`);
       }
-      
       const circulo = L.circle([lat, lng], {
         color: cor,
         fillColor: cor,
@@ -481,15 +536,23 @@ function renderizarPontosDeInteresse() {
         pane: 'overlayPane',
         weight: 2
       });
-      
-      circulo.bindPopup(`
-        <strong>📍 ${obs}</strong><br>
+      // Popup detalhado com link Google Maps e dados da malha
+      let popup = `<strong>📍 ${obs}</strong><br>
         🛣️ ${rodovia} - Km ${km.toFixed(3)}<br>
         🎨 ${cor} (${(opacidade * 100).toFixed(0)}% opacidade)<br>
-        📏 Raio: ${raio}m<br>
-        📄 <small>Dados da planilha: Pontos de Interesse</small>
-      `);
-      
+        📏 Raio: ${raio}m<br>`;
+      if (pontoInfo) {
+        popup += `<hr><b>RC:</b> ${pontoInfo.RC || ''}<br>
+        <b>SP:</b> ${pontoInfo.SP || ''}<br>
+        <b>KM:</b> ${pontoInfo['KM '] || ''}<br>
+        <b>Município:</b> ${pontoInfo.MUNICÍPIO || ''}<br>
+        <b>Tipo:</b> ${pontoInfo.TIPO || ''}<br>
+        <a href='https://www.google.com/maps/search/?api=1&query=${lat},${lng}' target='_blank'>Abrir no Google Maps</a><br>`;
+      } else {
+        popup += `<a href='https://www.google.com/maps/search/?api=1&query=${lat},${lng}' target='_blank'>Abrir no Google Maps</a><br>`;
+      }
+      popup += `<small>📄 Dados da planilha: Pontos de Interesse</small>`;
+      circulo.bindPopup(popup);
       layers.pontos.addLayer(circulo);
       
     } catch (error) {
