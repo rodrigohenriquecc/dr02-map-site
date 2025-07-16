@@ -31,12 +31,13 @@ let dados = {
   pontosDeInteresse: []
 };
 
-// ═══════════════════════ 3) URLs dos CSVs
+// ═══════════════════════ 3) URLs dos CSVs do Google Drive
 const CSV_URLS = {
-  // URLs para produção (GitHub Pages)
-  linhasPorTrecho: '../data/linhas_por_trecho.csv',
-  mapaDeCalor: '../data/mapa_de_calor.csv', 
-  pontosDeInteresse: '../data/pontos_de_interesse.csv'
+  // URLs públicas do Google Drive (compartilhado entre 4 usuários)
+  // TODO: Substituir pelos IDs reais dos arquivos após criar a pasta compartilhada
+  linhasPorTrecho: 'https://drive.google.com/uc?export=download&id=SEU_ID_LINHAS_POR_TRECHO',
+  mapaDeCalor: 'https://drive.google.com/uc?export=download&id=SEU_ID_MAPA_DE_CALOR', 
+  pontosDeInteresse: 'https://drive.google.com/uc?export=download&id=SEU_ID_PONTOS_DE_INTERESSE'
 };
 
 // ═══════════════════════ 4) Funções de Carregamento de Dados

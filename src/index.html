@@ -308,8 +308,9 @@
         setImportCardVisible(importCardVisible);
       });
 
-      // Filtro de rodovia e km (carrega dos CSVs colaborativos)
-      const CSV_PONTOS_URL = "../data/pontos_de_interesse.csv";
+      // Filtro de rodovia e km (carrega dos CSVs do Google Drive compartilhado)
+      // TODO: Substituir pelo ID real do arquivo do Google Drive
+      const CSV_PONTOS_URL = "https://drive.google.com/uc?export=download&id=SEU_ID_PONTOS_DE_INTERESSE";
       let filtroPontosPorKm = {};
       function preencherRodoviasFiltroPontos() {
         const select = document.getElementById('filtroRodovia');
