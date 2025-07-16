@@ -3,19 +3,19 @@
 ## 📊 **Arquivos Compartilhados:**
 
 ### **Pontos de Interesse**
-- **Link:** https://drive.google.com/file/d/1jDo4XoZ75R5I7nsjQGX_H0DEWMYb7d-j/view?usp=sharing
-- **ID:** `1jDo4XoZ75R5I7nsjQGX_H0DEWMYb7d-j`
-- **URL API:** `https://drive.google.com/uc?export=download&id=1jDo4XoZ75R5I7nsjQGX_H0DEWMYb7d-j`
+- **Link:** https://docs.google.com/spreadsheets/d/1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI/edit?usp=sharing
+- **ID:** `1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI`
+- **URL API:** `https://drive.google.com/uc?export=download&id=1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI`
 
 ### **Linhas por Trecho**
-- **Link:** https://drive.google.com/file/d/1TtPn-ZYcYe16AeWA-LWqGYeQcOfyKbcl/view?usp=sharing
-- **ID:** `1TtPn-ZYcYe16AeWA-LWqGYeQcOfyKbcl`
-- **URL API:** `https://drive.google.com/uc?export=download&id=1TtPn-ZYcYe16AeWA-LWqGYeQcOfyKbcl`
+- **Link:** https://docs.google.com/spreadsheets/d/1r-7wdW8IwNhDMmGJ_QoflML-Mo1wvgAuw6ILK_LFlpo/edit?usp=sharing
+- **ID:** `1r-7wdW8IwNhDMmGJ_QoflML-Mo1wvgAuw6ILK_LFlpo`
+- **URL API:** `https://drive.google.com/uc?export=download&id=1r-7wdW8IwNhDMmGJ_QoflML-Mo1wvgAuw6ILK_LFlpo`
 
 ### **Mapa de Calor**
-- **Link:** https://drive.google.com/file/d/16lePveVqIm5qLypsoXKd8D7q-gyssHtB/view?usp=sharing
-- **ID:** `16lePveVqIm5qLypsoXKd8D7q-gyssHtB`
-- **URL API:** `https://drive.google.com/uc?export=download&id=16lePveVqIm5qLypsoXKd8D7q-gyssHtB`
+- **Link:** https://docs.google.com/spreadsheets/d/1IcM6qrF9JpZlJ6c6P1pvb8O5bhmdgDz4gKCtf8V2JUg/edit?usp=sharing
+- **ID:** `1IcM6qrF9JpZlJ6c6P1pvb8O5bhmdgDz4gKCtf8V2JUg`
+- **URL API:** `https://drive.google.com/uc?export=download&id=1IcM6qrF9JpZlJ6c6P1pvb8O5bhmdgDz4gKCtf8V2JUg`
 
 ## 👥 **Usuários com Acesso:**
 - Rodrigo (Proprietário)

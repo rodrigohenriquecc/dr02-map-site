@@ -60,16 +60,16 @@ Editar `src/js/script_colaborativo.js`:
 
 ```javascript
 const CSV_URLS = {
-  linhasPorTrecho: 'https://drive.google.com/uc?export=download&id=1TtPn-ZYcYe16AeWA-LWqGYeQcOfyKbcl',
-  mapaDeCalor: 'https://drive.google.com/uc?export=download&id=16lePveVqIm5qLypsoXKd8D7q-gyssHtB', 
-  pontosDeInteresse: 'https://drive.google.com/uc?export=download&id=1jDo4XoZ75R5I7nsjQGX_H0DEWMYb7d-j'
+  linhasPorTrecho: 'https://drive.google.com/uc?export=download&id=1r-7wdW8IwNhDMmGJ_QoflML-Mo1wvgAuw6ILK_LFlpo',
+  mapaDeCalor: 'https://drive.google.com/uc?export=download&id=1IcM6qrF9JpZlJ6c6P1pvb8O5bhmdgDz4gKCtf8V2JUg', 
+  pontosDeInteresse: 'https://drive.google.com/uc?export=download&id=1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI'
 };
 ```
 
 Editar `src/index.html` (linha ~312):
 
 ```javascript
-const CSV_PONTOS_URL = "https://drive.google.com/uc?export=download&id=1jDo4XoZ75R5I7nsjQGX_H0DEWMYb7d-j";
+const CSV_PONTOS_URL = "https://drive.google.com/uc?export=download&id=1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI";
 ```
 
 **🎯 STATUS: CONFIGURADO! ✅**

@@ -39,15 +39,9 @@ let dados = {
 // ═══════════════════════ 3) URLs dos CSVs do Google Drive
 const CSV_URLS = {
   // URLs públicas do Google Drive (compartilhado entre 4 usuários)
-  // TEMPORÁRIO: Usando dados locais até Google Drive estar público
-  linhasPorTrecho: '../data/linhas_por_trecho.csv',
-  mapaDeCalor: '../data/mapa_de_calor.csv', 
-  pontosDeInteresse: '../data/pontos_de_interesse.csv'
-  
-  // URLs do Google Drive (descomentar quando estiverem públicos):
-  // linhasPorTrecho: 'https://drive.google.com/uc?export=download&id=1TtPn-ZYcYe16AeWA-LWqGYeQcOfyKbcl',
-  // mapaDeCalor: 'https://drive.google.com/uc?export=download&id=16lePveVqIm5qLypsoXKd8D7q-gyssHtB', 
-  // pontosDeInteresse: 'https://drive.google.com/uc?export=download&id=1jDo4XoZ75R5I7nsjQGX_H0DEWMYb7d-j'
+  linhasPorTrecho: 'https://drive.google.com/uc?export=download&id=1r-7wdW8IwNhDMmGJ_QoflML-Mo1wvgAuw6ILK_LFlpo',
+  mapaDeCalor: 'https://drive.google.com/uc?export=download&id=1IcM6qrF9JpZlJ6c6P1pvb8O5bhmdgDz4gKCtf8V2JUg', 
+  pontosDeInteresse: 'https://drive.google.com/uc?export=download&id=1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI'
 };
 
 // ═══════════════════════ 4) Funções de Carregamento de Dados
