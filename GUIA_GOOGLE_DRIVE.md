@@ -54,23 +54,25 @@ https://drive.google.com/file/d/1ABC123XYZ789/view?usp=sharing
 1ABC123XYZ789
 ```
 
-### **Passo 5: Atualizar o Código**
+### **Passo 5: Atualizar o Código** ✅
 
 Editar `src/js/script_colaborativo.js`:
 
 ```javascript
 const CSV_URLS = {
-  linhasPorTrecho: 'https://drive.google.com/uc?export=download&id=ID_REAL_LINHAS',
-  mapaDeCalor: 'https://drive.google.com/uc?export=download&id=ID_REAL_CALOR', 
-  pontosDeInteresse: 'https://drive.google.com/uc?export=download&id=ID_REAL_PONTOS'
+  linhasPorTrecho: 'https://drive.google.com/uc?export=download&id=1TtPn-ZYcYe16AeWA-LWqGYeQcOfyKbcl',
+  mapaDeCalor: 'https://drive.google.com/uc?export=download&id=16lePveVqIm5qLypsoXKd8D7q-gyssHtB', 
+  pontosDeInteresse: 'https://drive.google.com/uc?export=download&id=1jDo4XoZ75R5I7nsjQGX_H0DEWMYb7d-j'
 };
 ```
 
-Editar `src/index.html` (linha ~310):
+Editar `src/index.html` (linha ~312):
 
 ```javascript
-const CSV_PONTOS_URL = "https://drive.google.com/uc?export=download&id=ID_REAL_PONTOS";
+const CSV_PONTOS_URL = "https://drive.google.com/uc?export=download&id=1jDo4XoZ75R5I7nsjQGX_H0DEWMYb7d-j";
 ```
+
+**🎯 STATUS: CONFIGURADO! ✅**
 
 ## 👥 **Fluxo de Trabalho dos Usuários**
 
