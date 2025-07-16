@@ -25,6 +25,11 @@ const layers = {
   calor: null
 };
 
+// Variáveis para shapefiles
+const rcLayers = {};
+const rodLayers = {};
+let rodLabels = [];
+
 let dados = {
   linhasPorTrecho: [],
   mapaDeCalor: [],
@@ -34,9 +39,15 @@ let dados = {
 // ═══════════════════════ 3) URLs dos CSVs do Google Drive
 const CSV_URLS = {
   // URLs públicas do Google Drive (compartilhado entre 4 usuários)
-  linhasPorTrecho: 'https://drive.google.com/uc?export=download&id=1TtPn-ZYcYe16AeWA-LWqGYeQcOfyKbcl',
-  mapaDeCalor: 'https://drive.google.com/uc?export=download&id=16lePveVqIm5qLypsoXKd8D7q-gyssHtB', 
-  pontosDeInteresse: 'https://drive.google.com/uc?export=download&id=1jDo4XoZ75R5I7nsjQGX_H0DEWMYb7d-j'
+  // TEMPORÁRIO: Usando dados locais até Google Drive estar público
+  linhasPorTrecho: '../data/linhas_por_trecho.csv',
+  mapaDeCalor: '../data/mapa_de_calor.csv', 
+  pontosDeInteresse: '../data/pontos_de_interesse.csv'
+  
+  // URLs do Google Drive (descomentar quando estiverem públicos):
+  // linhasPorTrecho: 'https://drive.google.com/uc?export=download&id=1TtPn-ZYcYe16AeWA-LWqGYeQcOfyKbcl',
+  // mapaDeCalor: 'https://drive.google.com/uc?export=download&id=16lePveVqIm5qLypsoXKd8D7q-gyssHtB', 
+  // pontosDeInteresse: 'https://drive.google.com/uc?export=download&id=1jDo4XoZ75R5I7nsjQGX_H0DEWMYb7d-j'
 };
 
 // ═══════════════════════ 4) Funções de Carregamento de Dados
@@ -367,6 +378,105 @@ function adicionarControles() {
   }, 100);
 }
 
+// ═══════════════════════ 6) Carregamento de Shapefiles
+
+// Helper para adicionar rótulos
+const addLabel = (latlng, txt, cls) =>
+  L.marker(latlng, {
+    pane: "overlayPane",
+    icon: L.divIcon({ className: "", html: `<div class='${cls}'>${txt}</div>`, iconSize: null }),
+    interactive: false,
+  }).addTo(mapa);
+
+/**
+ * Carrega shapefiles das RCs
+ */
+async function carregarRC() {
+  console.log("🗺️ Carregando shapefiles das RCs...");
+  
+  const rcList = [
+    "../data/RC_2.1.zip",
+    "../data/RC_2.2.zip", 
+    "../data/RC_2.4.zip",
+    "../data/RC_2.5.zip",
+    "../data/RC_2.6_2.8.zip",
+    "../data/RC_2.7.zip",
+  ];
+
+  for (const p of rcList) {
+    try {
+      if (typeof shp !== 'undefined') {
+        const geo = await shp(p);
+        const name = p.match(/RC_[\d._]+/)[0].replace("_", " ");
+        rcLayers[name] = L.geoJSON(geo, {
+          pane: "shapefilePane",
+          style: { color: "#000", weight: 2.5, fill: false },
+        }).addTo(mapa);
+        addLabel(rcLayers[name].getBounds().getCenter(), name, "rc-label");
+        console.log(`✅ RC carregado: ${name}`);
+      }
+    } catch (err) {
+      console.warn(`❌ Erro ao carregar RC ${p}:`, err);
+    }
+  }
+
+  carregarMalha();
+}
+
+/**
+ * Carrega malha rodoviária DR.02
+ */
+async function carregarMalha() {
+  console.log("🛣️ Carregando malha rodoviária...");
+  
+  const MALHA_PATH = "../data/malha_dr02.kmz";
+  try {
+    if (typeof JSZip !== 'undefined' && typeof toGeoJSON !== 'undefined') {
+      const resp = await fetch(MALHA_PATH);
+      if (!resp.ok) throw new Error(`404 – não achei ${MALHA_PATH}`);
+
+      const zip = await JSZip.loadAsync(await resp.arrayBuffer());
+      const kmlFile = Object.keys(zip.files).find((f) => f.toLowerCase().endsWith(".kml"));
+      if (!kmlFile) throw new Error(".kml ausente dentro do KMZ");
+
+      const xml = await zip.file(kmlFile).async("string");
+      const geo = toGeoJSON.kml(new DOMParser().parseFromString(xml, "text/xml"));
+
+      // Remove labels antigos das rodovias
+      rodLabels.forEach((l) => mapa.removeLayer(l));
+      rodLabels = [];
+      
+      geo.features
+        .filter((f) => f.geometry && ["LineString", "MultiLineString"].includes(f.geometry.type))
+        .forEach((feat) => {
+          const nomeCompleto = (feat.properties?.name || "Rodovia").replaceAll("_", " ").trim();
+          // Extrai "SPA 294/250", "SPA 294" ou "SP 250" do nome
+          const nome = nomeCompleto.match(/SPA ?\d+\/\d+|SPA ?\d+|SP ?\d+/i)?.[0] || nomeCompleto;
+          
+          if (typeof turf !== 'undefined') {
+            rodLayers[nomeCompleto] = L.geoJSON(turf.simplify(feat, { tolerance: 0.00005 }), {
+              pane: "rodoviasPane",
+              style: { color: "#555", weight: 3, opacity: 0.9 },
+            }).addTo(mapa);
+          } else {
+            rodLayers[nomeCompleto] = L.geoJSON(feat, {
+              pane: "rodoviasPane", 
+              style: { color: "#555", weight: 3, opacity: 0.9 },
+            }).addTo(mapa);
+          }
+          
+          // Adiciona o label e armazena referência
+          const label = addLabel(rodLayers[nomeCompleto].getBounds().getCenter(), nome, "rod-label");
+          rodLabels.push(label);
+        });
+        
+      console.log(`✅ Malha rodoviária carregada com ${Object.keys(rodLayers).length} rodovias`);
+    }
+  } catch (err) {
+    console.warn("❌ Erro ao carregar malha rodoviária:", err);
+  }
+}
+
 // ═══════════════════════ 7) Inicialização
 
 /**
@@ -380,6 +490,11 @@ function inicializar() {
   
   // Carrega dados iniciais
   carregarTodosDados();
+  
+  // Carrega shapefiles (RCs e malha rodoviária)
+  setTimeout(() => {
+    carregarRC();
+  }, 1000);
   
   // Mostra notificação de boas-vindas
   mostrarNotificacao("🗺️ Sistema DR.02 carregado! Dados colaborativos atualizados.", "success");
