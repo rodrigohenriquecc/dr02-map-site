@@ -1,4 +1,38 @@
-# DR.02 - Site de Mapa Interativo
+# DR.02 - Sistema de Localização de Rodovias e KM## Como usar localmente
+
+1. **Clone ou baixe** este repositório
+2. **Abra `index.html`** diretamente no navegador ou use um servidor local:
+   ```bash
+   # Usando Python
+   python -m http.server 8080
+   
+   # Usando Node.js
+   npx serve .
+   
+   # Usando PHP
+   php -S localhost:8080
+   ```
+3. Acesse `http://localhost:8080` no navegador
+
+## Como usar o sistema
+
+1. **Clique no botão "🔍 Localizar Km"** no canto superior direito
+2. **Selecione a rodovia** no dropdown
+3. **Escolha o KM** desejado na lista
+4. **Clique em "Mostrar no mapa"** para visualizar o ponto
+5. Use o **link do Google Maps** para navegação externa
+
+## Deploy automático no GitHub Pages
+
+Este projeto está configurado para deploy automático no GitHub Pages. Após fazer push das alterações, o site será atualizado automaticamente em poucos minutos.rio contém um site interativo que exibe:
+
+* **Mapa interativo das rodovias do DR.02** com sistema de localização por KM
+* **Busca de pontos específicos** nas rodovias com coordenadas GPS
+* **Visualização de dados geográficos** através de shapefiles e arquivos KMZ
+* **Interface responsiva** que funciona em desktop e mobile
+* **Links diretos para Google Maps** para cada ponto localizado
+
+Tudo roda **100% no front-end** (Leaflet + bibliotecas JavaScript). Não há dependências de servidor ou build step. Site de Mapa Interativo
 
 Este repositório contém um site estático que exibe:
 
@@ -12,25 +46,31 @@ Tudo roda **100 % no front‑end** (Leaflet + SheetJS). Não há dependências 
 
 ```
 /
-├── index.html
+├── index.html              # Página principal com interface completa
+├── favicon.ico             # Ícone do site
+├── meta.csv               # Dados de metadados
 ├── css/
-│   └── style.css
+│   └── style.css          # Estilos personalizados
 ├── js/
-│   └── script.js
-├── data/
-│   ├── PLANILHA BI - OFICIAL.xlsx
-│   ├── RC 2.1.zip
-│   ├── RC 2.2.zip
-│   ├── RC 2.4.zip
-│   ├── RC 2.5.zip
-│   ├── RC 2.6+2.8.zip
-│   └── RC 2.7.zip
-└── README.md
+│   ├── script.js          # Script principal
+│   └── script_backup.js   # Backup do script
+└── data/
+    ├── malha_dr02.kmz     # Arquivo KMZ com malha rodoviária
+    ├── RC_2.1.zip         # Dados RC 2.1
+    ├── RC_2.2.zip         # Dados RC 2.2
+    ├── RC_2.4.zip         # Dados RC 2.4
+    ├── RC_2.5.zip         # Dados RC 2.5
+    ├── RC_2.6_2.8.zip     # Dados RC 2.6 e 2.8
+    └── RC_2.7.zip         # Dados RC 2.7
 ```
 
-Coloque seu **Excel** e os **shapefiles zip** dentro da pasta `data/` com exatamente os nomes acima.
+## Funcionalidades
 
-> **Obs.:** Cada ZIP deve conter todos os arquivos do shapefile (`.shp`, `.dbf`, `.prj`, etc.).
+- **🔍 Localização de KM**: Sistema de busca que permite localizar qualquer quilômetro em rodovias específicas
+- **📍 Coordenadas GPS**: Cada ponto exibe coordenadas precisas com link para Google Maps
+- **🗺️ Visualização de dados**: Carregamento automático de shapefiles e arquivos KMZ
+- **📱 Interface responsiva**: Funciona perfeitamente em dispositivos móveis
+- **🎯 Marcadores customizados**: Destaque visual para pontos localizados
 
 ## Como testar localmente
 
