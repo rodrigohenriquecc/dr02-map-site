@@ -766,9 +766,24 @@ async function carregarMalha() {
         .filter((f) => f.geometry && ["LineString", "MultiLineString"].includes(f.geometry.type))
         .forEach((feat) => {
           const nomeCompleto = (feat.properties?.name || "Rodovia").replaceAll("_", " ").trim();
-          // Extrai "SPA 294/250", "SPA 294" ou "SP 250" do nome
-          const nome = nomeCompleto.match(/SPA ?\d+\/\d+|SPA ?\d+|SP ?\d+/i)?.[0] || nomeCompleto;
-          
+          // Extrai sempre o nome completo para SPA (ex: SPA 294/250)
+          let nome = nomeCompleto;
+          if (/SPA/i.test(nomeCompleto)) {
+            // Se houver barra, pega tudo após SPA
+            const spaMatch = nomeCompleto.match(/SPA ?\d+\/\d+/);
+            if (spaMatch) {
+              nome = spaMatch[0];
+            } else {
+              // Se não houver barra, pega SPA + número
+              const spaSimple = nomeCompleto.match(/SPA ?\d+/);
+              if (spaSimple) nome = spaSimple[0];
+            }
+          } else {
+            // Para SP, pega SP + número
+            const spMatch = nomeCompleto.match(/SP ?\d+/);
+            if (spMatch) nome = spMatch[0];
+          }
+          // Adiciona o label e armazena referência
           if (typeof turf !== 'undefined') {
             rodLayers[nomeCompleto] = L.geoJSON(turf.simplify(feat, { tolerance: 0.00005 }), {
               pane: "rodoviasPane",
@@ -780,9 +795,8 @@ async function carregarMalha() {
               style: { color: "#555", weight: 3, opacity: 0.9 },
             }).addTo(mapa);
           }
-          
-          // Adiciona o label e armazena referência
-          const label = addLabel(rodLayers[nomeCompleto].getBounds().getCenter(), nome, "rod-label");
+          // Evita sobreposição: empilha os labels com classe .stacked
+          const label = addLabel(rodLayers[nomeCompleto].getBounds().getCenter(), nome, "rod-label stacked");
           rodLabels.push(label);
         });
         
