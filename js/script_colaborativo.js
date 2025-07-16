@@ -464,12 +464,12 @@ async function carregarRC() {
   console.log("🗺️ Carregando shapefiles das RCs...");
   
   const rcList = [
-    "../data/RC_2.1.zip",
-    "../data/RC_2.2.zip", 
-    "../data/RC_2.4.zip",
-    "../data/RC_2.5.zip",
-    "../data/RC_2.6_2.8.zip",
-    "../data/RC_2.7.zip",
+    "data/RC_2.1.zip",
+    "data/RC_2.2.zip", 
+    "data/RC_2.4.zip",
+    "data/RC_2.5.zip",
+    "data/RC_2.6_2.8.zip",
+    "data/RC_2.7.zip",
   ];
 
   for (const p of rcList) {
@@ -498,7 +498,7 @@ async function carregarRC() {
 async function carregarMalha() {
   console.log("🛣️ Carregando malha rodoviária...");
   
-  const MALHA_PATH = "../data/malha_dr02.kmz";
+  const MALHA_PATH = "data/malha_dr02.kmz";
   try {
     if (typeof JSZip !== 'undefined' && typeof toGeoJSON !== 'undefined') {
       const resp = await fetch(MALHA_PATH);
