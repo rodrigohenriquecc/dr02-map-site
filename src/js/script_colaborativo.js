@@ -39,9 +39,10 @@ let dados = {
 // ═══════════════════════ 3) URLs dos CSVs do Google Drive
 const CSV_URLS = {
   // URLs públicas do Google Drive (compartilhado entre 4 usuários)
-  linhasPorTrecho: 'https://drive.google.com/uc?export=download&id=1r-7wdW8IwNhDMmGJ_QoflML-Mo1wvgAuw6ILK_LFlpo',
-  mapaDeCalor: 'https://drive.google.com/uc?export=download&id=1IcM6qrF9JpZlJ6c6P1pvb8O5bhmdgDz4gKCtf8V2JUg', 
-  pontosDeInteresse: 'https://drive.google.com/uc?export=download&id=1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI'
+  // Usando formato /export?format=csv que funciona melhor
+  linhasPorTrecho: 'https://docs.google.com/spreadsheets/d/1r-7wdW8IwNhDMmGJ_QoflML-Mo1wvgAuw6ILK_LFlpo/export?format=csv',
+  mapaDeCalor: 'https://docs.google.com/spreadsheets/d/1IcM6qrF9JpZlJ6c6P1pvb8O5bhmdgDz4gKCtf8V2JUg/export?format=csv', 
+  pontosDeInteresse: 'https://docs.google.com/spreadsheets/d/1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI/export?format=csv'
 };
 
 // ═══════════════════════ 4) Funções de Carregamento de Dados
@@ -53,7 +54,22 @@ async function carregarCSV(url, nome) {
   console.log(`📊 Carregando ${nome}...`);
   
   try {
-    const response = await fetch(url);
+    // Primeira tentativa: URL normal
+    let response = await fetch(url);
+    
+    // Se receber 303 ou 500, tenta URLs alternativas
+    if (response.status === 303 || response.status === 500) {
+      console.warn(`⚠️ ${nome}: Status ${response.status}, tentando método alternativo...`);
+      
+      // Extrai ID da URL e tenta formato CSV direto
+      const idMatch = url.match(/id=([a-zA-Z0-9-_]+)/);
+      if (idMatch) {
+        const fileId = idMatch[1];
+        const urlAlternativa = `https://docs.google.com/spreadsheets/d/${fileId}/export?format=csv`;
+        console.log(`🔄 Tentando URL alternativa para ${nome}: ${urlAlternativa}`);
+        response = await fetch(urlAlternativa);
+      }
+    }
     
     // Verifica se houve redirecionamento (planilha não pública)
     if (response.status === 303 || response.url.includes('accounts.google.com')) {
@@ -69,6 +85,12 @@ async function carregarCSV(url, nome) {
     // Verifica se o conteúdo parece ser HTML (erro de login)
     if (csvText.trim().startsWith('<!DOCTYPE') || csvText.includes('<html')) {
       throw new Error(`Planilha "${nome}" retornou HTML ao invés de CSV. Verifique as permissões públicas.`);
+    }
+    
+    // Verifica se o CSV está vazio ou só tem cabeçalhos
+    const linhas = csvText.trim().split('\n');
+    if (linhas.length <= 1) {
+      console.warn(`⚠️ ${nome}: Planilha parece estar vazia (${linhas.length} linhas)`);
     }
     
     return new Promise((resolve, reject) => {
@@ -130,6 +152,8 @@ async function carregarTodosDados() {
       mensagem = "🔒 Planilhas não públicas. Configure permissões no Google Drive.";
     } else if (error.message.includes('Failed to fetch')) {
       mensagem = "🌐 Erro de conexão. Verifique sua internet.";
+    } else if (error.message.includes('HTTP 500')) {
+      mensagem = "⚠️ Servidor temporariamente indisponível. Tente novamente em alguns segundos.";
     } else if (error.message.includes('HTTP')) {
       mensagem = `📡 Erro no servidor: ${error.message}`;
     }
