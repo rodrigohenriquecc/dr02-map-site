@@ -308,8 +308,8 @@
         setImportCardVisible(importCardVisible);
       });
 
-      // Filtro de rodovia e km (carrega direto da nova planilha de pontos por Km)
-      const SHEET_PONTOS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRcA1FtwW6o2AymbsAQx2Ad-15DmJRx0P5Mri4qJ3FnZh52tKw6OcM8dQiNyzXTjQ/pub?output=csv";
+      // Filtro de rodovia e km (carrega dos CSVs colaborativos)
+      const CSV_PONTOS_URL = "../data/pontos_de_interesse.csv";
       let filtroPontosPorKm = {};
       function preencherRodoviasFiltroPontos() {
         const select = document.getElementById('filtroRodovia');
@@ -322,90 +322,52 @@
           select.appendChild(opt);
         });
       }
-      // Helper para normalizar nomes de colunas
-      function normalizarColuna(nome) {
-        return nome.normalize('NFD').replace(/[^\w]/g, '').toLowerCase();
-      }
-
-      // Carrega planilha de pontos por Km e popula filtro (corrige nomes de colunas)
+      // Carrega CSV de pontos de interesse e popula filtro
       function carregarFiltroPontosPorKm() {
         if (typeof Papa === 'undefined') {
           setTimeout(carregarFiltroPontosPorKm, 200);
           return;
         }
-        Papa.parse(SHEET_PONTOS_URL, {
+        Papa.parse(CSV_PONTOS_URL, {
           download: true,
           header: true,
           skipEmptyLines: true,
           complete: ({ data, meta }) => {
             filtroPontosPorKm = {};
-            let colunas = {};
-            if (meta && meta.fields) {
-              meta.fields.forEach((c) => {
-                colunas[normalizarColuna(c)] = c;
-              });
-            }
             data.forEach((r, idx) => {
-              // Busca colunas normalizadas
-              const rodovia = (r[colunas['sp']] || '').toString().trim();
-              const kmStr = (r[colunas['km']] || '').toString().replace(',', '.').trim();
-              const localizacao = (r[colunas['localizacao']] || '').toString().trim();
-              const urlFoto = (r[colunas['urlfotos']] || '').toString().trim();
-              const urlMaps = (r[colunas['urldolinkprogooglemaps']] || '').toString().trim();
-              const municipio = (r[colunas['municipio']] || '').toString().trim();
-              const tipo = (r[colunas['tipo']] || '').toString().trim();
-              const rc = (r[colunas['rc']] || '').toString().trim();
-              if (!rodovia || !kmStr || !localizacao) return;
-              // Extrai lat/lon da coluna LOCALIZAÇÃO
-              let lat = null, lon = null;
-              if (/^-?\d+([\.,]\d+)?\s*,\s*-?\d+([\.,]\d+)?$/.test(localizacao)) {
-                const [latStr, lonStr] = localizacao.split(',').map(s => s.replace(',', '.').trim());
-                lat = parseFloat(latStr);
-                lon = parseFloat(lonStr);
-              }
-              if (lat === null || lon === null || isNaN(lat) || isNaN(lon)) return;
+              // Lê dados do CSV colaborativo
+              const rodovia = (r.rodovia || '').toString().trim();
+              const kmStr = (r.km || '').toString().replace(',', '.').trim();
+              const obs = (r.obs || '').toString().trim();
+              const cor = (r.cor || '#FF0000').toString().trim();
+              const opacidade = parseFloat(r.opacidade || 0.8);
+              const raio = parseInt(r.raio || 50);
+              
+              if (!rodovia || !kmStr) return;
+              
+              const km = parseFloat(kmStr);
+              if (isNaN(km)) return;
+              
               if (!filtroPontosPorKm[rodovia]) filtroPontosPorKm[rodovia] = [];
               filtroPontosPorKm[rodovia].push({
-                km: parseFloat(kmStr),
-                lat,
-                lon,
-                urlFoto,
-                urlMaps,
-                municipio,
-                tipo,
-                rc
+                km: km,
+                obs: obs,
+                cor: cor,
+                opacidade: opacidade,
+                raio: raio,
+                // Para compatibilidade com o sistema de localização, geramos coordenadas fictícias
+                // Em um sistema real, você adicionaria colunas lat/lon no CSV
+                lat: -23.5489 + (Math.random() - 0.5) * 0.1, // Região de SP
+                lon: -46.6388 + (Math.random() - 0.5) * 0.1
               });
             });
             // Ordena os pontos por Km para cada rodovia
             Object.values(filtroPontosPorKm).forEach(arr => arr.sort((a, b) => a.km - b.km));
             preencherRodoviasFiltroPontos();
-            preencherMunicipiosFiltro();
           }
         });
       }
       carregarFiltroPontosPorKm();
-      // Preenche autocomplete de municípios
-      function preencherMunicipiosFiltro() {
-        const municipioInput = document.getElementById('filtroMunicipio');
-        if (!municipioInput) return;
-        const municipios = new Set();
-        Object.values(filtroPontosPorKm).flat().forEach(p => {
-          if (p.municipio) municipios.add(p.municipio);
-        });
-        municipioInput.setAttribute('list', 'filtroMunicipioList');
-        let datalist = document.getElementById('filtroMunicipioList');
-        if (!datalist) {
-          datalist = document.createElement('datalist');
-          datalist.id = 'filtroMunicipioList';
-          document.body.appendChild(datalist);
-        }
-        datalist.innerHTML = '';
-        Array.from(municipios).sort().forEach(m => {
-          const opt = document.createElement('option');
-          opt.value = m;
-          datalist.appendChild(opt);
-        });
-      }
 
       // Atualiza lista de Km ao selecionar rodovia
       function atualizarListaKm() {
@@ -485,21 +447,12 @@
         let infoHtml = `<div style='font-size:14px;text-align:left;margin-bottom:6px;'>`;
         infoHtml += `<b>Rodovia:</b> ${rod}<br>`;
         infoHtml += `<b>Km:</b> ${ponto.km.toFixed(3)}<br>`;
-        infoHtml += `<b>Município:</b> ${ponto.municipio || '-'}<br>`;
-        infoHtml += `<b>Tipo de pavimento:</b> ${ponto.tipo || '-'}<br>`;
-        if (ponto.rc) infoHtml += `<b>RC:</b> ${ponto.rc}<br>`;
+        infoHtml += `<b>Observação:</b> ${ponto.obs || '-'}<br>`;
+        infoHtml += `<b>Cor:</b> <span style='color:${ponto.cor}'>${ponto.cor}</span><br>`;
+        infoHtml += `<b>Opacidade:</b> ${ponto.opacidade}<br>`;
+        infoHtml += `<b>Raio:</b> ${ponto.raio}m<br>`;
         infoHtml += `<b>Coordenada:</b> ${ponto.lat.toFixed(6)}, ${ponto.lon.toFixed(6)}<br>`;
-        if (ponto.urlMaps && ponto.urlMaps.startsWith('http')) {
-          infoHtml += `<a href='${ponto.urlMaps}' target='_blank' style='color:#1976d2;font-size:13px;'>Abrir no Google Maps</a><br>`;
-        }
         infoHtml += `</div>`;
-        // Exibe link para foto do local, se houver URL válida
-        if (ponto.urlFoto && ponto.urlFoto.length > 4) {
-          const fotos = ponto.urlFoto.split(',').map(f => f.trim()).filter(f => f.startsWith('http'));
-          fotos.forEach((foto, i) => {
-            infoHtml += `<a href='${foto}' target='_blank' style='display:block;margin:8px auto 8px auto;color:#1976d2;font-size:15px;font-weight:600;text-align:center;text-decoration:underline;'>Ver foto do local</a>`;
-          });
-        }
         quadroFoto.innerHTML = infoHtml;
         quadroFoto.style.display = '';
       });
