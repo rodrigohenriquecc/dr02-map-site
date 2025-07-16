@@ -54,11 +54,22 @@ async function carregarCSV(url, nome) {
   
   try {
     const response = await fetch(url);
+    
+    // Verifica se houve redirecionamento (planilha não pública)
+    if (response.status === 303 || response.url.includes('accounts.google.com')) {
+      throw new Error(`Planilha "${nome}" não está pública. Configure permissões para "qualquer pessoa com o link".`);
+    }
+    
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
     
     const csvText = await response.text();
+    
+    // Verifica se o conteúdo parece ser HTML (erro de login)
+    if (csvText.trim().startsWith('<!DOCTYPE') || csvText.includes('<html')) {
+      throw new Error(`Planilha "${nome}" retornou HTML ao invés de CSV. Verifique as permissões públicas.`);
+    }
     
     return new Promise((resolve, reject) => {
       Papa.parse(csvText, {
@@ -108,10 +119,22 @@ async function carregarTodosDados() {
     renderizarPontosDeInteresse();
     
     console.log("🎉 Todos os dados carregados e renderizados com sucesso!");
+    mostrarNotificacao("✅ Dados atualizados com sucesso!", "success");
     
   } catch (error) {
     console.error("💥 Erro ao carregar dados:", error);
-    mostrarNotificacao("Erro ao carregar dados. Verifique a conexão.", "error");
+    
+    // Mensagem específica baseada no tipo de erro
+    let mensagem = "Erro ao carregar dados.";
+    if (error.message.includes('não está pública')) {
+      mensagem = "🔒 Planilhas não públicas. Configure permissões no Google Drive.";
+    } else if (error.message.includes('Failed to fetch')) {
+      mensagem = "🌐 Erro de conexão. Verifique sua internet.";
+    } else if (error.message.includes('HTTP')) {
+      mensagem = `📡 Erro no servidor: ${error.message}`;
+    }
+    
+    mostrarNotificacao(mensagem, "error");
   }
 }
 
