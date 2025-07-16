@@ -1,11 +1,15 @@
-name: Deploy to GitHub Pages
+name: 🚀 Validar CSVs e Publicar Site
 
 on:
-  # Executa no push para a branch main
+  # Executa em push para main
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   
-  # Permite execução manual do workflow
+  # Executa em Pull Requests para main
+  pull_request:
+    branches: ["main"]
+  
+  # Permite execução manual
   workflow_dispatch:
 
 # Define permissões para o GITHUB_TOKEN
@@ -13,6 +17,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  pull-requests: read
 
 # Permite apenas um deploy concorrente
 concurrency:
@@ -20,25 +25,59 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Job de deploy
+  # Job de validação (sempre executa)
+  validate:
+    name: 🔍 Validar CSVs
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout do código
+        uses: actions/checkout@v4
+        
+      - name: 🟢 Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: 📦 Instalar dependências
+        run: npm ci
+        
+      - name: 🔍 Validar CSVs
+        run: npm run validate
+        
+      - name: ✅ Validação concluída
+        run: echo "🎉 Todos os CSVs estão válidos!"
+
+  # Job de deploy (só executa na main após validação)
   deploy:
+    name: 🌐 Deploy para GitHub Pages
+    needs: validate
+    # Só executa se:
+    # 1. A validação passou
+    # 2. Estamos na branch main (não em PR)
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: 📥 Checkout do código
         uses: actions/checkout@v4
         
-      - name: Setup Pages
+      - name: ⚙️ Setup Pages
         uses: actions/configure-pages@v4
         
-      - name: Upload artifact
+      - name: 📤 Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload do diretório inteiro
-          path: '.'
+          # Upload da pasta src (onde está o site)
+          path: './src'
           
-      - name: Deploy to GitHub Pages
+      - name: 🚀 Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        
+      - name: 🎉 Deploy concluído
+        run: |
+          echo "🌐 Site publicado em: ${{ steps.deployment.outputs.page_url }}"
+          echo "📊 CSVs validados e site atualizado com sucesso!"

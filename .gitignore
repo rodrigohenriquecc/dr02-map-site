@@ -7,8 +7,9 @@ desktop.ini
 *.log
 npm-debug.log*
 
-# Dependências (se houver)
+# Dependências Node.js
 node_modules/
+package-lock.json
 
 # Arquivos temporários
 *.tmp
@@ -26,3 +27,12 @@ node_modules/
 
 # Arquivos de cache
 .cache/
+
+# Arquivos de build (se houver)
+dist/
+build/
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.production

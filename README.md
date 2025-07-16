@@ -1,111 +1,189 @@
-# DR.02 - Sistema de Localização de Rodovias e KM## Como usar localmente
+# 🗺️ DR.02 - Sistema Colaborativo de Mapeamento de Rodovias
 
-1. **Clone ou baixe** este repositório
-2. **Abra `index.html`** diretamente no navegador ou use um servidor local:
-   ```bash
-   # Usando Python
-   python -m http.server 8080
-   
-   # Usando Node.js
-   npx serve .
-   
-   # Usando PHP
-   php -S localhost:8080
-   ```
-3. Acesse `http://localhost:8080` no navegador
+Sistema interativo para visualização e gerenciamento colaborativo de dados rodoviários do DR.02, com validação automática e deploy contínuo.
 
-## Como usar o sistema
+## 👥 **Usuários Autorizados**
 
-1. **Clique no botão "🔍 Localizar Km"** no canto superior direito
-2. **Selecione a rodovia** no dropdown
-3. **Escolha o KM** desejado na lista
-4. **Clique em "Mostrar no mapa"** para visualizar o ponto
-5. Use o **link do Google Maps** para navegação externa
+- **Rodrigo** - Administrador do sistema
+- **Eloizo** - Analista de dados
+- **Marlon** - Especialista em rodovias  
+- **Khayan** - Coordenador técnico
 
-## Deploy automático no GitHub Pages
+> Todos os usuários têm permissão de escrita no repositório e podem editar os dados.
 
-Este projeto está configurado para deploy automático no GitHub Pages. Após fazer push das alterações, o site será atualizado automaticamente em poucos minutos.rio contém um site interativo que exibe:
-
-* **Mapa interativo das rodovias do DR.02** com sistema de localização por KM
-* **Busca de pontos específicos** nas rodovias com coordenadas GPS
-* **Visualização de dados geográficos** através de shapefiles e arquivos KMZ
-* **Interface responsiva** que funciona em desktop e mobile
-* **Links diretos para Google Maps** para cada ponto localizado
-
-Tudo roda **100% no front-end** (Leaflet + bibliotecas JavaScript). Não há dependências de servidor ou build step. Site de Mapa Interativo
-
-Este repositório contém um site estático que exibe:
-
-* **Seis shapefiles de regiões do DR.02** (RC 2.1, RC 2.2, RC 2.4, RC 2.5, RC 2.6+2.8 e RC 2.7) com cores semi‑transparentes.
-* **Malha completa das rodovias do DR.02**, traçada a partir de um arquivo Excel (`PLANILHA BI - OFICIAL.xlsx`) contendo KMs, coordenadas e municípios.
-* **Filtros de visualização** para ligar/desligar cada região e cada rodovia.
-
-Tudo roda **100 % no front‑end** (Leaflet + SheetJS). Não há dependências de servidor ou build step.
-
-## Estrutura de pastas
+## 📂 **Estrutura do Projeto**
 
 ```
-/
-├── index.html              # Página principal com interface completa
-├── favicon.ico             # Ícone do site
-├── meta.csv               # Dados de metadados
-├── css/
-│   └── style.css          # Estilos personalizados
-├── js/
-│   ├── script.js          # Script principal
-│   └── script_backup.js   # Backup do script
-└── data/
-    ├── malha_dr02.kmz     # Arquivo KMZ com malha rodoviária
-    ├── RC_2.1.zip         # Dados RC 2.1
-    ├── RC_2.2.zip         # Dados RC 2.2
-    ├── RC_2.4.zip         # Dados RC 2.4
-    ├── RC_2.5.zip         # Dados RC 2.5
-    ├── RC_2.6_2.8.zip     # Dados RC 2.6 e 2.8
-    └── RC_2.7.zip         # Dados RC 2.7
+dr02-map-site/
+├── .github/workflows/
+│   └── deploy.yml                    # CI/CD automático
+├── data/                            # 📊 Dados CSV (editáveis)
+│   ├── linhas_por_trecho.csv        # Trechos de rodovias
+│   ├── mapa_de_calor.csv           # Dados do mapa de calor
+│   └── pontos_de_interesse.csv     # Pontos específicos
+├── src/                            # 🌐 Código do site
+│   ├── index.html                  # Página principal
+│   ├── css/                        # Estilos
+│   └── js/                         # Scripts do mapa
+├── scripts/
+│   └── validar-csv.js              # Validação automática
+├── package.json                    # Dependências Node.js
+└── README.md                       # Esta documentação
 ```
 
-## Funcionalidades
+## 📊 **Formato dos Dados CSV**
 
-- **🔍 Localização de KM**: Sistema de busca que permite localizar qualquer quilômetro em rodovias específicas
-- **📍 Coordenadas GPS**: Cada ponto exibe coordenadas precisas com link para Google Maps
-- **🗺️ Visualização de dados**: Carregamento automático de shapefiles e arquivos KMZ
-- **📱 Interface responsiva**: Funciona perfeitamente em dispositivos móveis
-- **🎯 Marcadores customizados**: Destaque visual para pontos localizados
+### `linhas_por_trecho.csv`
+```csv
+rodovia,km_inicial,km_final,cor,espessura
+SP-129,0,10,#FF0000,3
+SP-160,15,25,#00FF00,2
+```
+- **rodovia**: Nome da rodovia (string)
+- **km_inicial**: Quilômetro inicial (número)
+- **km_final**: Quilômetro final (número, > km_inicial)
+- **cor**: Cor hexadecimal (#RRGGBB)
+- **espessura**: Espessura da linha (1-10)
 
-## Como testar localmente
+### `mapa_de_calor.csv`
+```csv
+rodovia,km_inicial,km_final
+SP-129,5,15
+SP-160,20,30
+```
+- **rodovia**: Nome da rodovia (string)
+- **km_inicial**: Quilômetro inicial (número)
+- **km_final**: Quilômetro final (número, > km_inicial)
 
-1. Baixe/clone o repositório.
-2. Coloque `PLANILHA BI - OFICIAL.xlsx` e os arquivos `RC *.zip` em `/data/`.
-3. **Abra `index.html` em um navegador** ou rode um servidor estático, por exemplo:
+### `pontos_de_interesse.csv`
+```csv
+rodovia,km,obs,cor,opacidade,raio
+SP-129,12.5,Posto de combustível,#FFFF00,0.8,50
+SP-160,22.3,Restaurante,#FF8800,0.7,30
+```
+- **rodovia**: Nome da rodovia (string)
+- **km**: Quilômetro exato (número)
+- **obs**: Observação/descrição (string)
+- **cor**: Cor hexadecimal (#RRGGBB)
+- **opacidade**: Transparência (0.0-1.0)
+- **raio**: Raio do ponto em metros (1-1000)
+
+## 🚀 **Como Colaborar**
+
+### **1. Preparação Inicial**
+```bash
+# Clone o repositório
+git clone https://github.com/rodrigohenriquecc/dr02-map-site.git
+cd dr02-map-site
+
+# Instale as dependências
+npm install
+```
+
+### **2. Fluxo de Trabalho**
+
+#### **📝 Convenção de Branches**
+Sempre crie uma branch específica para suas alterações:
+```bash
+# Formato: usuario-assunto
+git checkout -b rodrigo-linhas-sp129
+git checkout -b eloizo-pontos-interesse
+git checkout -b marlon-calor-sp160
+git checkout -b khayan-correcao-dados
+```
+
+#### **✏️ Editando os Dados**
+1. **Edite os arquivos CSV** em `/data/` com seu editor preferido
+2. **Valide localmente** antes de enviar:
    ```bash
-   npx serve .
-   # ou
-   python -m http.server 8080
+   npm run validate
    ```
-   Depois acesse `http://localhost:8080`.
+3. **Se houver erros**, corrija-os e valide novamente
 
-## Deploy no GitHub Pages
+#### **📤 Enviando Alterações**
+```bash
+# 1. Adicione os arquivos modificados
+git add data/
 
-1. Crie um novo repositório no GitHub (por exemplo, `dr02-map-site`).
-2. Faça **push** de todos os arquivos do projeto (inclusive a pasta `data/`):
-   ```bash
-   git init
-   git add .
-   git commit -m "Site de mapa DR.02"
-   git remote add origin https://github.com/<SEU_USUARIO>/dr02-map-site.git
-   git push -u origin main
-   ```
-3. No GitHub, vá em **Settings ▸ Pages**, selecione a branch **`main`** e a pasta **`/ (root)`**. Salve.
-4. Após alguns segundos, seu site estará disponível em  
-   `https://<SEU_USUARIO>.github.io/dr02-map-site/`.
+# 2. Faça commit com mensagem descritiva
+git commit -m "✨ Adicionar novos pontos de interesse na SP-129
+   
+   - Adicionados 3 postos de combustível
+   - Incluído restaurante no km 25.3
+   - Corrigida cor do ponto no km 18.7"
 
-## Créditos & Licenças
+# 3. Envie a branch
+git push origin sua-branch
+```
 
-* [Leaflet](https://leafletjs.com) – BSD 2‑Clause
-* [leaflet‑omnivore](https://github.com/mapbox/leaflet-omnivore) – BSD
-* [SheetJS](https://github.com/SheetJS/sheetjs) – Apache‑2.0
-* Mosaico base: © OpenStreetMap contributors (ODbL) / tiles via openstreetmap.org
+#### **🔄 Criando Pull Request**
+1. Acesse o repositório no GitHub
+2. Clique em **"Compare & pull request"**
+3. **Título**: Resumo claro da alteração
+4. **Descrição**: Detalhe o que foi modificado e por quê
+5. Clique em **"Create pull request"**
+
+#### **✅ Aprovação e Merge**
+- O **GitHub Actions** validará automaticamente os CSVs
+- Se houver erros, corrija e faça novo commit na mesma branch
+- Após aprovação, faça o **merge** para `main`
+- O site será atualizado automaticamente em 2-3 minutos
+
+## 🔍 **Validação Automática**
+
+O sistema valida automaticamente:
+- ✅ **Cabeçalhos corretos** em cada CSV
+- ✅ **Tipos de dados** (números vs strings)
+- ✅ **Valores obrigatórios** não vazios
+- ✅ **Regras específicas**:
+  - km_inicial < km_final
+  - Cores no formato hexadecimal
+  - Opacidade entre 0 e 1
+  - Espessura entre 1 e 10
+  - Raio entre 1 e 1000
+
+## 🛠️ **Comandos Úteis**
+
+```bash
+# Validar CSVs localmente
+npm run validate
+
+# Verificar status do Git
+git status
+
+# Ver diferenças nos arquivos
+git diff
+
+# Atualizar branch local com main
+git checkout main
+git pull origin main
+
+# Deletar branch após merge
+git branch -d nome-da-branch
+```
+
+## 🌐 **Acesso ao Site**
+
+- **URL de Produção**: https://rodrigohenriquecc.github.io/dr02-map-site
+- **Dados**: Os CSVs são carregados automaticamente da pasta `/data/`
+- **Atualização**: O site é atualizado automaticamente após merge na `main`
+
+## ⚠️ **Importante**
+
+1. **Sempre valide** localmente com `npm run validate` antes de enviar
+2. **Use branches específicas** para cada alteração
+3. **Mensagens de commit** devem ser descritivas
+4. **Teste as alterações** no site após o deploy
+5. **Coordene grandes mudanças** com a equipe
+
+## 📞 **Suporte**
+
+Em caso de dúvidas ou problemas:
+1. Verifique os logs do GitHub Actions na aba "Actions"
+2. Execute `npm run validate` para ver erros específicos
+3. Consulte este README para convenções
+4. Entre em contato com Rodrigo para questões técnicas
 
 ---
 
-Desenvolvido para DR.02 – Exemplo de uso em engenharia rodoviária.
+🎯 **Objetivo**: Manter os dados sempre atualizados e válidos, com colaboração eficiente entre toda a equipe!
