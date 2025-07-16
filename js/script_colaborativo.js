@@ -45,7 +45,151 @@ const CSV_URLS = {
   pontosDeInteresse: 'https://docs.google.com/spreadsheets/d/1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI/export?format=csv'
 };
 
-// ═══════════════════════ 4) Funções de Carregamento de Dados
+// ═══════════════════════ 4) Sistema de Coordenadas Reais
+
+/**
+ * Dados de metadados das rodovias carregados do meta.csv
+ */
+let metadadosRodovias = {};
+
+/**
+ * Carrega o arquivo meta.csv com coordenadas reais das rodovias
+ */
+async function carregarMetadadosRodovias() {
+  console.log("📊 Carregando metadados das rodovias (meta.csv)...");
+  
+  try {
+    const response = await fetch('meta.csv');
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const csvText = await response.text();
+    
+    return new Promise((resolve, reject) => {
+      Papa.parse(csvText, {
+        header: true,
+        skipEmptyLines: true,
+        transform: (value) => value.trim(),
+        complete: (results) => {
+          metadadosRodovias = {};
+          
+          results.data.forEach((row, index) => {
+            try {
+              const rodovia = row.Rodovia?.trim();
+              const kmInicialStr = row['Km Inicial']?.replace(',', '.');
+              const kmFinalStr = row['Km Final']?.replace(',', '.');
+              const coordInicialStr = row['Lat e Long km Inicial'];
+              const coordFinalStr = row['Lat e Long km final'];
+              
+              if (!rodovia || !kmInicialStr || !kmFinalStr || !coordInicialStr || !coordFinalStr) {
+                return;
+              }
+              
+              const kmInicial = parseFloat(kmInicialStr);
+              const kmFinal = parseFloat(kmFinalStr);
+              
+              // Parse coordenadas iniciais (formato: "-23.415050, -48.043810")
+              const [latInicial, lngInicial] = coordInicialStr.split(',').map(c => parseFloat(c.trim()));
+              const [latFinal, lngFinal] = coordFinalStr.split(',').map(c => parseFloat(c.trim()));
+              
+              if (isNaN(kmInicial) || isNaN(kmFinal) || isNaN(latInicial) || isNaN(lngInicial) || isNaN(latFinal) || isNaN(lngFinal)) {
+                console.warn(`⚠️ Dados inválidos na linha ${index + 2}: ${rodovia}`);
+                return;
+              }
+              
+              if (!metadadosRodovias[rodovia]) {
+                metadadosRodovias[rodovia] = [];
+              }
+              
+              metadadosRodovias[rodovia].push({
+                kmInicial,
+                kmFinal,
+                coordInicial: { lat: latInicial, lng: lngInicial },
+                coordFinal: { lat: latFinal, lng: lngFinal }
+              });
+              
+            } catch (error) {
+              console.error(`❌ Erro ao processar linha ${index + 2}:`, error, row);
+            }
+          });
+          
+          // Ordena trechos por km inicial para facilitar interpolação
+          Object.values(metadadosRodovias).forEach(trechos => {
+            trechos.sort((a, b) => a.kmInicial - b.kmInicial);
+          });
+          
+          console.log(`✅ Metadados carregados: ${Object.keys(metadadosRodovias).length} rodovias`);
+          console.log("📍 Rodovias disponíveis:", Object.keys(metadadosRodovias));
+          resolve(metadadosRodovias);
+        },
+        error: (error) => {
+          console.error("❌ Erro no parsing do meta.csv:", error);
+          reject(error);
+        }
+      });
+    });
+  } catch (error) {
+    console.error("❌ Erro ao carregar meta.csv:", error);
+    throw error;
+  }
+}
+
+/**
+ * Calcula coordenadas reais baseadas na rodovia e quilometragem
+ * @param {string} rodovia - Nome da rodovia (ex: "SP 270 Vang")
+ * @param {number} km - Quilometragem desejada
+ * @returns {Object|null} - {lat, lng} ou null se não encontrado
+ */
+function obterCoordenadaReal(rodovia, km) {
+  if (!metadadosRodovias[rodovia]) {
+    // Tenta variações do nome da rodovia
+    const rodoviaLimpa = rodovia.replace(/ Vang| Jon| Madri| Obragen| Ellenco| Vale/g, '').trim();
+    const possiveisNomes = Object.keys(metadadosRodovias).filter(r => 
+      r.includes(rodoviaLimpa) || rodoviaLimpa.includes(r.split(' ')[0] + ' ' + r.split(' ')[1])
+    );
+    
+    if (possiveisNomes.length === 0) {
+      console.warn(`⚠️ Rodovia não encontrada nos metadados: ${rodovia}`);
+      return null;
+    }
+    
+    rodovia = possiveisNomes[0]; // Usa a primeira correspondência
+  }
+  
+  const trechos = metadadosRodovias[rodovia];
+  if (!trechos || trechos.length === 0) return null;
+  
+  // Procura o trecho que contém o km desejado
+  const trecho = trechos.find(t => km >= t.kmInicial && km <= t.kmFinal);
+  
+  if (!trecho) {
+    // Se não encontrar trecho exato, usa o mais próximo
+    const trechoProximo = trechos.reduce((prev, curr) => {
+      const distPrev = Math.min(Math.abs(km - prev.kmInicial), Math.abs(km - prev.kmFinal));
+      const distCurr = Math.min(Math.abs(km - curr.kmInicial), Math.abs(km - curr.kmFinal));
+      return distPrev < distCurr ? prev : curr;
+    });
+    
+    console.warn(`⚠️ Km ${km} fora dos trechos de ${rodovia}. Usando trecho mais próximo: ${trechoProximo.kmInicial}-${trechoProximo.kmFinal}`);
+    
+    // Usa o ponto mais próximo do trecho
+    const distInicial = Math.abs(km - trechoProximo.kmInicial);
+    const distFinal = Math.abs(km - trechoProximo.kmFinal);
+    
+    return distInicial < distFinal ? trechoProximo.coordInicial : trechoProximo.coordFinal;
+  }
+  
+  // Interpola linearmente entre as coordenadas inicial e final do trecho
+  const progresso = (km - trecho.kmInicial) / (trecho.kmFinal - trecho.kmInicial);
+  
+  const lat = trecho.coordInicial.lat + (trecho.coordFinal.lat - trecho.coordInicial.lat) * progresso;
+  const lng = trecho.coordInicial.lng + (trecho.coordFinal.lng - trecho.coordInicial.lng) * progresso;
+  
+  return { lat, lng };
+}
+
+// ═══════════════════════ 5) Funções de Carregamento de Dados
 
 /**
  * Carrega um CSV e retorna os dados parseados
@@ -118,12 +262,16 @@ async function carregarCSV(url, nome) {
 }
 
 /**
- * Carrega todos os CSVs
+ * Carrega todos os CSVs e metadados
  */
 async function carregarTodosDados() {
   console.log("🚀 Iniciando carregamento de dados...");
   
   try {
+    // Carrega metadados primeiro para ter coordenadas disponíveis
+    console.log("📍 Carregando metadados das rodovias...");
+    await carregarMetadadosRodovias();
+    
     // Carrega todos os CSVs em paralelo
     const [linhas, calor, pontos] = await Promise.all([
       carregarCSV(CSV_URLS.linhasPorTrecho, 'Linhas por Trecho'),
@@ -189,15 +337,29 @@ function renderizarLinhasPorTrecho() {
       
       console.log(`🛣️ Processando linha: ${rodovia}, Km ${kmInicial}-${kmFinal}, Cor: ${cor}, Espessura: ${espessura}`);
       
-      // TEMPORÁRIO: Coordenadas baseadas em região São Paulo
-      // TODO: Integrar com sistema de coordenadas real baseado em rodovia e Km
-      const latBase = -23.5 - (index * 0.15);
-      const lngBase = -46.6 + (index * 0.2);
+      // Obtém coordenadas reais para início e fim do trecho
+      const coordInicial = obterCoordenadaReal(rodovia, kmInicial);
+      const coordFinal = obterCoordenadaReal(rodovia, kmFinal);
       
-      const linha_geom = L.polyline([
-        [latBase, lngBase],
-        [latBase - 0.05, lngBase + 0.1]
-      ], {
+      let pontos;
+      if (coordInicial && coordFinal) {
+        pontos = [
+          [coordInicial.lat, coordInicial.lng],
+          [coordFinal.lat, coordFinal.lng]
+        ];
+        console.log(`✅ Coordenadas reais: ${coordInicial.lat.toFixed(6)},${coordInicial.lng.toFixed(6)} → ${coordFinal.lat.toFixed(6)},${coordFinal.lng.toFixed(6)}`);
+      } else {
+        // Fallback: coordenadas baseadas em região São Paulo
+        const latBase = -23.5 - (index * 0.15);
+        const lngBase = -46.6 + (index * 0.2);
+        pontos = [
+          [latBase, lngBase],
+          [latBase - 0.05, lngBase + 0.1]
+        ];
+        console.warn(`⚠️ Usando coordenadas fallback para ${rodovia}`);
+      }
+      
+      const linha_geom = L.polyline(pontos, {
         color: cor,
         weight: espessura,
         pane: 'rodoviasPane',
@@ -238,13 +400,25 @@ function renderizarMapaDeCalor() {
     const rodovia = item.rodovia || `Rodovia ${index + 1}`;
     const kmInicial = parseFloat(item.km_inicial) || 0;
     const kmFinal = parseFloat(item.km_final) || 0;
+    const kmMedio = (kmInicial + kmFinal) / 2; // Usa o ponto médio do trecho
     
-    console.log(`🔥 Processando ponto de calor: ${rodovia}, Km ${kmInicial}-${kmFinal}`);
+    console.log(`🔥 Processando ponto de calor: ${rodovia}, Km ${kmInicial}-${kmFinal} (médio: ${kmMedio.toFixed(3)})`);
     
-    // TEMPORÁRIO: Coordenadas baseadas em região São Paulo  
-    // TODO: Integrar com sistema de coordenadas real baseado em rodovia e Km
-    const lat = -23.6 - (index * 0.1);
-    const lng = -46.8 + (index * 0.15);
+    // Obtém coordenadas reais baseadas no ponto médio do trecho
+    const coordReal = obterCoordenadaReal(rodovia, kmMedio);
+    let lat, lng;
+    
+    if (coordReal) {
+      lat = coordReal.lat;
+      lng = coordReal.lng;
+      console.log(`✅ Coordenada real para heatmap: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+    } else {
+      // Fallback: coordenadas baseadas em região São Paulo
+      lat = -23.6 - (index * 0.1);
+      lng = -46.8 + (index * 0.15);
+      console.warn(`⚠️ Usando coordenada fallback para heatmap: ${rodovia}`);
+    }
+    
     const intensidade = 0.9; // Intensidade alta para destaque
     
     return [lat, lng, intensidade];
@@ -284,10 +458,20 @@ function renderizarPontosDeInteresse() {
       
       console.log(`📍 Processando ponto: ${rodovia} Km ${km}, ${obs}, Cor: ${cor}, Raio: ${raio}m`);
       
-      // TEMPORÁRIO: Coordenadas baseadas em região São Paulo
-      // TODO: Integrar com sistema de coordenadas real baseado em rodovia e Km
-      const lat = -23.4 - (index * 0.12);
-      const lng = -46.4 + (index * 0.18);
+      // Obtém coordenadas reais baseadas na rodovia e Km
+      const coordReal = obterCoordenadaReal(rodovia, km);
+      let lat, lng;
+      
+      if (coordReal) {
+        lat = coordReal.lat;
+        lng = coordReal.lng;
+        console.log(`✅ Coordenada real encontrada: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+      } else {
+        // Fallback: coordenadas baseadas em região São Paulo (mantido para compatibilidade)
+        lat = -23.4 - (index * 0.12);
+        lng = -46.4 + (index * 0.18);
+        console.warn(`⚠️ Usando coordenada fallback para ${rodovia} Km ${km}`);
+      }
       
       const circulo = L.circle([lat, lng], {
         color: cor,
