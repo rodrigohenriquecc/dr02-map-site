@@ -536,7 +536,7 @@ function renderizarPontosDeInteresse() {
         pane: 'overlayPane',
         weight: 2
       });
-      // Popup detalhado com link Google Maps e dados da malha
+      // Popup detalhado com link Google Maps, dados da malha e imagem (foto)
       let popup = `<strong>📍 ${obs}</strong><br>
         🛣️ ${rodovia} - Km ${km.toFixed(3)}<br>
         🎨 ${cor} (${(opacidade * 100).toFixed(0)}% opacidade)<br>
@@ -546,8 +546,11 @@ function renderizarPontosDeInteresse() {
         <b>SP:</b> ${pontoInfo.SP || ''}<br>
         <b>KM:</b> ${pontoInfo['KM '] || ''}<br>
         <b>Município:</b> ${pontoInfo.MUNICÍPIO || ''}<br>
-        <b>Tipo:</b> ${pontoInfo.TIPO || ''}<br>
-        <a href='https://www.google.com/maps/search/?api=1&query=${lat},${lng}' target='_blank'>Abrir no Google Maps</a><br>`;
+        <b>Tipo:</b> ${pontoInfo.TIPO || ''}<br>`;
+        if (pontoInfo.foto) {
+          popup += `<div style='margin:8px 0;'><img src='${pontoInfo.foto}' alt='Foto do ponto' style='max-width:220px;max-height:160px;border-radius:6px;box-shadow:0 2px 8px #0002;'></div>`;
+        }
+        popup += `<a href='https://www.google.com/maps/search/?api=1&query=${lat},${lng}' target='_blank'>Abrir no Google Maps</a><br>`;
       } else {
         popup += `<a href='https://www.google.com/maps/search/?api=1&query=${lat},${lng}' target='_blank'>Abrir no Google Maps</a><br>`;
       }

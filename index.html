@@ -575,6 +575,9 @@
         infoHtml += `<b>Opacidade:</b> ${ponto.opacidade}<br>`;
         infoHtml += `<b>Raio:</b> ${ponto.raio}m<br>`;
         infoHtml += `<b>Coordenada:</b> ${ponto.lat.toFixed(6)}, ${ponto.lon.toFixed(6)}<br>`;
+        if (ponto.foto) {
+          infoHtml += `<div style='margin:8px 0;'><img src='${ponto.foto}' alt='Foto do ponto' style='max-width:220px;max-height:160px;border-radius:6px;box-shadow:0 2px 8px #0002;'></div>`;
+        }
         infoHtml += `</div>`;
         quadroFoto.innerHTML = infoHtml;
         quadroFoto.style.display = '';
