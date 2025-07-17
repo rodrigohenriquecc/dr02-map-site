@@ -36,12 +36,7 @@
   <style>
     html, body, #map { height: 100%; margin: 0; padding: 0; }
 
-    /* cartão de camadas */
-    .layer-card{
-      /* removido pois não será mais usado */
-      display: none;
-    }
-    .layer-card label{ cursor: pointer; }
+    /* ...existing code... */
 
     /* botão flutuante (recarregar planilhas) */
     .fab{
@@ -163,12 +158,6 @@
       visibility: visible;
       pointer-events: auto;
       overflow: visible;
-    }
-      cursor: pointer;
-      transition: background 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 4px;
     }
 
     .import-toggle-btn:hover {
@@ -314,12 +303,15 @@
 </head>
 
 <body>
+  <!-- ...existing code... -->
+
   <!-- Botão flutuante para abrir/esconder busca de Km -->
-  <button id="toggleImportCard" class="import-toggle-btn" title="Localizar Km">
+  <button id="toggleImportCard" class="import-toggle-btn" title="Localizar Km" style="top:16px;right:16px;">
     <span>Localizar Km</span>
     <span class="arrow">▼</span>
   </button>
 
+  <!-- Botão flutuante para abrir/esconder Camadas -->
   <!-- Cartão de localização de Km -->
   <div class="import-card" id="importCard">
     <div class="filtro-rodovia-card">
@@ -334,34 +326,36 @@
     </div>
   </div>
 
+
   <!-- MAPA -->
   <div id="map"></div>
 
+
   <script>
-    window.addEventListener('DOMContentLoaded', function() {
+    // ...existing code...
       // Inicializa referências dos elementos após o DOM estar pronto
       filtroKmLink = document.getElementById('filtroKmLink');
       msgKmProximo = document.getElementById('msgKmProximo');
       // Referências globais dos elementos do cartão
       var filtroKmLink = null;
       var msgKmProximo = null;
-      // Controle de visibilidade do cartão
+      // Controle de visibilidade apenas para o cartão de Km
       const importCard = document.getElementById('importCard');
       const toggleBtn = document.getElementById('toggleImportCard');
-      function setImportCardVisible(expanded) {
+      function setCardVisible(card, btn, expanded) {
         if (expanded) {
-          importCard.classList.add('expanded');
-          toggleBtn.classList.add('expanded');
+          card.classList.add('expanded');
+          btn.classList.add('expanded');
         } else {
-          importCard.classList.remove('expanded');
-          toggleBtn.classList.remove('expanded');
+          card.classList.remove('expanded');
+          btn.classList.remove('expanded');
         }
       }
       let importCardExpanded = false;
-      setImportCardVisible(importCardExpanded);
+      setCardVisible(importCard, toggleBtn, importCardExpanded);
       toggleBtn.addEventListener('click', function() {
         importCardExpanded = !importCardExpanded;
-        setImportCardVisible(importCardExpanded);
+        setCardVisible(importCard, toggleBtn, importCardExpanded);
       });
 
       // Preenche rodovias no cartão
