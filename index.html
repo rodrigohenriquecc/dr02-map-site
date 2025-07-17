@@ -118,28 +118,52 @@
       pointer-events: none;
     }
 
-    .import-title {
-      font-weight: bold;
-      font-size: 17px;
-      margin-bottom: 6px;
-      color: #1976d2;
-      letter-spacing: 0.5px;
-    }
-
-    /* Botão flutuante para abrir/esconder localização */
     .import-toggle-btn {
       position: absolute;
       top: 16px;
       right: 16px;
       z-index: 1100;
-      background: #1976d2;
-      color: #fff;
-      border: none;
+      background: #fff;
+      color: #1976d2;
+      border: 1.5px solid #1976d2;
       border-radius: 50px;
-      padding: 8px 12px;
-      font-size: 15px;
+      padding: 8px 18px;
+      font-size: 16px;
       font-weight: 600;
-      box-shadow: 0 2px 8px rgba(0,0,0,.13);
+      box-shadow: 0 2px 8px rgba(25,118,210,0.10);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, border 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .import-toggle-btn:hover {
+      background: #e3f0ff;
+      color: #1251a3;
+      border: 1.5px solid #1251a3;
+    }
+    .import-toggle-btn .arrow {
+      font-size: 18px;
+      transition: transform 0.3s;
+    }
+    .import-toggle-btn.expanded .arrow {
+      transform: rotate(180deg);
+    }
+    .import-card {
+      transition: max-height 0.35s cubic-bezier(.4,0,.2,1), opacity 0.2s, visibility 0.2s;
+      max-height: 0;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .import-card.expanded {
+      max-height: 600px;
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      overflow: visible;
+    }
       cursor: pointer;
       transition: background 0.2s;
       display: flex;
@@ -292,22 +316,21 @@
 <body>
   <!-- Botão flutuante para abrir/esconder busca de Km -->
   <button id="toggleImportCard" class="import-toggle-btn" title="Localizar Km">
-    🔍 Localizar Km
+    <span>Localizar Km</span>
+    <span class="arrow">▼</span>
   </button>
 
   <!-- Cartão de localização de Km -->
   <div class="import-card" id="importCard">
-    <div class="import-title">Localizar Km na Rodovia</div>
-
-    <!-- Filtro de Rodovia e Km -->
     <div class="filtro-rodovia-card">
       <select id="filtroRodovia" class="filtro-rodovia-select">
         <option value="">Selecione a rodovia</option>
       </select>
       <select id="filtroKm" class="filtro-km-input" disabled></select>
-      <div id="msgKmProximo" style="display:none;color:#c62828;font-size:13px;margin-bottom:2px;"></div>
-      <button id="filtroKmBtn" class="filtro-km-btn" disabled>Mostrar no mapa</button>
-      <a id="filtroKmLink" class="filtro-km-link" href="#" target="_blank">Ver no Google Maps</a>
+      <button id="filtroKmBtn" class="filtro-km-btn" disabled>Mostrar</button>
+      <a id="filtroKmLink" class="filtro-km-link" href="#" target="_blank" style="display:none;"></a>
+      <div id="msgKmProximo" style="display:none;"></div>
+      <div id="quadroFotoKm" style="display:none;margin-top:8px;text-align:left;"></div>
     </div>
   </div>
 
@@ -316,32 +339,138 @@
 
   <script>
     window.addEventListener('DOMContentLoaded', function() {
+      // Inicializa referências dos elementos após o DOM estar pronto
+      filtroKmLink = document.getElementById('filtroKmLink');
+      msgKmProximo = document.getElementById('msgKmProximo');
+      // Referências globais dos elementos do cartão
+      var filtroKmLink = null;
+      var msgKmProximo = null;
       // Controle de visibilidade do cartão
       const importCard = document.getElementById('importCard');
       const toggleBtn = document.getElementById('toggleImportCard');
-      
-      function setImportCardVisible(visible) {
-        if (visible) {
-          importCard.classList.remove('hide');
+      function setImportCardVisible(expanded) {
+        if (expanded) {
+          importCard.classList.add('expanded');
+          toggleBtn.classList.add('expanded');
         } else {
-          importCard.classList.add('hide');
+          importCard.classList.remove('expanded');
+          toggleBtn.classList.remove('expanded');
         }
       }
-      
-      // Inicia oculto
-      let importCardVisible = false;
-      setImportCardVisible(importCardVisible);
-      
+      let importCardExpanded = false;
+      setImportCardVisible(importCardExpanded);
       toggleBtn.addEventListener('click', function() {
-        importCardVisible = !importCardVisible;
-        setImportCardVisible(importCardVisible);
+        importCardExpanded = !importCardExpanded;
+        setImportCardVisible(importCardExpanded);
       });
 
-      // Filtro de rodovia e km (carrega dos CSVs do Google Drive compartilhado)
-      const CSV_PONTOS_URL = "https://docs.google.com/spreadsheets/d/1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI/export?format=csv";
-      const METADADOS_URL = "meta.csv";
-      let filtroPontosPorKm = {};
-      let metadadosRodovias = {};
+      // Preenche rodovias no cartão
+      function preencherRodoviasFiltroOficial() {
+        const select = document.getElementById('filtroRodovia');
+        select.innerHTML = '<option value="">Selecione a rodovia</option>';
+        // Considera apenas valores únicos da coluna SP
+        const rodoviasUnicas = [...new Set(dadosPlanilhaOficial.map(l => l.SP?.trim()).filter(Boolean))];
+        rodoviasUnicas.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r;
+          opt.textContent = r;
+          select.appendChild(opt);
+        });
+      }
+
+      // Atualiza lista de Km no cartão
+      function atualizarListaKmOficial() {
+        const rod = document.getElementById('filtroRodovia').value;
+        // Filtra os kms correspondentes à rodovia selecionada
+        const arr = dadosPlanilhaOficial.filter(l => (l.SP?.trim() === rod) && l.Km && !isNaN(parseFloat(l.Km.replace(',', '.'))));
+        const kmSelect = document.getElementById('filtroKm');
+        kmSelect.innerHTML = '';
+        arr.forEach(p => {
+          const kmNum = parseFloat(p.Km.replace(',', '.'));
+          if (!isNaN(kmNum)) {
+            const opt = document.createElement('option');
+            opt.value = kmNum;
+            opt.textContent = kmNum;
+            kmSelect.appendChild(opt);
+          }
+        });
+        kmSelect.disabled = !arr.length;
+        document.getElementById('filtroKmBtn').disabled = !arr.length;
+      }
+      document.getElementById('filtroRodovia').addEventListener('change', atualizarListaKmOficial);
+
+      // Exibe dados e marcador ao buscar
+      document.getElementById('filtroKmBtn').addEventListener('click', function() {
+        const rod = document.getElementById('filtroRodovia').value;
+        const kmSelect = document.getElementById('filtroKm');
+        const quadroFoto = document.getElementById('quadroFotoKm');
+        quadroFoto.style.display = 'none';
+        if (!rod || !kmSelect.value) {
+          alert('Selecione uma rodovia e um Km válido!');
+          return;
+        }
+        // Busca o registro correspondente (compara Km como número, busca o mais próximo se não encontrar)
+        const kmSelecionado = parseFloat(kmSelect.value.toString().replace(',', '.'));
+        let ponto = dadosPlanilhaOficial.find(l => {
+          const rodCol = l.SP?.toString().trim();
+          let kmCol = l.Km !== undefined ? l.Km : l['KM '];
+          kmCol = parseFloat(kmCol?.toString().replace(',', '.'));
+          return rodCol === rod && !isNaN(kmCol) && kmCol.toFixed(3) === kmSelecionado.toFixed(3);
+        });
+        let usouProximo = false;
+        if (!ponto) {
+          // Busca o mais próximo
+          const arrRod = dadosPlanilhaOficial.filter(l => l.SP?.toString().trim() === rod && l.Km !== undefined || l['KM '] !== undefined);
+          let pontoProx = null;
+          let menorDist = Infinity;
+          arrRod.forEach(l => {
+            let kmCol = l.Km !== undefined ? l.Km : l['KM '];
+            kmCol = parseFloat(kmCol?.toString().replace(',', '.'));
+            if (!isNaN(kmCol)) {
+              const dist = Math.abs(kmCol - kmSelecionado);
+              if (dist < menorDist) {
+                menorDist = dist;
+                pontoProx = l;
+              }
+            }
+          });
+          ponto = pontoProx;
+          usouProximo = true;
+        }
+        if (!ponto) {
+          quadroFoto.innerHTML = `<div style='color:#c62828;font-size:14px;'>Km não disponível.</div>`;
+          quadroFoto.style.display = '';
+          return;
+        }
+        // Coordenada
+        let lat = ponto.Latitude || ponto.lat || (ponto.LOCALIZAÇÃO ? ponto.LOCALIZAÇÃO.split(',')[0] : undefined);
+        let lng = ponto.Longitude || ponto.lng || (ponto.LOCALIZAÇÃO ? ponto.LOCALIZAÇÃO.split(',')[1] : undefined);
+        let coordStr = (lat && lng) ? `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}` : '-';
+        // Exibe os dados essenciais + link
+        let infoHtml = `<div style='font-size:15px;text-align:left;margin-bottom:6px;'>`;
+        if (usouProximo) {
+          infoHtml += `<span style='color:#c62828;font-size:13px;'>Km não disponível. Mostrando informações do Km mais próximo: <b>${ponto.Km || ponto['KM '] || '-'}</b></span><br>`;
+        }
+        infoHtml += `<b>Rodovia:</b> ${rod}<br>`;
+        infoHtml += `<b>Km:</b> ${ponto.Km || ponto['KM '] || '-'}<br>`;
+        infoHtml += `<b>Município:</b> ${ponto.Município || ponto.MUNICÍPIO || '-'}<br>`;
+        infoHtml += `<b>Tipo:</b> ${ponto.Tipo || ponto.TIPO || '-'}<br>`;
+        infoHtml += `<b>Coordenada:</b> ${coordStr}`;
+        if (lat && lng) {
+          infoHtml += ` <a href='https://www.google.com/maps?q=${lat},${lng}' target='_blank' style='color:#1976d2;text-decoration:underline;font-size:14px;'>(Google Maps)</a>`;
+        }
+        infoHtml += `</div>`;
+        quadroFoto.innerHTML = infoHtml;
+        quadroFoto.style.display = '';
+      });
+
+      // Inicializa filtro Localizar Km com a planilha oficial
+      carregarPlanilhaOficial().then(() => {
+        preencherRodoviasFiltroOficial();
+        atualizarListaKmOficial();
+        const selectRodovia = document.getElementById('filtroRodovia');
+        selectRodovia.onchange = atualizarListaKmOficial;
+      });
       
       // Carrega metadados das rodovias para coordenadas reais
       async function carregarMetadados() {
@@ -584,14 +713,11 @@
       });
 
       // NOVO: Localizar Km usando PLANILHA BI - OFICIAL.csv
-      const PLANILHA_OFICIAL_URL = 'PLANILHA BI - OFICIAL.csv';
-      let dadosPlanilhaOficial = [];
-      let rodoviasPlanilha = [];
-      let kmsPorRodovia = {};
+      // Variáveis já declaradas acima
 
       async function carregarPlanilhaOficial() {
         return new Promise((resolve, reject) => {
-          Papa.parse(PLANILHA_OFICIAL_URL, {
+          Papa.parse('PLANILHA BI - OFICIAL.csv', {
             download: true,
             header: true,
             skipEmptyLines: true,
@@ -625,7 +751,9 @@
       function preencherRodoviasFiltroOficial() {
         const select = document.getElementById('filtroRodovia');
         select.innerHTML = '<option value="">Selecione a rodovia</option>';
-        rodoviasPlanilha.forEach(r => {
+        // Gera lista única de rodovias da coluna SP, sem duplicidades
+        const rodoviasUnicas = [...new Set(dadosPlanilhaOficial.map(l => l.SP?.trim()).filter(Boolean))];
+        rodoviasUnicas.forEach(r => {
           const opt = document.createElement('option');
           opt.value = r;
           opt.textContent = r;
@@ -635,14 +763,18 @@
 
       function atualizarListaKmOficial() {
         const rod = document.getElementById('filtroRodovia').value;
-        const arr = kmsPorRodovia[rod] || [];
+        // Filtra os kms correspondentes à rodovia selecionada
+        const arr = dadosPlanilhaOficial.filter(l => (l.SP?.trim() === rod) && l['KM '] && !isNaN(parseFloat(l['KM '].replace(',', '.'))));
         const kmSelect = document.getElementById('filtroKm');
         kmSelect.innerHTML = '';
         arr.forEach(p => {
-          const opt = document.createElement('option');
-          opt.value = p.km.toFixed(3);
-          opt.textContent = p.km.toFixed(3);
-          kmSelect.appendChild(opt);
+          const kmNum = parseFloat(p['KM '].replace(',', '.'));
+          if (!isNaN(kmNum)) {
+            const opt = document.createElement('option');
+            opt.value = kmNum.toFixed(3);
+            opt.textContent = kmNum.toFixed(3);
+            kmSelect.appendChild(opt);
+          }
         });
         kmSelect.disabled = !arr.length;
         document.getElementById('filtroKmBtn').disabled = !arr.length;
@@ -694,22 +826,34 @@
         link.href = `https://www.google.com/maps?q=${ponto.lat},${ponto.lng}`;
         link.textContent = `Ver no Google Maps (${ponto.lat.toFixed(6)}, ${ponto.lng.toFixed(6)})`;
         link.classList.add('active');
-        // Mostra quadro de informações detalhadas
-        let infoHtml = `<div style='font-size:14px;text-align:left;margin-bottom:6px;'>`;
-        infoHtml += `<b>RC:</b> ${ponto.RC || '-'}<br>`;
-        infoHtml += `<b>Rodovia:</b> ${ponto.SP || '-'}<br>`;
-        infoHtml += `<b>Km:</b> ${ponto.km.toFixed(3)}<br>`;
-        infoHtml += `<b>Município:</b> ${ponto.MUNICÍPIO || '-'}<br>`;
-        infoHtml += `<b>Tipo:</b> ${ponto.TIPO || '-'}<br>`;
-        infoHtml += `<b>Coordenada:</b> ${ponto.lat.toFixed(6)}, ${ponto.lng.toFixed(6)}<br>`;
+        // Mostra quadro de informações detalhadas, exibindo apenas os dados essenciais
+        let infoHtml = `<div style='font-size:15px;text-align:left;margin-bottom:6px;'>`;
+        if (usouProximo) {
+          infoHtml += `<span style='color:#c62828;font-size:13px;'>Km não disponível. Mostrando informações do Km mais próximo: <b>${ponto.km !== undefined ? ponto.km.toFixed(3) : '-'}</b></span><br>`;
+        }
+        infoHtml += `<b>Rodovia:</b> ${ponto.SP || rod || '-'}<br>`;
+        infoHtml += `<b>Km:</b> ${ponto.km !== undefined ? ponto.km.toFixed(3) : '-'}<br>`;
+        infoHtml += `<b>Município:</b> ${ponto.MUNICÍPIO || ponto.municipio || '-'}<br>`;
+        infoHtml += `<b>Tipo:</b> ${ponto.TIPO || ponto.tipo || '-'}<br>`;
+        let latFinal = ponto.lat !== undefined ? ponto.lat : undefined;
+        let lngFinal = ponto.lon !== undefined ? ponto.lon : ponto.lng !== undefined ? ponto.lng : undefined;
+        let coordStr = (latFinal !== undefined && lngFinal !== undefined) ? `${parseFloat(latFinal).toFixed(6)}, ${parseFloat(lngFinal).toFixed(6)}` : '-';
+        let linkGoogle = (latFinal !== undefined && lngFinal !== undefined) ? `<a href='https://www.google.com/maps?q=${latFinal},${lngFinal}' target='_blank' style='color:#1976d2;text-decoration:underline;font-size:14px;'>(Google Maps)</a>` : '';
+        infoHtml += `<b>Coordenada:</b> ${coordStr} ${linkGoogle}<br>`;
         infoHtml += `</div>`;
         quadroFoto.innerHTML = infoHtml;
         quadroFoto.style.display = '';
       });
 
       // Inicializa filtro Localizar Km com a planilha oficial
+      // Sempre mostrar todas as rodovias e Kms da PLANILHA BI - OFICIAL.csv, sem filtro
       carregarPlanilhaOficial().then(() => {
+        // Preenche rodovias e kms apenas uma vez após carregar a planilha
         preencherRodoviasFiltroOficial();
+        atualizarListaKmOficial();
+        // Garante que o evento de change só seja adicionado uma vez
+        const selectRodovia = document.getElementById('filtroRodovia');
+        selectRodovia.onchange = atualizarListaKmOficial;
       });
     });
   </script>
