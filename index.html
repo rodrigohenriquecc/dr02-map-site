@@ -30,7 +30,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" defer></script>
 
   <!-- script principal -->
-  <script src="js/script_colaborativo.js" defer></script>
+  <script src="assets/js/script_colaborativo.js" defer></script>
 
   <!-- =========== ESTILOS BÁSICOS =========== -->
   <style>
@@ -246,11 +246,116 @@
         padding: 6px 0;
       }
     }
+    
+    /* ====== BOTÕES DE ACESSO ÀS PLANILHAS ====== */
+    .planilhas-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .btn-planilha {
+      background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 3px 12px rgba(25, 118, 210, 0.3);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      min-width: 160px;
+      justify-content: flex-start;
+    }
+    
+    .btn-planilha:hover {
+      background: linear-gradient(135deg, #1251a3 0%, #1976d2 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 16px rgba(25, 118, 210, 0.4);
+    }
+    
+    .btn-planilha:active {
+      transform: translateY(0px);
+      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+    }
+    
+    .btn-pontos {
+      background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);
+      box-shadow: 0 3px 12px rgba(233, 30, 99, 0.3);
+    }
+    
+    .btn-pontos:hover {
+      background: linear-gradient(135deg, #c2185b 0%, #e91e63 100%);
+      box-shadow: 0 5px 16px rgba(233, 30, 99, 0.4);
+    }
+    
+    .btn-calor {
+      background: linear-gradient(135deg, #ff5722 0%, #ff8a65 100%);
+      box-shadow: 0 3px 12px rgba(255, 87, 34, 0.3);
+    }
+    
+    .btn-calor:hover {
+      background: linear-gradient(135deg, #e64a19 0%, #ff5722 100%);
+      box-shadow: 0 5px 16px rgba(255, 87, 34, 0.4);
+    }
+    
+    @media (max-width: 768px) {
+      .planilhas-container {
+        top: 10px;
+        right: 10px;
+        gap: 6px;
+      }
+      
+      .btn-planilha {
+        padding: 8px 12px;
+        font-size: 12px;
+        min-width: 140px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .planilhas-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        top: 8px;
+        right: 8px;
+        left: 8px;
+        gap: 4px;
+      }
+      
+      .btn-planilha {
+        flex: 1;
+        min-width: auto;
+        padding: 6px 8px;
+        font-size: 11px;
+        justify-content: center;
+      }
+    }
   </style>
 </head>
 
 <body>
-  <!-- ...existing code... -->
+  <!-- Botões de Acesso às Planilhas -->
+  <div class="planilhas-container">
+    <a href="https://docs.google.com/spreadsheets/d/1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI/edit?gid=1698628532#gid=1698628532" target="_blank" class="btn-planilha btn-pontos">
+      Pontos de Interesse
+    </a>
+    <a href="https://docs.google.com/spreadsheets/d/1IcM6qrF9JpZlJ6c6P1pvb8O5bhmdgDz4gKCtf8V2JUg/edit?usp=drive_link" target="_blank" class="btn-planilha btn-calor">
+      Mapa de Calor
+    </a>
+    <a href="https://docs.google.com/spreadsheets/d/1r-7wdW8IwNhDMmGJ_QoflML-Mo1wvgAuw6ILK_LFlpo/edit?usp=drive_link" target="_blank" class="btn-planilha">
+      Linhas por Trecho
+    </a>
+  </div>
 
   <!-- Sidebar esquerda -->
   <div class="import-card" id="importCard">
@@ -276,15 +381,10 @@
 
 
   <script>
-    // Variáveis globais
+    // Aguarda o carregamento do script principal e do PapaParse
     let dadosPlanilhaOficial = [];
     let rodoviasPlanilha = [];
     let kmsPorRodovia = {};
-    let metadadosRodovias = {};
-    let filtroPontosPorKm = {};
-    
-    // URLs dos arquivos
-    const METADADOS_URL = 'meta.csv';
     
     // ...existing code...
 // Função utilitária para exibir mensagens discretas sem sobreposição
@@ -429,17 +529,32 @@ function mostrarMensagemDiscreta(texto, tempo = 2500) {
       });
 
       // Inicializa filtro Localizar Km com a planilha oficial
-      carregarPlanilhaOficial().then(() => {
-        preencherRodoviasFiltroOficial();
-        atualizarListaKmOficial();
-        const selectRodovia = document.getElementById('filtroRodovia');
-        selectRodovia.addEventListener('change', atualizarListaKmOficial);
-      });
+      // Aguarda o carregamento do script principal e do PapaParse
+      function inicializarSistema() {
+        // Verifica se as dependências estão carregadas
+        if (typeof Papa === 'undefined' || typeof window.mapa === 'undefined') {
+          setTimeout(inicializarSistema, 100);
+          return;
+        }
+        
+        // Carrega a planilha oficial
+        carregarPlanilhaOficial().then(() => {
+          preencherRodoviasFiltroOficial();
+          atualizarListaKmOficial();
+          const selectRodovia = document.getElementById('filtroRodovia');
+          selectRodovia.addEventListener('change', atualizarListaKmOficial);
+        }).catch(error => {
+          console.error('Erro ao carregar planilha oficial:', error);
+        });
+      }
+      
+      // Inicia a inicialização
+      inicializarSistema();
       
       // Carrega metadados das rodovias para coordenadas reais
       async function carregarMetadados() {
         try {
-          const response = await fetch(METADADOS_URL);
+          const response = await fetch('assets/data/meta.csv');
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const csvText = await response.text();
           
@@ -448,7 +563,11 @@ function mostrarMensagemDiscreta(texto, tempo = 2500) {
               header: true,
               skipEmptyLines: true,
               complete: ({ data }) => {
-                metadadosRodovias = {};
+                // Usa variável global ou cria se não existir
+                if (!window.metadadosRodovias) {
+                  window.metadadosRodovias = {};
+                }
+                window.metadadosRodovias = {};
                 data.forEach(row => {
                   const rodovia = row.Rodovia?.trim();
                   if (!rodovia) return;
@@ -459,16 +578,16 @@ function mostrarMensagemDiscreta(texto, tempo = 2500) {
                   const [latFinal, lngFinal] = row['Lat e Long km final']?.split(',').map(c => parseFloat(c.trim())) || [];
                   
                   if (!isNaN(kmInicial) && !isNaN(kmFinal) && !isNaN(latInicial) && !isNaN(lngInicial) && !isNaN(latFinal) && !isNaN(lngFinal)) {
-                    if (!metadadosRodovias[rodovia]) metadadosRodovias[rodovia] = [];
-                    metadadosRodovias[rodovia].push({
+                    if (!window.metadadosRodovias[rodovia]) window.metadadosRodovias[rodovia] = [];
+                    window.metadadosRodovias[rodovia].push({
                       kmInicial, kmFinal,
                       coordInicial: { lat: latInicial, lng: lngInicial },
                       coordFinal: { lat: latFinal, lng: lngFinal }
                     });
                   }
                 });
-                Object.values(metadadosRodovias).forEach(trechos => trechos.sort((a, b) => a.kmInicial - b.kmInicial));
-                console.log('✅ Metadados carregados:', Object.keys(metadadosRodovias).length, 'rodovias');
+                Object.values(window.metadadosRodovias).forEach(trechos => trechos.sort((a, b) => a.kmInicial - b.kmInicial));
+                console.log('✅ Metadados carregados:', Object.keys(window.metadadosRodovias).length, 'rodovias');
                 resolve();
               }
             });
@@ -480,6 +599,8 @@ function mostrarMensagemDiscreta(texto, tempo = 2500) {
       
       // Calcula coordenadas reais baseadas na rodovia e Km
       function obterCoordenadaReal(rodovia, km) {
+        const metadadosRodovias = window.metadadosRodovias || {};
+        
         if (!metadadosRodovias[rodovia]) {
           const rodoviaLimpa = rodovia.replace(/ Vang| Jon| Madri| Obragen| Ellenco| Vale/g, '').trim();
           const possiveisNomes = Object.keys(metadadosRodovias).filter(r => 
@@ -509,203 +630,23 @@ function mostrarMensagemDiscreta(texto, tempo = 2500) {
         const lng = trecho.coordInicial.lng + (trecho.coordFinal.lng - trecho.coordInicial.lng) * progresso;
         return { lat, lng };
       }
-      function preencherRodoviasFiltroPontos() {
-        const select = document.getElementById('filtroRodovia');
-        if (!select) return;
-        select.innerHTML = '<option value="">Rodovia</option>';
-        Object.keys(filtroPontosPorKm).forEach(r => {
-          const opt = document.createElement('option');
-          opt.value = r;
-          opt.textContent = r;
-          select.appendChild(opt);
-        });
-      }
-      // URL do Google Sheets para pontos de interesse (exportar como CSV)
-      const CSV_PONTOS_URL = 'https://docs.google.com/spreadsheets/d/1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI/export?format=csv';
-      
-      // Carrega CSV de pontos de interesse e popula filtro
-      async function carregarFiltroPontosPorKm() {
-        if (typeof Papa === 'undefined') {
-          setTimeout(carregarFiltroPontosPorKm, 200);
-          return;
-        }
-        
-        // Carrega metadados primeiro
-        await carregarMetadados();
-        
-        Papa.parse(CSV_PONTOS_URL, {
-          download: true,
-          header: true,
-          skipEmptyLines: true,
-          complete: ({ data, meta }) => {
-            filtroPontosPorKm = {};
-            data.forEach((r, idx) => {
-              // Lê dados do CSV colaborativo
-              const rodovia = (r.rodovia || '').toString().trim();
-              const kmStr = (r.km || '').toString().replace(',', '.').trim();
-              const obs = (r.obs || '').toString().trim();
-              const cor = (r.cor || '#FF0000').toString().trim();
-              const opacidade = parseFloat(r.opacidade || 0.8);
-              const raio = parseInt(r.raio || 50);
-              const fotos = (r.fotos || '').toString().trim(); // NOVA: coluna fotos
-              
-              if (!rodovia || !kmStr) return;
-              
-              const km = parseFloat(kmStr);
-              if (isNaN(km)) return;
-              
-              if (!filtroPontosPorKm[rodovia]) filtroPontosPorKm[rodovia] = [];
-              filtroPontosPorKm[rodovia].push({
-                km: km,
-                obs: obs,
-                cor: cor,
-                opacidade: opacidade,
-                raio: raio,
-                fotos: fotos, // NOVA: armazena URLs das fotos
-                // Coordenadas serão calculadas pelo sistema de metadados quando necessário
-                lat: null,
-                lon: null,
-                // Marca para calcular coordenadas reais posteriormente
-                needsRealCoords: true
-              });
-            });
-            // Ordena os pontos por Km para cada rodovia
-            Object.values(filtroPontosPorKm).forEach(arr => arr.sort((a, b) => a.km - b.km));
-            preencherRodoviasFiltroPontos();
-          }
-        });
-      }
-      carregarFiltroPontosPorKm();
+      // REMOVIDO: Função que usava outras fontes de dados
+      // Agora usa apenas PLANILHA BI - OFICIAL.csv
+      // REMOVIDO: Carregamento de dados de fontes externas
+      // Agora usa apenas PLANILHA BI - OFICIAL.csv local
 
-      // Atualiza lista de Km ao selecionar rodovia
-      function atualizarListaKm() {
-        const rod = document.getElementById('filtroRodovia').value;
-        const arr = filtroPontosPorKm[rod] || [];
-        const kmSelect = document.getElementById('filtroKm');
-        kmSelect.innerHTML = '';
-        arr.forEach(p => {
-          const opt = document.createElement('option');
-          opt.value = p.km.toFixed(3);
-          opt.textContent = p.km.toFixed(3);
-          kmSelect.appendChild(opt);
-        });
-        kmSelect.disabled = !arr.length;
-        document.getElementById('filtroKmBtn').disabled = !arr.length;
-      }
-      document.getElementById('filtroRodovia').addEventListener('change', atualizarListaKm);
+      // REMOVIDO: Função que usava dados de outras fontes
+      // Agora usa atualizarListaKmOficial() que usa apenas PLANILHA BI - OFICIAL.csv
 
-      // Botão de busca
-      const quadroFoto = document.getElementById('quadroFotoKm') || document.createElement('div');
-      quadroFoto.id = 'quadroFotoKm';
-      quadroFoto.style.display = 'none';
-      quadroFoto.style.marginTop = '8px';
-      quadroFoto.style.textAlign = 'center';
-      quadroFoto.innerHTML = '';
-      if (!document.getElementById('quadroFotoKm')) {
-        document.querySelector('.filtro-rodovia-card').appendChild(quadroFoto);
-      }
-
-      document.getElementById('filtroKmBtn').addEventListener('click', function() {
-        const rod = document.getElementById('filtroRodovia').value;
-        const kmSelect = document.getElementById('filtroKm');
-        const arr = filtroPontosPorKm[rod] || [];
-        const link = document.getElementById('filtroKmLink');
-        const msgKmProximo = document.getElementById('msgKmProximo');
-        quadroFoto.style.display = 'none';
-        link.classList.remove('active');
-        msgKmProximo.style.display = 'none';
-        if (!rod || !arr.length) {
-          alert('Selecione uma rodovia e um Km válido!');
-          return;
-        }
-        let km = parseFloat(kmSelect.value.replace(',', '.'));
-        let ponto = arr.find(p => p.km.toFixed(3) === km.toFixed(3));
-        let usouProximo = false;
-        if (!ponto) {
-          // Busca o mais próximo
-          ponto = arr.reduce((prev, curr) => Math.abs(curr.km - km) < Math.abs(prev.km - km) ? curr : prev, arr[0]);
-          km = ponto.km;
-          usouProximo = true;
-        }
-        if (usouProximo) {
-          msgKmProximo.textContent = `Km não disponível. Mostrando informações do Km mais próximo: ${ponto.km.toFixed(3)}`;
-          msgKmProximo.style.display = '';
-        }
-        
-        // Calcula coordenadas reais ou usa fallback
-        const coordReal = obterCoordenadaReal(rod, ponto.km);
-        if (coordReal) {
-          ponto.lat = coordReal.lat;
-          ponto.lon = coordReal.lng;
-          console.log(`✅ Coordenada real calculada: ${ponto.lat.toFixed(6)}, ${ponto.lon.toFixed(6)}`);
-        } else {
-          // Fallback para região de SP se não encontrar coordenadas reais
-          ponto.lat = -23.5489 + (Math.random() - 0.5) * 0.1;
-          ponto.lon = -46.6388 + (Math.random() - 0.5) * 0.1;
-          console.warn(`⚠️ Usando coordenada fallback para ${rod} Km ${ponto.km}`);
-        }
-        // Mostra marcador e link
-        if (window.filtroMarker && window.mapa) window.mapa.removeLayer(window.filtroMarker);
-        if (window.mapa) {
-          // Ícone customizado para destaque (corrige pane para 'markerPane')
-          const customIcon = L.icon({
-            iconUrl: 'https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-red.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-            shadowSize: [41, 41]
-          });
-          window.filtroMarker = L.marker([ponto.lat, ponto.lon], { pane: "markerPane", icon: customIcon }).addTo(window.mapa);
-          window.mapa.setView([ponto.lat, ponto.lon], 15, { animate: true });
-          // Animação rápida para chamar atenção
-          setTimeout(() => { window.filtroMarker.setZIndexOffset(1000); }, 100);
-        }
-        link.href = ponto.urlMaps && ponto.urlMaps.startsWith('http') ? ponto.urlMaps : `https://www.google.com/maps?q=${ponto.lat},${ponto.lon}`;
-        link.textContent = `Ver no Google Maps (${ponto.lat.toFixed(6)}, ${ponto.lon.toFixed(6)})`;
-        link.classList.add('active');
-        // Mostra quadro de informações detalhadas
-        let infoHtml = `<div style='font-size:14px;text-align:left;margin-bottom:6px;'>`;
-        infoHtml += `<b>Rodovia:</b> ${rod}<br>`;
-        infoHtml += `<b>Km:</b> ${ponto.km.toFixed(3)}<br>`;
-        infoHtml += `<b>Observação:</b> ${ponto.obs || '-'}<br>`;
-        infoHtml += `<b>Cor:</b> <span style='color:${ponto.cor}'>${ponto.cor}</span><br>`;
-        infoHtml += `<b>Opacidade:</b> ${ponto.opacidade}<br>`;
-        infoHtml += `<b>Raio:</b> ${ponto.raio}m<br>`;
-        infoHtml += `<b>Coordenada:</b> ${ponto.lat.toFixed(6)}, ${ponto.lon.toFixed(6)}<br>`;
-        
-        // NOVA: Exibe fotos se disponíveis
-        if (ponto.fotos && ponto.fotos.length > 0) {
-          // Verifica se são múltiplas URLs separadas por vírgula ou ponto e vírgula
-          const urlsFotos = ponto.fotos.split(/[,;]/).map(url => url.trim()).filter(url => url.length > 0);
-          
-          if (urlsFotos.length > 0) {
-            infoHtml += `<b>Fotos:</b><br>`;
-            urlsFotos.forEach((fotoUrl, index) => {
-              if (fotoUrl.startsWith('http')) {
-                infoHtml += `<div style='margin:4px 0;'>`;
-                infoHtml += `<a href='${fotoUrl}' target='_blank' style='color:#1976d2;text-decoration:underline;font-size:13px;'>📷 Foto ${index + 1}</a>`;
-                infoHtml += `</div>`;
-                // Tenta exibir a imagem se for um link direto para imagem
-                if (fotoUrl.match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i)) {
-                  infoHtml += `<div style='margin:4px 0;'><img src='${fotoUrl}' alt='Foto do ponto' style='max-width:200px;max-height:150px;border-radius:6px;box-shadow:0 2px 8px #0002;' onerror='this.style.display="none"'></div>`;
-                }
-              }
-            });
-          }
-        }
-        
-        infoHtml += `</div>`;
-        quadroFoto.innerHTML = infoHtml;
-        quadroFoto.style.display = '';
-      });
+      // REMOVIDO: Event listener que usava dados de outras fontes
+      // Agora usa apenas os dados da PLANILHA BI - OFICIAL.csv
 
       // NOVO: Localizar Km usando PLANILHA BI - OFICIAL.csv
       // Variáveis já declaradas acima
 
       async function carregarPlanilhaOficial() {
         return new Promise((resolve, reject) => {
-        Papa.parse('PLANILHA BI - OFICIAL.csv', {
+        Papa.parse('assets/data/PLANILHA BI - OFICIAL.csv', {
           download: true,
           header: true,
           skipEmptyLines: true,
