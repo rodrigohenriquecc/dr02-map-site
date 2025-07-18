@@ -276,6 +276,16 @@
 
 
   <script>
+    // Variáveis globais
+    let dadosPlanilhaOficial = [];
+    let rodoviasPlanilha = [];
+    let kmsPorRodovia = {};
+    let metadadosRodovias = {};
+    let filtroPontosPorKm = {};
+    
+    // URLs dos arquivos
+    const METADADOS_URL = 'meta.csv';
+    
     // ...existing code...
 // Função utilitária para exibir mensagens discretas sem sobreposição
 function mostrarMensagemDiscreta(texto, tempo = 2500) {
@@ -510,6 +520,9 @@ function mostrarMensagemDiscreta(texto, tempo = 2500) {
           select.appendChild(opt);
         });
       }
+      // URL do Google Sheets para pontos de interesse (exportar como CSV)
+      const CSV_PONTOS_URL = 'https://docs.google.com/spreadsheets/d/1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI/export?format=csv';
+      
       // Carrega CSV de pontos de interesse e popula filtro
       async function carregarFiltroPontosPorKm() {
         if (typeof Papa === 'undefined') {
@@ -534,6 +547,7 @@ function mostrarMensagemDiscreta(texto, tempo = 2500) {
               const cor = (r.cor || '#FF0000').toString().trim();
               const opacidade = parseFloat(r.opacidade || 0.8);
               const raio = parseInt(r.raio || 50);
+              const fotos = (r.fotos || '').toString().trim(); // NOVA: coluna fotos
               
               if (!rodovia || !kmStr) return;
               
@@ -547,6 +561,7 @@ function mostrarMensagemDiscreta(texto, tempo = 2500) {
                 cor: cor,
                 opacidade: opacidade,
                 raio: raio,
+                fotos: fotos, // NOVA: armazena URLs das fotos
                 // Coordenadas serão calculadas pelo sistema de metadados quando necessário
                 lat: null,
                 lon: null,
@@ -658,9 +673,28 @@ function mostrarMensagemDiscreta(texto, tempo = 2500) {
         infoHtml += `<b>Opacidade:</b> ${ponto.opacidade}<br>`;
         infoHtml += `<b>Raio:</b> ${ponto.raio}m<br>`;
         infoHtml += `<b>Coordenada:</b> ${ponto.lat.toFixed(6)}, ${ponto.lon.toFixed(6)}<br>`;
-        if (ponto.foto) {
-          infoHtml += `<div style='margin:8px 0;'><img src='${ponto.foto}' alt='Foto do ponto' style='max-width:220px;max-height:160px;border-radius:6px;box-shadow:0 2px 8px #0002;'></div>`;
+        
+        // NOVA: Exibe fotos se disponíveis
+        if (ponto.fotos && ponto.fotos.length > 0) {
+          // Verifica se são múltiplas URLs separadas por vírgula ou ponto e vírgula
+          const urlsFotos = ponto.fotos.split(/[,;]/).map(url => url.trim()).filter(url => url.length > 0);
+          
+          if (urlsFotos.length > 0) {
+            infoHtml += `<b>Fotos:</b><br>`;
+            urlsFotos.forEach((fotoUrl, index) => {
+              if (fotoUrl.startsWith('http')) {
+                infoHtml += `<div style='margin:4px 0;'>`;
+                infoHtml += `<a href='${fotoUrl}' target='_blank' style='color:#1976d2;text-decoration:underline;font-size:13px;'>📷 Foto ${index + 1}</a>`;
+                infoHtml += `</div>`;
+                // Tenta exibir a imagem se for um link direto para imagem
+                if (fotoUrl.match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i)) {
+                  infoHtml += `<div style='margin:4px 0;'><img src='${fotoUrl}' alt='Foto do ponto' style='max-width:200px;max-height:150px;border-radius:6px;box-shadow:0 2px 8px #0002;' onerror='this.style.display="none"'></div>`;
+                }
+              }
+            });
+          }
         }
+        
         infoHtml += `</div>`;
         quadroFoto.innerHTML = infoHtml;
         quadroFoto.style.display = '';
