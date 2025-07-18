@@ -1,0 +1,1611 @@
+﻿SP;KM ;LOCALIZAÇÃO;MUNICÍPIO;TIPO
+SP 073;35,7;-23.152178, -47.256790;Salto;Simples
+SP 073;36;-23.154327, -47.258543;Salto;Simples
+SP 073;36,5;-23.156347, -47.261614;Salto;Simples
+SP 073;37;-23.160226, -47.264834;Salto;Simples
+SP 073;37,5;-23.167878, -47.268992;Salto;Simples
+SP 073;38;-23.168839, -47.268961;Salto;Simples
+SP 073;38,5;-23.170805, -47.269480;Salto;Simples
+SP 073;39;-23.171709, -47.268804;Salto;Simples
+SP 073;39,5;-23.178815, -47.265868;Salto;Simples
+SP 073;41;-23.188759, -47.279236;Salto;Simples
+SP 073;41,2;-23.188900, -47.279980;Salto;Simples
+SP 079;39;-23.215280, -47.297680;Salto;Dupla
+SP 079;40;-23.221250, -47.300680;Salto;Dupla
+SP 079;41;-23.225380, -47.301910;Salto;Simples
+SP 079;42;-23.232150, -47.304020;Salto;Simples
+SP 079;43;-23.239860, -47.304820;Salto;Simples
+SP 079;44;-23.246690, -47.304250;Salto;Simples
+SP 079;45;-23.254260, -47.301170;Salto;Simples
+SP 079;49;-23.287820, -47.293420;Itu;Dupla
+SP 079;50;-23.294680, -47.301390;Itu;Dupla
+SP 079;51;-23.301910, -47.303610;Itu;Dupla
+SP 079;52;-23.310480, -47.304060;Itu;Dupla
+SP 079;53;-23.318890, -47.300860;Itu;Dupla
+SP 079;54;-23.328070, -47.302790;Itu;Dupla
+SP 079;55;-23.336950, -47.306000;Itu;Dupla
+SP 079;56;-23.345380, -47.307360;Itu;Dupla
+SP 079;57;-23.354590, -47.308950;Itu;Dupla
+SP 079;58;-23.362500, -47.308390;Itu;Dupla
+SP 079;59;-23.370070, -47.314340;Itu;Dupla
+SP 079;60;-23.372560, -47.323650;Itu;Dupla
+SP 079;61;-23.378320, -47.330870;Itu;Dupla
+SP 079;62;-23.384350, -47.337470;Itu;Dupla
+SP 079;63;-23.390600, -47.347500;Itu;Dupla
+SP 079;64;-23.396750, -47.354480;Itu;Dupla
+SP 079;65;-23.397230, -47.363090;Sorocaba;Dupla
+SP 079;66;-23.398050, -47.371630;Sorocaba;Dupla
+SP 079;67;-23.402310, -47.380440;Sorocaba;Dupla
+SP 079;68;-23.407900, -47.384060;Sorocaba;Dupla
+SP 079;69;-23.414160, -47.390350;Sorocaba;Dupla
+SP 079;70;-23.415350, -47.401670;Sorocaba;Dupla
+SP 079;71;-23.418520, -47.409200;Sorocaba;Dupla
+SP 079;72;-23.427270, -47.414940;Sorocaba;Dupla
+SP 079;73;-23.434910, -47.415910;Sorocaba;Dupla
+SP 079;74;-23.443340, -47.417050;Sorocaba;Dupla
+SP 079;75;-23.451700, -47.418170;Sorocaba;Dupla
+SP 079;76;-23.461860, -47.422680;Sorocaba;Dupla
+SP 079;77;-23.467540, -47.424460;Sorocaba;Dupla
+SP 097;0;-23.449260, -47.513530;Sorocaba;Dupla
+SP 097;0;-23.449300, -47.513670;Sorocaba;Dupla
+SP 097;1;-23.442310, -47.514880;Sorocaba;Dupla
+SP 097;1;-23.442450, -47.514910;Sorocaba;Dupla
+SP 097;2;-23.436140, -47.511130;Sorocaba;Simples
+SP 097;3;-23.426470, -47.517610;Sorocaba;Simples
+SP 097;4;-23.417560, -47.520400;Sorocaba;Simples
+SP 097;4;-23.417590, -47.520750;Sorocaba;Simples
+SP 097;5;-23.406740, -47.521250;Sorocaba;Simples
+SP 097;6;-23.400600, -47.516700;Sorocaba;Simples
+SP 097;7;-23.392440, -47.516460;Sorocaba;Simples
+SP 097;8;-23.382440, -47.517540;Sorocaba;Simples
+SP 097;9;-23.374910, -47.526390;Sorocaba;Simples
+SP 097;10;-23.368020, -47.532800;Porto Feliz;Simples
+SP 097;11;-23.360010, -47.533830;Porto Feliz;Simples
+SP 097;12;-23.353500, -47.531090;Porto Feliz;Simples
+SP 097;13;-23.353500, -47.531090;Porto Feliz;Simples
+SP 097;14;-23.342910, -47.529180;Porto Feliz;Simples
+SP 097;15;-23.328100, -47.528640;Porto Feliz;Simples
+SP 097;16;-23.317950, -47.531610;Porto Feliz;Simples
+SP 097;17;-23.309160, -47.533250;Porto Feliz;Simples
+SP 097;18;-23.300050, -47.533340;Porto Feliz;Simples
+SP 097;19;-23.290900, -47.529530;Porto Feliz;Simples
+SP 097;20;-23.282830, -47.526230;Porto Feliz;Simples
+SP 097;21;-23.273650, -47.522430;Porto Feliz;Simples
+SP 097;22;-23.264760, -47.521150;Porto Feliz;Simples
+SP 097;23;-23.256170, -47.520630;Porto Feliz;Dupla
+SP 097;23;-23.255890, -47.520630;Porto Feliz;Dupla
+SP 097;24;-23.246870, -47.517450;Porto Feliz;Dupla
+SP 097;24;-23.248830, -47.518180;Porto Feliz;Dupla
+SP 097;25;-23.238030, -47.517910;Porto Feliz;Dupla
+SP 097;25;-23.237610, -47.518170;Porto Feliz;Dupla
+SP 127;213,5;-23.990330, -48.329090;Capão Bonito;Dupla
+SP 127;213,5;-23.989540, -48.328130;Capão Bonito;Dupla
+SP 127;214;-23.993630, -48.332130;Capão Bonito;Dupla
+SP 127;214;-23.993250, -48.331600;Capão Bonito;Dupla
+SP 127;215;-23.999860, -48.336950;Capão Bonito;Dupla
+SP 127;215;-24.000410, -48.337220;Capão Bonito;Dupla
+SP 127;216;-24.007780, -48.341170;Capão Bonito;Dupla
+SP 127;216;-24.007850, -48.341130;Capão Bonito;Dupla
+SP 129;0;-23.226210, -47.570500;Porto Feliz;Simples
+SP 129;1;-23.224150, -47.576040;Porto Feliz;Simples
+SP 129;2;-23.227730, -47.580310;Porto Feliz;Simples
+SP 129;3;-23.231150, -47.583210;Porto Feliz;Simples
+SP 129;4;-23.236010, -47.591750;Porto Feliz;Simples
+SP 129;5;-23.245340, -47.608620;Porto Feliz;Simples
+SP 129;6;-23.251290, -47.616440;Boituva;Simples
+SP 129;7;-23.251620, -47.616650;Boituva;Simples
+SP 129;8;-23.260230, -47.632300;Boituva;Simples
+SP 129;9;-23.262150, -47.643000;Boituva;Simples
+SP 129;10;-23.262180, -47.642950;Boituva;Simples
+SP 129;11;-23.268860, -47.663200;Boituva;Simples
+SP 129;12;-23.266580, -47.671150;Boituva;Simples
+SP 129;12;-23.266580, -47.669630;Boituva;Simples
+SP 129;13;-23.270640, -47.680380;Boituva;Simples
+SP 129;14;-23.273880, -47.688630;Boituva;Simples
+SP 129;15;-23.277540, -47.697530;Boituva;Simples
+SP 129;16;-23.283960, -47.710920;Boituva;Simples
+SP 129;17;-23.282310, -47.717030;Boituva;Simples
+SP 129;18;-23.283290, -47.726270;Boituva;Simples
+SP 129;19;-23.285930, -47.734620;Boituva;Simples
+SP 129;20;-23.284150, -47.790120;Boituva;Simples
+SP 129;21;-23.292610, -47.752560;Boituva;Simples
+SP 129;22;-23.296430, -47.762960;Boituva;Simples
+SP 129;22;-23.296770, -47.763030;Boituva;Simples
+SP 129;23;-23.299610, -47.771260;Tatuí;Simples
+SP 129;24;-23.295380, -47.754660;Tatuí;Simples
+SP 129;25;-23.306090, -47.788540;Tatuí;Simples
+SP 129;26;-23.306150, -47.788670;Tatuí;Simples
+SP 129;27;-23.313270, -47.805770;Tatuí;Simples
+SP 129;28;-23.313340, -47.805830;Tatuí;Simples
+SP 129;29;-23.320570, -47.822970;Tatuí;Simples
+SP 129;37,7;-23.359720, -47.890370;Tatuí;Simples
+SP 129;38;-23.358730, -47.893330;Tatuí;Simples
+SP 129;39;-23.359250, -47.897030;Tatuí;Simples
+SP 129;40;-23.359060, -47.902740;Tatuí;Simples
+SP 129;41;-23.359250, -47.912010;Tatuí;Simples
+SP 129;42;-23.360580, -47.931170;Tatuí;Simples
+SP 129;43;-23.360340, -47.931340;Tatuí;Simples
+SP 129;44;-23.364960, -47.938660;Tatuí;Simples
+SP 129;45;-23.377430, -47.951020;Tatuí;Simples
+SP 129;46;-23.382540, -47.959150;Tatuí;Simples
+SP 129;47;-23.383270, -47.948260;Tatuí;Simples
+SP 129;48;-23.387060, -47.967920;Tatuí;Simples
+SP 129;49;-23.383930, -47.983850;Tatuí;Simples
+SP 129;50;-23.383000, -47.986270;Tatuí;Simples
+SP 129;51;-23.383790, -48.005270;Tatuí;Simples
+SP 129;52;-23.383730, -48.005510;Tatuí;Simples
+SP 129;53;-23.386140, -48.013260;Tatuí;Simples
+SP 129;54;-23.388780, -48.030060;Tatuí;Simples
+SP 129;55;-23.395070, -48.030560;Tatuí;Simples
+SP 129;56;-23.403420, -48.033260;Tatuí;Simples
+SP 129;57;-23.407810, -48.041280;Tatuí;Simples
+SP 129;58;-23.415040, -48.043830;Tatuí;Simples
+SP 129;59;-23.415050, -48.043810;Itapetininga;Simples
+SP 129;60;-23.429420, -48.048300;Itapetininga;Simples
+SP 129;61;-23.440200, -48.046560;Itapetininga;Simples
+SP 129;62;-23.449060, -48.047990;Itapetininga;Simples
+SP 129;63;-23.457630, -48.050410;Itapetininga;Simples
+SP 129;64;-23.466370, -48.052610;Itapetininga;Simples
+SP 129;65;-23.466360, -48.052590;Itapetininga;Simples
+SP 129;66;-23.475320, -48.052910;Itapetininga;Simples
+SP 129;67;-23.492180, -48.048340;Itapetininga;Simples
+SP 129;68;-23.503220, -48.051730;Itapetininga;Simples
+SP 129;69;-23.513870, -48.052440;Itapetininga;Simples
+SP 129;70;-23.520470, -48.051880;Itapetininga;Simples
+SP 129;71;-23.529190, -48.052820;Itapetininga;Simples
+SP 129;72;-23.538860, -48.056430;Itapetininga;Simples
+SP 129;73;-23.546870, -48.053940;Itapetininga;Simples
+SP 129;74;-23.547190, -48.053860;Itapetininga;Simples
+SP 139;67,77;-24.124330, -47.990390;São Miguel Arcanjo;Simples - Intertravado
+SP 139;67,77;-24.124580, -47.990560;São Miguel Arcanjo;Simples - Intertravado
+SP 139;68;-24.121970, -47.988770;São Miguel Arcanjo;Simples - Intertravado
+SP 139;69;-24.106750, -47.986670;São Miguel Arcanjo;Simples - Intertravado
+SP 139;70;-24.106080, -47.985610;São Miguel Arcanjo;Simples - Intertravado
+SP 139;71;-24.102770, -47.988100;São Miguel Arcanjo;Simples - Intertravado
+SP 139;72;-24.097690, -47.988150;São Miguel Arcanjo;Simples - Intertravado
+SP 139;73;-24.092920, -47.99020;São Miguel Arcanjo;Simples - Intertravado
+SP 139;74;-24.087570, -47.994350;São Miguel Arcanjo;Simples - Intertravado
+SP 139;75;-24.079680, -47.995530;São Miguel Arcanjo;Simples - Intertravado
+SP 139;76;-24.071610, -47.999180;São Miguel Arcanjo;Simples - Intertravado
+SP 139;77;-24.062850, -47.999180;São Miguel Arcanjo;Simples - Intertravado
+SP 139;78;-24.056960, -47.994700;São Miguel Arcanjo;Simples - Intertravado
+SP 139;79;-24.049960, -48.000020;São Miguel Arcanjo;Simples
+SP 139;80;-24.041850, -48.004420;São Miguel Arcanjo;Simples
+SP 139;81;-24.037230, -48.010990;São Miguel Arcanjo;Simples
+SP 139;82;-24.029490, -48.015880;São Miguel Arcanjo;Simples
+SP 139;83;-24.021080, -48.016820;São Miguel Arcanjo;Simples
+SP 139;84;-24.008560, -48.016870;São Miguel Arcanjo;Simples
+SP 139;85;-24.003930, -48.015720;São Miguel Arcanjo;Simples
+SP 139;86;-23.992830, -48.015920;São Miguel Arcanjo;Simples
+SP 139;87;-23.985380, -48.014900;São Miguel Arcanjo;Simples
+SP 139;88;-23.977130, -48.015320;São Miguel Arcanjo;Simples
+SP 139;89;-23.970080, -48.019850;São Miguel Arcanjo;Simples
+SP 139;90;-23.966100, -48.022130;São Miguel Arcanjo;Simples
+SP 139;91;-23.957570, -48.023360;São Miguel Arcanjo;Simples
+SP 139;92;-23.948410, -48.024810;São Miguel Arcanjo;Simples
+SP 139;93;-23.939410, -48.025280;São Miguel Arcanjo;Simples
+SP 139;94;-23.931000, -48.025550;São Miguel Arcanjo;Simples
+SP 139;95;-23.922840, -48.023730;São Miguel Arcanjo;Simples
+SP 139;96;-23.916310, -48.018540;São Miguel Arcanjo;Simples
+SP 139;97;-23.908850, -48.013940;São Miguel Arcanjo;Simples
+SP 139;98;-23.901990, -48.010200;São Miguel Arcanjo;Simples
+SP 139;99;-23.892380, -48.010840;São Miguel Arcanjo;Simples
+SP 139;100;-23.884110, -48.010650;São Miguel Arcanjo;Simples
+SP 139;104;-23.860480, -48.019360;São Miguel Arcanjo;Simples
+SP 139;107;-23.845970, -48.038130;São Miguel Arcanjo;Simples
+SP 139;109;-23.839060, -48.049510;São Miguel Arcanjo;Simples
+SP 139;111;-23.839060, -48.049510;São Miguel Arcanjo;Simples
+SP 139;113;-23.839060, -48.049510;São Miguel Arcanjo;Simples
+SP 139;115;-23.795810, -48.093780;São Miguel Arcanjo;Simples
+SP 139;117;-23.783150, -48.105320;Itapetininga;Simples
+SP 139;119;-23.791610, -48.120830;Itapetininga;Simples
+SP 139;121;-23.770100, -48.128730;Itapetininga;Simples
+SP 141;0,4;-23.532490, -47.724790;Araçoiaba da Serra;Simples
+SP 141;1;-23.528370, -47.728890;Araçoiaba da Serra;Simples
+SP 141;2;-23.521810, -47.735570;Araçoiaba da Serra;Simples
+SP 141;3;-23.513710, -47.739560;Araçoiaba da Serra;Simples
+SP 141;4;-23.503520, -47.743640;Araçoiaba da Serra;Simples
+SP 141;5;-23.496300, -47.742260;Araçoiaba da Serra;Simples
+SP 141;6;-23.487130, -47.741090;Araçoiaba da Serra;Simples
+SP 141;6;-23.487070, -47.741360;Araçoiaba da Serra;Simples
+SP 141;7;-23.478280, -47.741380;Capela do Alto;Dupla
+SP 141;7;-23.478110, -47.741580;Capela do Alto;Dupla
+SP 141;8;-23.469280, -47.741130;Capela do Alto;Dupla
+SP 141;8;-23.469190, -47.741500;Capela do Alto;Dupla
+SP 141;9;-23.462550, -47.735330;Capela do Alto;Dupla
+SP 141;10;-23.453770, -47.735110;Capela do Alto;Simples
+SP 141;11;-23.444810, -47.735980;Capela do Alto;Simples
+SP 141;12;-23.448550, -47.734630;Capela do Alto;Simples
+SP 141;13;-23.389970, -47.779020;Capela do Alto;Simples
+SP 141;14;-23.389970, -47.779020;Capela do Alto;Simples
+SP 141;15;-23.411980, -47.745960;Capela do Alto;Simples
+SP 141;16;-23.411980, -47.745950;Capela do Alto;Simples
+SP 141;17;-23.411980, -47.745950;Tatuí;Simples
+SP 141;18;-23.396220, -47.765540;Tatuí;Simples
+SP 141;19;-23.390410, -47.773350;Tatuí;Simples
+SP 141;20;-23.386520, -47.781680;Tatuí;Simples
+SP 141;21;-23.381550, -47.789850;Tatuí;Dupla
+SP 141;22;-23.373790, -47.796140;Tatuí;Dupla
+SP 141;22;-23.374680, -47.795940;Tatuí;Dupla
+SP 141;23;-23.368280, -47.802980;Tatuí;Dupla
+SP 141;23;-23.368460, -47.803000;Tatuí;Dupla
+SP 141;24;-23.367980, -47.802940;Tatuí;Dupla
+SP 141;24;-23.359610, -47.803500;Tatuí;Dupla
+SP 141;25;-23.355430, -47.811310;Tatuí;Dupla
+SP 141;26;-23.353390, -47.820680;Tatuí;Dupla
+SP 141;27;-23.351430, -47.830350;Tatuí;Dupla
+SP 141;27,6;-23.350720, -47.836160;Tatuí;Dupla
+SP 141;27,6;-23.350710, -47.836160;Tatuí;Dupla
+SP 141;31;-23.336050, -47.859520;Tatuí;Simples
+SP 141;32;-23.331050, -47.865200;Tatuí;Simples
+SP 141;33;-23.324500, -47.872320;Tatuí;Simples
+SP 141;34;-23.317430, -47.878260;Tatuí;Simples
+SP 141;35;-23.309580, -47.883230;Tatuí;Simples
+SP 141;36;-23.303040, -47.889490;Tatuí;Simples
+SP 141;37;-23.296620, -47.896140;Tatuí;Simples
+SP 141;38;-23.288650, -47.899980;Tatuí;Simples
+SP 141;39;-23.282610, -47.907380;Tatuí;Simples
+SP 141;40;-23.277420, -47.913980;Tatuí;Simples
+SP 141;41;-23.269490, -47.916000;Cesário Lange;Simples
+SP 141;42;-23.265910, -47.924330;Cesário Lange;Simples
+SP 141;43;-23.260860, -47.932370;Cesário Lange;Simples
+SP 141;44;-23.254680, -47.937860;Cesário Lange;Simples
+SP 141;45;-23.245320, -47.938270;Cesário Lange;Simples
+SP 141;46;-23.238520, -47.944540;Cesário Lange;Dulpa
+SP 141;46,7;-23.232960, -47.948070;Cesário Lange;Dulpa
+SP 141;49;-23.219630, -47.963830;Cesário Lange;Simples
+SP 141;49;-23.219650, -47.963820;Cesário Lange;Simples
+SP 141;50;-23.219150, -47.973450;Cesário Lange;Simples
+SP 141;50;-23.219180, -47.973430;Cesário Lange;Simples
+SP 141;51;-23.217880, -47.981400;Pereiras;Simples
+SP 141;52;-23.220250, -47.989600;Cesário Lange;Simples
+SP 141;53;-23.223230, -47.998190;Cesário Lange;Simples
+SP 141;54;-23.223250, -48.007810;Quadra;Simples
+SP 141;55;-23.225910, -48.016250;Pereiras;Simples
+SP 141;56;-23.227080, -48.025740;Pereiras;Simples
+SP 141;57;-23.225020, -48.033950;Pereiras;Simples
+SP 141;58;-23.222350, -48.041770;Pereiras;Simples
+SP 141;59;-23.219690, -48.050150;Porangaba;Simples
+SP 141;60;-23.216540, -48.058970;Porangaba;Simples
+SP 141;61;-23.213180, -48.067100;Porangaba;Simples
+SP 141;62;-23.211850, -48.076160;Porangaba;Simples
+SP 141;63;-23.210590, -48.082840;Porangaba;Simples
+SP 141;64;-23.204130, -48.089980;Porangaba;Simples
+SP 141;65;-23.199800, -48.098020;Porangaba;Simples
+SP 141;66;-23.195020, -48.106840;Porangaba;Simples
+SP 141;67;-23.190310, -48.115240;Porangaba;Simples
+SP 141;68;-23.185820, -48.123310;Porangaba;Simples
+SP 141;69;-23.181300, -48.132540;Porangaba;Simples
+SP 141;70;-23.177070, -48.140890;Porangaba;Simples
+SP 141;71;-23.172920, -48.149270;Porangaba;Simples
+SP 141;72;-23.167660, -48.157050;Porangaba;Simples
+SP 141;73;-23.159870, -48.162020;Porangaba;Simples
+SP 141;74;-23.152130, -48.166810;Porangaba;Simples
+SP 141;75;-23.143870, -48.170500;Porangaba;Simples
+SP 141;76;-23.134920, -48.169110;Porangaba;Simples
+SP 141;77;-23.126780, -48.171320;Porangaba;Simples
+SP 141;78;-23.121690, -48.179890;Porangaba;Simples
+SP 141;79;-23.117000, -48.187690;Porangaba;Simples
+SP 141;80;-23.113550, -48.196730;Bofete;Simples
+SP 141;81;-23.110090, -48.205530;Bofete;Simples
+SP 141;82;-23.105970, -48.213950;Bofete;Simples
+SP 141;83;-23.105350, -48.225580;Bofete;Simples
+SP 141;84;-23.105830, -48.233450;Bofete;Simples
+SP 141;85;-23.103030, -48.242570;Bofete;Simples
+SP 141;86;-23.100490, -48.251670;Bofete;Simples
+SP 143;0;-23.231010, -47.948120;Cesário Lange;Dupla
+SP 143;0;-23.230770, -47.948620;Cesário Lange;Dupla
+SP 143;1;-23.223690, -47.948920;Cesário Lange;Dupla
+SP 143;1;-23.223540, -47.949400;Cesário Lange;Dupla
+SP 143;2;-23.213720, -47.948220;Cesário Lange;Simples
+SP 143;3;-23.205050, -47.947100;Cesário Lange;Simples
+SP 143;4;-23.194820, -47.945790;Cesário Lange;Simples
+SP 143;5;-23.185810, -47.944650;Cesário Lange;Simples
+SP 143;6;-23.176570, -47.943620;Cesário Lange;Simples
+SP 143;7;-23.167710, -47.942490;Cesário Lange;Simples
+SP 143;8;-23.159630, -47.941320;Pereiras;Simples
+SP 143;9;-23.150800, -47.941880;Pereiras;Simples
+SP 143;10;-23.142170, -47.942470;Pereiras;Simples
+SP 143;11;-23.134240, -47.947390;Pereiras;Simples
+SP 143;12;-23.124860, -47.948770;Pereiras;Simples
+SP 143;13;-23.115660, -47.950980;Pereiras;Simples
+SP 143;14;-23.106630, -47.951730;Pereiras;Simples
+SP 143;15;-23.099430, -47.955940;Pereiras;Simples
+SP 143;16;-23.091760, -47.961100;Pereiras;Simples
+SP 143;17;-23.084150, -47.965480;Pereiras;Dupla
+SP 143;18;-23.076340, -47.969680;Pereiras;Dupla
+SP 143;18;-23.076460, -47.969800;Pereiras;Dupla
+SP 143;19;-23.068690, -47.973840;Pereiras;Dupla
+SP 143;19;-23.068680, -47.974140;Pereiras;Dupla
+SP 143;20;-23.062350, -47.969020;Pereiras;Simples
+SP 143;21;-23.056330, -47.961810;Pereiras;Simples
+SP 143;22;-23.049130, -47.958510;Pereiras;Simples
+SP 147;238,5;-22.951300, -48.276270;Anhembi;Simples
+SP 147;239;-22.955790, -48.275390;Anhembi;Simples
+SP 147;240;-22.964260, -48.275250;Anhembi;Simples
+SP 147;241;-22.966590, -48.276380;Bofete;Simples
+SP 147;242;-22.982160, -48.278140;Bofete;Simples
+SP 147;243;-22.982150, -48.278150;Bofete;Simples
+SP 147;244;-22.997820, -48.269210;Bofete;Simples
+SP 147;245;-23.004190, -48.265260;Bofete;Simples
+SP 147;246;-23.009290, -48.256180;Bofete;Simples
+SP 147;247;-23.017690, -48.256740;Bofete;Simples
+SP 147;247;-23.017950, -48.256590;Bofete;Simples
+SP 147;248;-23.017950, -48.256590;Bofete;Simples
+SP 147;249;-23.034440, -48.253850;Bofete;Simples
+SP 147;250;-23.038070, -48.245260;Bofete;Simples
+SP 147;251;-23.043550, -48.238460;Bofete;Simples
+SP 147;252;-23.052320, -48.240700;Bofete;Simples
+SP 147;253;-23.052300, -48.240730;Bofete;Simples
+SP 147;254;-23.061060, -48.242300;Bofete;Simples
+SP 147;255;-23.076500, -48.249030;Bofete;Simples
+SP 147;256;-23.082230, -48.255550;Bofete;Simples
+SP 147;257;-23.092540, -48.257930;Bofete;Simples
+SP 147;258;-23.098620, -48.261510;Bofete;Simples
+SP 147;258;-23.098650, -48.261490;Bofete;Simples
+SP 147;259;-23.105060, -48.269170;Bofete;Simples
+SP 147;259;-23.105160, -48.268790;Bofete;Simples
+SP 147;259;-23.105170, -48.268790;Bofete;Simples
+SP 147;260;-23.112870, -48.273280;Bofete;Simples
+SP 147;261;-23.120660, -48.277640;Bofete;Simples
+SP 147;262;-23.128630, -48.282210;Bofete;Simples
+SP 147;262;-23.128640, -48.282220;Bofete;Simples
+SP 147;262,8;-23.135530, -48.284890;Bofete;Simples
+SP 147;262,8;-23.135540, -48.284940;Bofete;Simples
+SP 147;263;-23.137010, -48.285530;Bofete;Simples
+SP 147;264;-23.152890, -48.292400;Bofete;Simples
+SP 147;264;-23.145540, -48.287980;Bofete;Simples
+SP 147;265;-23.154060, -48.291850;Bofete;Simples
+SP 147;266;-23.154060, -48.291850;Bofete;Simples
+SP 147;266;-23.161610, -48.296890;Bofete;Simples
+SP 147;267;-23.169740, -48.301340;Bofete;Simples
+SP 147;267;-23.127350, -48.279950;Bofete;Simples
+SP 147;267,8;-23.169620, -48.301440;Bofete;Simples
+SP 147;267,8;-23.176470, -48.304870;Bofete;Simples
+SP 147;268,2;-23.179910, -48.306570;Bofete;Simples
+SP 147;268,2;-23.179960, -48.306520;Bofete;Simples
+SP 147;268,2;-23.180090, -48.306670;Bofete;Simples
+SP 157;6;-23.568280, -48.084620;Itapetininga;Simples
+SP 157;7;-23.559670, -48.085820;Itapetininga;Simples
+SP 157;8;-23.551820, -48.089110;Itapetininga;Simples
+SP 157;9;-23.550060, -48.094880;Itapetininga;Simples
+SP 157;10;-23.541170, -48.096980;Itapetininga;Simples
+SP 157;11;-23.535710, -48.102460;Itapetininga;Simples
+SP 157;12;-23.533310, -48.111740;Itapetininga;Simples
+SP 157;13;-23.536080, -48.118490;Itapetininga;Simples
+SP 157;14;-23.534610, -48.124610;Itapetininga;Simples
+SP 157;15;-23.527880, -48.130990;Itapetininga;Simples
+SP 157;16;-23.522010, -48.137710;Itapetininga;Simples
+SP 157;18;-23.508820, -48.147940;Itapetininga;Simples
+SP 157;19;-23.500510, -48.151490;Itapetininga;Simples
+SP 157;20;-23.494420, -48.157880;Itapetininga;Simples
+SP 157;21;-23.493520, -48.167180;Itapetininga;Simples
+SP 157;21,9;-23.492940, -48.174350;Guareí;Simples
+SP 157;21,9;-23.494110, -48.175470;Guareí;Simples
+SP 157;22;-23.494070, -48.175520;Guareí;Simples
+SP 157;22;-23.494110, -48.175460;Guareí;Simples
+SP 157;23,15;-23.486770, -48.182990;Guareí;Simples
+SP 157;43;-23.326130, -48.185700;Guareí;Simples
+SP 157;44;-23.318090, -48.181130;Guareí;Simples
+SP 157;44,85;-23.311750, -48.176610;Guareí;Simples
+SP 157;44,9;-23.311540, -48.176460;Guareí;Simples
+SP 157;45,9;-23.305320, -48.169590;Guareí;Simples
+SP 157;45,9;-23.304690, -48.168960;Guareí;Simples
+SP 157;45,95;-23.304920, -48.168910;Guareí;Simples
+SP 157;45,95;-23.304920, -48.168940;Guareí;Simples
+SP 157;45,95;-23.304960, -48.168960;Guareí;Simples
+SP 157;45,95;-23.304820, -48.168980;Guareí;Simples
+SP 157;45,95;-23.304830, -48.168980;Guareí;Simples
+SP 157;45,95;-23.304830, -48.168990;Guareí;Simples
+SP 157;46;-23.304510, -48.168810;Guareí;Simples
+SP 157;46,95;-23.297400, -48.164510;Guareí;Simples
+SP 157;46,95;-23.297390, -48.164500;Guareí;Simples
+SP 157;47,75;-23.290680, -48.166510;Guareí;Simples
+SP 157;47,8;-23.290330, -48.166500;Guareí;Simples
+SP 157;47,9;-23.289190, -48.166170;Guareí;Simples
+SP 157;47,9;-23.289120, -48.166150;Guareí;Simples
+SP 157;47,9;-23.288890, -48.166090;Guareí;Simples
+SP 157;47,9;-23.288900, -48.166110;Guareí;Simples
+SP 157;49;-23.281250, -48.159330;Guareí;Simples
+SP 157;50;-23.274140, -48.154130;Guareí;Simples
+SP 157;50;-23.274190, -48.154150;Guareí;Simples
+SP 157;50;-23.274080, -48.154160;Guareí;Simples
+SP 157;50;-23.274210, -48.154180;Guareí;Simples
+SP 157;51,8;-23.265660, -48.142480;Guareí;Simples
+SP 157;52;-23.264740, -48.140630;Guareí;Simples
+SP 157;52,2;-23.263040, -48.139500;Guareí;Simples
+SP 157;52,5;-23.261190, -48.139230;Guareí;Simples
+SP 157;52,5;-23.261380, -48.139200;Guareí;Simples
+SP 157;52,5;-23.261370, -48.139210;Guareí;Simples
+SP 165;168,8;-24.51957, -48.72663;Apiaí;Terra
+SP 165;169;-24.51977, -48.72846;Apiaí;Terra
+SP 165;170;-24.52421, -48.73587;Apiaí;Terra
+SP 165;171;-24.52593, -48.74527;Apiaí;Terra
+SP 165;172;-24.52944, -48.75382;Apiaí;Terra
+SP 165;173;-24.53474, -48.76212;Apiaí;Terra
+SP 165;174;-24.5395, -48.76939;Apiaí;Terra
+SP 165;175;-24.54021, -48.77827;Apiaí;Terra
+SP 165;176;-24.53733, -48.78451;Apiaí;Terra
+SP 165;177;-24.53799, -48.79102;Apiaí;Terra
+SP 165;178;-24.54093, -48.79951;Apiaí;Terra
+SP 165;179;-24.53951, -48.80875;Apiaí;Terra
+SP 165;180;-24.5408, -48.81331;Apiaí;Terra
+SP 165;181;-24.54063, -48.81334;Apiaí;Simples
+SP 165;182;-24.54044, -48.82767;Apiaí;Simples
+SP 165;183;-24.53466, -48.83371;Apiaí;Simples
+SP 165;184;-24.52686, -48.83662;Apiaí;Simples
+SP 181;0;-24.01697, -48.34942;Capão Bonito;Simples
+SP 181;1;-24.02535, -48.34707;Capão Bonito;Simples
+SP 181;2;-24.03402, -48.34881;Capão Bonito;Simples
+SP 181;3;-24.04218, -48.34757;Capão Bonito;Simples
+SP 181;4;-24.05054, -48.35141;Capão Bonito;Simples
+SP 181;5;-24.05718, -48.35801;Capão Bonito;Simples
+SP 181;6;-24.06538, -48.36044;Capão Bonito;Simples
+SP 181;7;-24.07442, -48.3633;Ribeirão Grande;Simples
+SP 181;8;-24.08118, -48.36329;Ribeirão Grande;Simples
+SP 181;9;-24.09047, -48.36353;Ribeirão Grande;Simples
+SP 181;10;-24.09831, -48.36177;Ribeirão Grande;Simples
+SP 181;11;-24.10698, -48.36146;Ribeirão Grande;Simples
+SP 181;12;-24.11422, -48.35764;Ribeirão Grande;Simples
+SP 181;13;-24.12323, -48.36148;Ribeirão Grande;Simples
+SP 181;14;-24.12875, -48.36761;Ribeirão Grande;Simples
+SP 181;15;-24.136, -48.363;Ribeirão Grande;Simples
+SP 181;16;-24.14169, -48.35608;Ribeirão Grande;Simples
+SP 181;17;-24.14823, -48.34916;Ribeirão Grande;Simples
+SP 181;18;-24.15208, -48.35289;Ribeirão Grande;Simples
+SP 181;19;-24.15939, -48.34867;Ribeirão Grande;Simples
+SP 181;19,1;-24.16033, -48.34872;Ribeirão Grande;Simples
+SP 189;0;-23.53409, -48.43402;Campina do Monte Alegre;Simples
+SP 189;1;-23.53738, -48.44116;Campina do Monte Alegre;Simples
+SP 189;2;-23.54099, -48.44895;Campina do Monte Alegre;Simples
+SP 189;3;-23.54878, -48.44899;Campina do Monte Alegre;Simples
+SP 189;4;-23.55846, -48.45139;Campina do Monte Alegre;Simples
+SP 189;5;-23.56643, -48.4529;Campina do Monte Alegre;Simples
+SP 189;6;-23.57408, -48.45626;Campina do Monte Alegre;Simples
+SP 189;7;-23.58204, -48.45751;Campina do Monte Alegre;Simples
+SP 189;8;-23.59316, -48.45975;Campina do Monte Alegre;Simples
+SP 189;9;-23.59537, -48.46746;Campina do Monte Alegre;Simples
+SP 189;10;-23.59399, -48.47429;Campina do Monte Alegre;Simples
+SP 189;11;-23.59252, -48.48375;Campina do Monte Alegre;Simples
+SP 189;12;-23.59171, -48.49486;Buri;Simples
+SP 189;13;-23.59738, -48.50331;Buri;Simples
+SP 189;14;-23.60649, -48.50431;Buri;Simples
+SP 189;15;-23.61482, -48.50291;Buri;Simples
+SP 189;16;-23.62405, -48.50156;Buri;Simples
+SP 189;17;-23.63293, -48.50036;Buri;Simples
+SP 189;18;-23.64193, -48.49914;Buri;Simples
+SP 189;19;-23.65002, -48.49704;Buri;Simples
+SP 189;20;-23.65822, -48.49538;Buri;Simples
+SP 189;21;-23.66484, -48.49013;Buri;Simples
+SP 189;22;-23.67247, -48.48427;Buri;Simples
+SP 189;23;-23.68051, -48.48195;Buri;Simples
+SP 189;24;-23.68752, -48.48691;Buri;Simples
+SP 189;25;-23.69449, -48.49206;Buri;Simples
+SP 189;26;-23.70126, -48.48788;Buri;Simples
+SP 189;27;-23.70767, -48.48528;Buri;Simples
+SP 189;28;-23.71647, -48.48134;Buri;Simples
+SP 189;29;-23.72462, -48.48177;Buri;Simples
+SP 189;30;-23.72917, -48.48944;Buri;Simples
+SP 189;31;-23.73327, -48.49754;Buri;Simples
+SP 189;32;-23.7365, -48.50662;Buri;Simples
+SP 189;33;-23.74377, -48.51131;Buri;Simples
+SP 189;34;-23.75198, -48.50758;Buri;Simples
+SP 189;35;-23.75965, -48.5112;Buri;Simples
+SP 189;36;-23.76532, -48.51852;Buri;Simples
+SP 189;37;-23.76966, -48.52763;Buri;Simples
+SP 189;38;-23.77225, -48.53617;Buri;Simples
+SP 189;39;-23.77427, -48.5456;Buri;Simples
+SP 189;40;-23.77677, -48.55476;Buri;Simples
+SP 189;41;-23.7782, -48.56271;Buri;Simples
+SP 189;42;-23.78487, -48.56665;Buri;Simples
+SP 189;43;-23.79402, -48.57658;Buri;Simples
+SP 189;44;-23.79975, -48.58461;Buri;Simples
+SP 245;0;-23.10931, -48.94126;Avaré;Simples
+SP 245;1;-23.10845, -48.951;Avaré;Simples
+SP 245;2;-23.1074, -48.96108;Avaré;Simples
+SP 245;3;-23.1068, -48.96951;Avaré;Simples
+SP 245;4;-23.10544, -48.97938;Arandu;Simples
+SP 245;5;-23.09951, -48.98741;Arandu;Simples
+SP 245;6;-23.09335, -48.9946;Arandu;Simples
+SP 245;7;-23.08751, -49.00146;Arandu;Simples
+SP 245;8;-23.08344, -49.00952;Avaré;Simples
+SP 245;9;-23.0816, -49.01907;Avaré;Simples
+SP 245;10;-23.07982, -49.02859;Avaré;Simples
+SP 245;11;-23.07796, -49.03824;Avaré;Simples
+SP 245;12;-23.07624, -49.04758;Avaré;Simples
+SP 245;13;-23.07423, -49.05785;Avaré;Simples
+SP 245;14;-23.0725, -49.06702;Avaré;Simples
+SP 245;15;-23.07075, -49.07634;Avaré;Simples
+SP 249;2;-24.49925, -48.84285;Apiaí;Dupla
+SP 249;3;-24.48995, -48.84502;Apiaí;Dupla
+SP 249;4;-24.48393, -48.83978;Apiaí;Simples
+SP 249;5;-24.47514, -48.84052;Apiaí;Simples
+SP 249;6;-24.46713, -48.84093;Apiaí;Simples
+SP 249;7;-24.45769, -48.84507;Apiaí;Simples
+SP 249;8;-24.45472, -48.85075;Apiaí;Simples
+SP 249;9;-24.44707, -48.85469;Apiaí;Simples
+SP 249;10;-24.4404, -48.85811;Apiaí;Simples
+SP 249;11;-24.43671, -48.86665;Apiaí;Simples
+SP 249;12;-24.43165, -48.87235;Apiaí;Simples
+SP 249;13;-24.42243, -48.8658;Apiaí;Simples
+SP 249;14;-24.41604, -48.86619;Apiaí;Simples
+SP 249;15;-24.40908, -48.87217;Apiaí;Simples
+SP 249;16;-24.40117, -48.8759;Apiaí;Simples
+SP 249;17;-24.39265, -48.87446;Apiaí;Simples
+SP 249;18;-24.38485, -48.87067;Apiaí;Simples
+SP 249;19;-24.38035, -48.86393;Apiaí;Simples
+SP 249;20;-24.37365, -48.85831;Apiaí;Simples
+SP 249;21;-24.36716, -48.85867;Apiaí;Simples
+SP 249;22;-24.3605, -48.85261;Apiaí;Simples
+SP 249;23;-24.35227, -48.85271;Apiaí;Simples
+SP 249;24;-24.346, -48.84861;Apiaí;Simples
+SP 249;25;-24.34507, -48.84378;Ribeirão Branco;Terra
+SP 249;25;-24.34516, -48.84418;Ribeirão Branco;Terra
+SP 249;25;-24.34518, -48.84409;Ribeirão Branco;Terra
+SP 249;26;-24.33907, -48.83879;Ribeirão Branco;Terra
+SP 249;27;-24.33048, -48.83824;Ribeirão Branco;Terra
+SP 249;27;-24.33048, -48.83824;Ribeirão Branco;Terra
+SP 249;28;-24.32159, -48.83617;Ribeirão Branco;Terra
+SP 249;28;-24.32156, -48.83612;Ribeirão Branco;Terra
+SP 249;29;-24.3126, -48.83451;Ribeirão Branco;Terra
+SP 249;29;-24.31261, -48.83452;Ribeirão Branco;Terra
+SP 249;30;-24.3066, -48.82778;Ribeirão Branco;Terra
+SP 249;30;-24.3066, -48.82783;Ribeirão Branco;Terra
+SP 249;30,6;-24.30246, -48.82434;Ribeirão Branco;Terra
+SP 249;30,6;-24.30245, -48.82436;Ribeirão Branco;Terra
+SP 249;31;-24.29919, -48.82205;Ribeirão Branco;Terra
+SP 249;31;-24.29918, -48.82205;Ribeirão Branco;Terra
+SP 249;32;-24.29234, -48.81649;Ribeirão Branco;Terra
+SP 249;32;-24.29235, -48.81649;Ribeirão Branco;Terra
+SP 249;32,8;-24.29126, -48.80988;Ribeirão Branco;Terra
+SP 249;32,8;-24.29129, -48.80973;Ribeirão Branco;Terra
+SP 249;34,3;-24.28933, -48.79676;Ribeirão Branco;Terra
+SP 249;34,5;-24.28743, -48.79765;Ribeirão Branco;Terra
+SP 249;34,5;-24.28748, -48.79762;Ribeirão Branco;Terra
+SP 249;34,87;-24.28883, -48.79478;Ribeirão Branco;Terra
+SP 249;35,05;-24.28826, -48.79282;Ribeirão Branco;Terra
+SP 249;35,38;-24.28539, -48.79135;Ribeirão Branco;Terra
+SP 249;35,5;-24.2845, -48.79124;Ribeirão Branco;Terra
+SP 249;35,9;-24.281, -48.79084;Ribeirão Branco;Terra
+SP 249;36,1;-24.27926, -48.79102;Ribeirão Branco;Terra
+SP 249;37;-24.27855, -48.78641;Ribeirão Branco;Terra
+SP 249;37;-24.27708, -48.78517;Ribeirão Branco;Terra
+SP 249;38;-24.27134, -48.77788;Ribeirão Branco;Terra
+SP 249;38;-24.27113, -48.77751;Ribeirão Branco;Terra
+SP 249;39;-24.26435, -48.77173;Ribeirão Branco;Terra
+SP 249;39;-24.26397, -48.77174;Ribeirão Branco;Terra
+SP 249;40;-24.25606, -48.76755;Ribeirão Branco;Terra
+SP 249;40;-24.25578, -48.76762;Ribeirão Branco;Terra
+SP 249;41;-24.24678, -48.76572;Ribeirão Branco;Terra
+SP 249;45;-24.21743, -48.76782;Ribeirão Branco;Simples
+SP 249;46;-24.21264, -48.77224;Ribeirão Branco;Simples
+SP 249;47;-24.2045, -48.77629;Ribeirão Branco;Simples
+SP 249;48;-24.19874, -48.78289;Ribeirão Branco;Simples
+SP 249;49;-24.19628, -48.79278;Ribeirão Branco;Simples
+SP 249;50;-24.19233, -48.80263;Ribeirão Branco;Simples
+SP 249;51;-24.18308, -48.8039;Ribeirão Branco;Simples
+SP 249;52;-24.17386, -48.80061;Ribeirão Branco;Simples
+SP 249;53;-24.1639, -48.79841;Ribeirão Branco;Simples
+SP 249;54;-24.15385, -48.79811;Ribeirão Branco;Simples
+SP 249;55;-24.14615, -48.80438;Ribeirão Branco;Simples
+SP 249;56;-24.1391, -48.81088;Ribeirão Branco;Simples
+SP 249;57;-24.12924, -48.81237;Ribeirão Branco;Simples
+SP 249;58;-24.12105, -48.80911;Itapeva;Simples
+SP 249;59;-24.11433, -48.80803;Itapeva;Simples
+SP 249;60;-24.10668, -48.81017;Itapeva;Simples
+SP 249;61;-24.10665, -48.81555;Itapeva;Simples
+SP 249;62;-24.10418, -48.81857;Itapeva;Simples
+SP 249;63;-24.09585, -48.82218;Itapeva;Simples
+SP 249;64;-24.09182, -48.82396;Itapeva;Simples
+SP 249;65;-24.08455, -48.82977;Itapeva;Simples
+SP 249;66;-24.07783, -48.82993;Itapeva;Simples
+SP 249;67;-24.06849, -48.83224;Itapeva;Simples
+SP 249;68;-24.06008, -48.83604;Itapeva;Simples
+SP 249;69;-24.05184, -48.83983;Itapeva;Simples
+SP 249;70;-24.04571, -48.84603;Itapeva;Simples
+SP 249;71;-24.03877, -48.85183;Itapeva;Simples
+SP 249;71;-24.03995, -48.85003;Itapeva;Simples
+SP 249;72;-24.0329, -48.85833;Itapeva;Simples
+SP 249;72;-24.03352, -48.85742;Itapeva;Simples
+SP 249;73;-24.02664, -48.8671;Itapeva;Simples
+SP 249;73;-24.02792, -48.86596;Itapeva;Simples
+SP 249;74;-24.01848, -48.86978;Itapeva;Simples
+SP 249;74;-24.01977, -48.87009;Itapeva;Simples
+SP 249;75;-24.01115, -48.87302;Itapeva;Simples
+SP 249;75;-24.01285, -48.87259;Itapeva;Simples
+SP 249;76;-24.00326, -48.87754;Itapeva;Simples
+SP 249;76;-23.9993, -48.8786;Itapeva;Simples
+SP 249;79;-23.986, -48.89335;Itapeva;Simples
+SP 249;80;-23.98181, -48.89699;Itapeva;Simples
+SP 249;81;-23.97662, -48.90548;Itapeva;Simples
+SP 249;82;-23.97065, -48.91198;Itapeva;Simples
+SP 249;83;-23.96541, -48.92043;Itapeva;Simples
+SP 249;84;-23.96504, -48.92955;Itapeva;Simples
+SP 249;85;-23.96288, -48.93912;Itapeva;Simples
+SP 249;86;-23.96284, -48.94718;Itapeva;Simples
+SP 249;87;-23.96444, -48.95661;Itapeva;Simples
+SP 249;88;-23.95807, -48.96277;Itapeva;Simples
+SP 249;89;-23.95138, -48.96825;Itapeva;Simples
+SP 249;90;-23.94505, -48.97397;Itapeva;Simples
+SP 249;91;-23.94051, -48.98277;Itapeva;Simples
+SP 249;92;-23.93704, -48.99072;Itapeva;Simples
+SP 249;93;-23.93373, -48.99795;Itapeva;Simples
+SP 249;94;-23.92843, -49.00553;Itapeva;Simples
+SP 249;95;-23.92305, -49.01146;Itapeva;Simples
+SP 249;96;-23.92228, -49.0193;Itaberá;Simples
+SP 249;97;-23.91985, -49.02859;Itaberá;Simples
+SP 249;98;-23.91735, -49.03766;Itaberá;Simples
+SP 249;99;-23.9129, -49.04551;Itaberá;Simples
+SP 249;100;-23.91368, -49.05429;Itaberá;Simples
+SP 249;101;-23.9051, -49.05667;Itaberá;Simples
+SP 249;102;-23.89802, -49.05393;Itaberá;Simples
+SP 249;103;-23.89024, -49.05451;Itaberá;Simples
+SP 249;104;-23.88566, -49.06262;Itaberá;Simples
+SP 249;105;-23.87839, -49.0679;Itaberá;Simples
+SP 249;106;-23.87698, -49.07775;Itaberá;Simples
+SP 249;107;-23.87587, -49.08756;Itaberá;Simples
+SP 249;108;-23.8703, -49.09529;Itaberá;Simples
+SP 249;109;-23.86689, -49.10441;Itaberá;Simples
+SP 249;110;-23.86232, -49.11143;Itaberá;Simples
+SP 249;111;-23.85967, -49.12218;Itaberá;Simples
+SP 249;112;-23.85753, -49.13113;Itaberá;Simples
+SP 249;113;-23.85586, -49.14032;Itaberá;Simples
+SP 249;114;-23.8553, -49.14934;Itaberá;Simples
+SP 249;115;-23.85128, -49.15669;Itaberá;Simples
+SP 249;116;-23.84251, -49.16117;Itaberá;Simples
+SP 249;117;-23.83512, -49.16748;Itaberá;Simples
+SP 249;118;-23.82818, -49.17424;Itaberá;Simples
+SP 249;119;-23.82187, -49.18137;Itaberá;Simples
+SP 249;120;-23.81441, -49.1872;Itaberá;Simples
+SP 249;121;-23.80628, -49.19193;Itaberá;Simples
+SP 249;122;-23.79992, -49.19946;Itaberá;Simples
+SP 249;123;-23.80111, -49.20929;Itaberá;Simples
+SP 249;124;-23.79848, -49.21891;Itaberá;Simples
+SP 249;125;-23.79046, -49.22307;Itaberá;Simples
+SP 249;126;-23.78172, -49.2247;Itaberá;Simples
+SP 249;127;-23.7731, -49.22359;Itaberá;Simples
+SP 249;128;-23.76618, -49.22991;Itaberá;Simples
+SP 249;129;-23.7577, -49.22824;Itaberá;Simples
+SP 249;130;-23.74866, -49.23154;Itaberá;Simples
+SP 249;131;-23.74075, -49.2346;Itaberá;Simples
+SP 249;132;-23.73565, -49.24299;Itaberá;Simples
+SP 249;133;-23.72989, -49.2498;Itaberá;Simples
+SP 249;134;-23.72132, -49.25329;Itaberá;Simples
+SP 249;135;-23.71223, -49.25396;Itaberá;Simples
+SP 249;135;-23.71021, -49.25407;Itaberá;Simples
+SP 249;136;-23.70303, -49.25459;Coronel Macedo;Simples
+SP 249;137;-23.69491, -49.25914;Coronel Macedo;Simples
+SP 249;138;-23.69045, -49.26736;Coronel Macedo;Simples
+SP 249;139;-23.68854, -49.27717;Coronel Macedo;Simples
+SP 249;140;-23.68135, -49.28243;Coronel Macedo;Simples
+SP 249;141;-23.67241, -49.28468;Coronel Macedo;Simples
+SP 249;142;-23.66276, -49.28699;Coronel Macedo;Simples
+SP 249;143;-23.65444, -49.2883;Coronel Macedo;Simples
+SP 249;144;-23.64521, -49.28845;Coronel Macedo;Simples
+SP 249;158,39;-23.52538, -49.24552;Taquarituba;Simples
+SP 249;159;-23.52291, -49.25221;Taquarituba;Simples
+SP 249;160;-23.52005, -49.25948;Taquarituba;Simples
+SP 249;161;-23.51622, -49.26747;Taquarituba;Simples
+SP 249;162;-23.5117, -49.2768;Taquarituba;Simples
+SP 249;163;-23.50753, -49.28554;Taquarituba;Simples
+SP 249;164;-23.5034, -49.29409;Taquarituba;Simples
+SP 249;165;-23.49922, -49.30268;Taquarituba;Simples
+SP 249;166;-23.49523, -49.31128;Taquarituba;Simples
+SP 249;167;-23.49055, -49.32011;Taquarituba;Simples
+SP 249;168;-23.48504, -49.32783;Taquarituba;Simples
+SP 250;159;-23.85892, -47.84317;São Miguel Arcanjo;Simples
+SP 250;160;-23.86207, -47.85233;São Miguel Arcanjo;Simples
+SP 250;161;-23.86554, -47.86189;São Miguel Arcanjo;Simples
+SP 250;162;-23.86899, -47.87024;São Miguel Arcanjo;Simples
+SP 250;163;-23.87245, -47.87899;São Miguel Arcanjo;Simples
+SP 250;164;-23.8737, -47.8888;São Miguel Arcanjo;Simples
+SP 250;165;-23.8752, -47.89868;São Miguel Arcanjo;Simples
+SP 250;166;-23.87659, -47.90771;São Miguel Arcanjo;Simples
+SP 250;167;-23.87807, -47.91758;São Miguel Arcanjo;Simples
+SP 250;168;-23.87948, -47.92699;São Miguel Arcanjo;Simples
+SP 250;169;-23.88097, -47.93666;São Miguel Arcanjo;Simples
+SP 250;170;-23.88231, -47.94562;São Miguel Arcanjo;Simples
+SP 250;171;-23.88404, -47.95568;São Miguel Arcanjo;Simples
+SP 250;172;-23.88551, -47.96477;São Miguel Arcanjo;Simples
+SP 250;173;-23.88732, -47.97425;São Miguel Arcanjo;Simples
+SP 250;174;-23.88984, -47.9831;São Miguel Arcanjo;Simples
+SP 250;175;-23.89185, -47.99182;São Miguel Arcanjo;Simples
+SP 250;176;-23.89188, -48.00014;São Miguel Arcanjo;Simples
+SP 250;177;-23.89048, -48.00893;São Miguel Arcanjo;Simples
+SP 250;178;-23.88433, -48.01361;São Miguel Arcanjo;Simples
+SP 250;179;-23.88843, -48.0215;São Miguel Arcanjo;Simples
+SP 250;180;-23.88645, -48.02936;São Miguel Arcanjo;Simples
+SP 250;181;-23.88429, -48.03862;São Miguel Arcanjo;Simples
+SP 250;182;-23.88176, -48.04672;São Miguel Arcanjo;Simples
+SP 250;183;-23.87845, -48.05582;São Miguel Arcanjo;Simples
+SP 250;184;-23.88024, -48.06515;São Miguel Arcanjo;Simples
+SP 250;185;-23.87923, -48.07442;São Miguel Arcanjo;Simples
+SP 250;186;-23.87881, -48.08396;São Miguel Arcanjo;Simples
+SP 250;187;-23.87892, -48.09382;São Miguel Arcanjo;Simples
+SP 250;188;-23.87904, -48.10345;São Miguel Arcanjo;Simples
+SP 250;189;-23.87917, -48.11354;São Miguel Arcanjo;Simples
+SP 250;190;-23.8791, -48.123;São Miguel Arcanjo;Simples
+SP 250;191;-23.87708, -48.13256;São Miguel Arcanjo;Simples
+SP 250;192;-23.88352, -48.13701;São Miguel Arcanjo;Simples
+SP 250;193;-23.89064, -48.14896;São Miguel Arcanjo;Terra
+SP 250;194;-23.89475, -48.15172;São Miguel Arcanjo;Terra
+SP 250;195;-23.90499, -48.15325;São Miguel Arcanjo;Terra
+SP 250;196;-23.91218, -48.15422;São Miguel Arcanjo;Terra
+SP 250;197;-23.92106, -48.15909;São Miguel Arcanjo;Terra
+SP 250;198;-23.92847, -48.16207;São Miguel Arcanjo;Terra
+SP 250;199;-23.92551, -48.17198;São Miguel Arcanjo;Terra
+SP 250;200;-23.92373, -48.17849;São Miguel Arcanjo;Terra
+SP 250;204;-23.92249, -48.18115;Capão Bonito;Terra
+SP 250;205;-23.91688, -48.18939;Capão Bonito;Terra
+SP 250;206;-23.02853, -48.0639;Capão Bonito;Terra
+SP 250;207;-23.0313, -48.138;Capão Bonito;Terra
+SP 250;208;-23.93455, -48.20952;Capão Bonito;Terra
+SP 250;209;-23.9423, -48.21429;Capão Bonito;Terra
+SP 250;210;-23.94449, -48.2234;Capão Bonito;Terra
+SP 250;211;-23.9492, -48.23231;Capão Bonito;Terra
+SP 250;212;-23.95653, -48.2366;Capão Bonito;Terra
+SP 250;213;-23.96298, -48.24231;Capão Bonito;Terra
+SP 250;214;-23.96197, -48.25113;Capão Bonito;Terra
+SP 250;215;-23.96493, -48.26064;Capão Bonito;Terra
+SP 250;216;-23.97027, -48.27004;Capão Bonito;Terra
+SP 250;217;-23.96951, -48.27582;Capão Bonito;Terra
+SP 250;218;-23.96992, -48.28608;Capão Bonito;Terra
+SP 250;219;-23.97595, -48.29178;Capão Bonito;Terra
+SP 250;220;-23.98207, -48.29981;Capão Bonito;Terra
+SP 250;221;-23.99225, -48.30202;Capão Bonito;Terra
+SP 250;222;-23.99491, -48.3089;Capão Bonito;Terra
+SP 250;223;-24.00229, -48.3146;Capão Bonito;Terra
+SP 250;224;-24.00481, -48.3233;Capão Bonito;Terra
+SP 250;225;-24.00974, -48.33018;Capão Bonito;Terra
+SP 250;228;-24.01726, -48.35057;Capão Bonito;Simples
+SP 250;229;-24.02494, -48.35793;Capão Bonito;Simples
+SP 250;230;-24.03123, -48.36413;Capão Bonito;Simples
+SP 250;231;-24.03609, -48.37226;Capão Bonito;Simples
+SP 250;232;-24.04291, -48.37859;Capão Bonito;Simples
+SP 250;233;-24.05225, -48.3846;Capão Bonito;Simples
+SP 250;234;-24.05964, -48.39009;Capão Bonito;Simples
+SP 250;235;-24.105954, -48.39909;Capão Bonito;Simples
+SP 250;236;-24.06267, -48.40902;Capão Bonito;Simples
+SP 250;237;-24.06738, -48.4175;Capão Bonito;Simples
+SP 250;238;-24.07282, -48.4239;Capão Bonito;Simples
+SP 250;239;-24.07983, -48.43186;Capão Bonito;Simples
+SP 250;240;-24.08688, -48.43728;Capão Bonito;Simples
+SP 250;241;-24.09916, -48.44351;Capão Bonito;Simples
+SP 250;242;-24.10319, -48.44548;Capão Bonito;Simples
+SP 250;243;-24.10927, -48.4495;Capão Bonito;Simples
+SP 250;244;-24.11741, -48.45043;Capão Bonito;Simples
+SP 250;245;-24.12665, -48.44978;Capão Bonito;Simples
+SP 250;246;-24.13324, -48.45521;Capão Bonito;Simples
+SP 250;247;-24.14117, -48.46068;Capão Bonito;Simples
+SP 250;248;-24.14554, -48.46789;Capão Bonito;Simples
+SP 250;249;-24.14911, -48.47629;Capão Bonito;Simples
+SP 250;250;-24.14576, -48.48346;Capão Bonito;Simples
+SP 250;251;-24.14436, -48.49441;Capão Bonito;Simples
+SP 250;252;-24.14604, -48.49964;Guapiara;Simples
+SP 250;253;-24.15608, -48.49894;Guapiara;Simples
+SP 250;254;-24.15821, -48.50277;Guapiara;Simples
+SP 250;255;-24.16549, -48.50295;Guapiara;Simples
+SP 250;256;-24.16891, -48.50782;Guapiara;Simples
+SP 250;257;-24.17969, -48.50979;Guapiara;Simples
+SP 250;258;-24.18622, -48.51425;Guapiara;Simples
+SP 250;259;-24.18768, -48.51933;Guapiara;Simples
+SP 250;260;-24.18811, -48.52303;Guapiara;Simples
+SP 250;261;-24.18591, -48.53242;Guapiara;Simples
+SP 250;262;-24.19045, -48.53856;Guapiara;Simples
+SP 250;263;-24.19104, -48.54258;Guapiara;Simples
+SP 250;264;-24.19286, -48.55211;Guapiara;Simples
+SP 250;265;-24.19672, -48.5592;Guapiara;Simples
+SP 250;266;-24.20349, -48.56207;Guapiara;Simples
+SP 250;267;-24.21062, -48.56966;Guapiara;Simples
+SP 250;268;-24.21646, -48.5746;Guapiara;Simples
+SP 250;269;-24.22273, -48.57984;Guapiara;Simples
+SP 250;270;-24.22479, -48.58697;Guapiara;Simples
+SP 250;271;-24.22659, -48.5963;Guapiara;Simples
+SP 250;272;-24.2341, -48.5965;Guapiara;Simples
+SP 250;273;-24.24014, -48.59354;Guapiara;Simples
+SP 250;274;-24.24742, -48.59264;Guapiara;Simples
+SP 250;275;-24.25449, -48.59661;Guapiara;Simples
+SP 250;276;-24.26171, -48.6025;Guapiara;Simples
+SP 250;277;-24.2653, -48.61029;Guapiara;Simples
+SP 250;278;-24.27547, -48.61746;Guapiara;Simples
+SP 250;279;-24.28178, -48.6202;Guapiara;Simples
+SP 250;280;-24.28979, -48.61818;Guapiara;Simples
+SP 250;281;-24.29906, -48.61989;Guapiara;Simples
+SP 250;282;-24.30633, -48.62122;Guapiara;Simples
+SP 250;283;-24.3132, -48.62308;Guapiara;Simples
+SP 250;284;-24.32106, -48.61692;Guapiara;Simples
+SP 250;285;-24.32692, -48.61147;Guapiara;Simples
+SP 250;286;-24.33416, -48.61601;Guapiara;Simples
+SP 250;287;-24.34172, -48.62075;Apiaí;Simples
+SP 250;288;-24.35352, -48.62648;Apiaí;Simples
+SP 250;289;-24.35994, -48.62859;Apiaí;Simples
+SP 250;290;-24.3666, -48.6317;Apiaí;Simples
+SP 250;291;-24.37399, -48.63617;Apiaí;Simples
+SP 250;292;-24.38236, -48.63855;Apiaí;Simples
+SP 250;293;-24.39545, -48.64268;Apiaí;Simples
+SP 250;294;-24.39731, -48.64415;Apiaí;Simples
+SP 250;295;-24.40452, -48.65065;Apiaí;Simples
+SP 250;296;-24.41046, -48.65744;Apiaí;Simples
+SP 250;297;-24.41671, -48.66368;Apiaí;Simples
+SP 250;298;-24.42058, -48.67039;Apiaí;Simples
+SP 250;299;-24.42606, -48.67932;Apiaí;Simples
+SP 250;300;-24.43269, -48.68074;Apiaí;Simples
+SP 250;301;-24.43947, -48.69033;Apiaí;Simples
+SP 250;302;-24.44361, -48.69578;Apiaí;Simples
+SP 250;303;-24.44601, -48.70671;Apiaí;Simples
+SP 250;304;-24.44822, -48.71194;Apiaí;Simples
+SP 250;305;-24.45461, -48.7183;Apiaí;Simples
+SP 250;306;-24.45534, -48.72826;Apiaí;Simples
+SP 250;307;-24.4593, -48.73692;Apiaí;Simples
+SP 250;308;-24.4649, -48.74344;Apiaí;Simples
+SP 250;309;-24.46994, -48.75123;Apiaí;Simples
+SP 250;310;-24.47325, -48.75968;Apiaí;Simples
+SP 250;311;-24.47577, -48.7682;Apiaí;Simples
+SP 250;312;-24.47702, -48.77767;Apiaí;Simples
+SP 250;313;-24.48622, -48.7846;Apiaí;Simples
+SP 250;314;-24.49058, -48.78884;Apiaí;Simples
+SP 250;315;-24.49708, -48.79539;Apiaí;Simples
+SP 250;316;-24.50284, -48.80298;Apiaí;Simples
+SP 250;317;-24.50812, -48.81091;Apiaí;Simples
+SP 250;318;-24.51352, -48.81819;Apiaí;Simples
+SP 250;319;-24.51987, -48.82738;Apiaí;Simples
+SP 250;320;-24.52336, -48.83369;Apiaí;Simples
+SP 250;321;-24.51825, -48.84007;Apiaí;Simples
+SP 250;322;-24.5148, -48.84692;Apiaí;Simples
+SP 250;323;-24.51658, -48.85649;Apiaí;Simples
+SP 250;324;-24.52171, -48.86241;Apiaí;Simples
+SP 250;325;-24.52888, -48.86589;Apiaí;Simples
+SP 250;326;-24.52922, -48.87314;Apiaí;Simples
+SP 250;327;-24.53385, -48.87098;Apiaí;Simples
+SP 250;328;-24.53696, -48.87783;Apiaí;Simples
+SP 250;329;-24.53852, -48.88657;Apiaí;Simples
+SP 250;330;-24.54448, -48.89308;Apiaí;Simples
+SP 250;331;-24.54359, -48.90126;Apiaí;Simples
+SP 250;332;-24.54266, -48.90823;Apiaí;Simples
+SP 250;332;-24.03571, -49.17189;Apiaí;Simples
+SP 250;333;-24.54735, -48.91455;Apiaí;Simples
+SP 250;334;-24.54918, -48.92170;Ribeira;Simples
+SP 250;335;-24.54708, -48.92507;Ribeira;Simples
+SP 250;336;-24.54807, -48.93030;Ribeira;Simples
+SP 250;337;-24.55378, -48.93760;Ribeira;Simples
+SP 250;338;-24.56060, -48.94115;Ribeira;Simples
+SP 250;339;-24.56260, -48.94455;Ribeira;Simples
+SP 250;340;-24.57246, -48.95199;Ribeira;Simples
+SP 250;341;-24.58029, -48.95441;Ribeira;Simples
+SP 250;342;-24.58636, -48.95980;Ribeira;Simples
+SP 250;343;-24.59273, -48.96558;Ribeira;Simples
+SP 250;344;-24.59857, -48.97126;Ribeira;Simples
+SP 250;345;-24.60342, -48.97307;Ribeira;Simples
+SP 250;346;-24.60795, -48.97731;Ribeira;Simples
+SP 250;347;-24.60497, -48.98482;Ribeira;Simples
+SP 250;348;-24.60960, -48.99146;Ribeira;Simples
+SP 250;349;-24.61743, -48.99228;Ribeira;Simples
+SP 250;350;-24.62672, -48.99429;Ribeira;Simples
+SP 250;351;-24.63540, -48.99602;Ribeira;Simples
+SP 250;352;-24.64025, -49.00405;Ribeira;Simples
+SP 250;353;-24.64614, -49.00589;Ribeira;Simples
+SP 250;354;-24.65598, -49.01012;Ribeira;Simples
+SP 251;20,38;-22.98693, -48.82775;Avaré;Terra
+SP 251;21;-22.98326, -48.82332;Avaré;Terra
+SP 251;21;-22.98320, -48.82343;Avaré;Terra
+SP 251;22;-22.98265, -48.82287;Avaré;Terra
+SP 251;22;-22.97691, -48.81626;Avaré;Terra
+SP 251;23;-22.97068, -48.80895;Avaré;Terra
+SP 251;23;-22.97068, -48.80895;Avaré;Terra
+SP 251;24;-22.96784, -48.80133;Avaré;Terra
+SP 251;24;-22.96782, -48.80130;Avaré;Terra
+SP 251;24,1;-22.96814, -48.80065;Avaré;Terra
+SP 252;0,05;-24.18926, -48.53702;Guapiara;Simples
+SP 252;1;-24.18377, -48.54192;Guapiara;Simples
+SP 252;2;-24.18650, -48.54974;Guapiara;Simples
+SP 252;3;-24.18302, -48.55781;Guapiara;Simples
+SP 252;4;-24.18086, -48.56401;Guapiara;Simples
+SP 252;4;-24.17851, -48.57205;Guapiara;Simples
+SP 252;4;-24.18225, -48.57905;Guapiara;Simples
+SP 252;7;-24.18587, -48.58739;Guapiara;Simples
+SP 252;8;-24.18138, -48.59537;Guapiara;Simples
+SP 252;9;-24.18192, -48.60366;Guapiara;Simples
+SP 252;10;-24.17985, -48.61220;Guapiara;Simples
+SP 252;11;-24.17599, -48.62086;Guapiara;Simples
+SP 252;12;-24.18087, -48.62965;Guapiara;Simples
+SP 252;12,45;-24.18240, -48.63309;Guapiara;Simples
+SP 252;13;-24.18427, -48.63839;Ribeirão Branco;Simples
+SP 252;14;-24.18252, -48.64655;Ribeirão Branco;Simples
+SP 252;15;-24.18530, -48.65129;Ribeirão Branco;Simples
+SP 252;16;-24.18396, -48.66016;Ribeirão Branco;Simples
+SP 252;17;-24.18338, -48.67016;Ribeirão Branco;Simples
+SP 252;19;-24.18168, -48.67918;Ribeirão Branco;Simples
+SP 252;20;-24.17925, -48.69446;Ribeirão Branco;Simples
+SP 252;21;-24.17879, -48.70294;Ribeirão Branco;Simples
+SP 252;22;-24.18487, -48.71020;Ribeirão Branco;Simples
+SP 252;23;-24.18835, -48.71922;Ribeirão Branco;Simples
+SP 252;24;-24.19245, -48.72408;Ribeirão Branco;Simples
+SP 252;25;-24.19595, -48.73108;Ribeirão Branco;Simples
+SP 252;26;-24.19975, -48.73915;Ribeirão Branco;Simples
+SP 252;27;-24.20285, -48.74870;Ribeirão Branco;Simples
+SP 252;28;-24.20754, -48.75726;Ribeirão Branco;Simples
+SP 252;29;-24.21382, -48.76346;Ribeirão Branco;Simples
+SP 252;30,4;-24.21768, -48.76712;Ribeirão Branco;Simples
+SP 259;308,8;-23.91527, -49.05177;Itaberá;Terra
+SP 259;309;-23.91645, -49.05352;Itaberá;Terra
+SP 259;309;-23.91642, -49.05351;Itaberá;Terra
+SP 259;310;-23.92446, -49.05494;Itaberá;Terra
+SP 259;310;-23.92441, -49.05497;Itaberá;Terra
+SP 259;311;-23.93332, -49.05784;Itaberá;Terra
+SP 259;311;-23.93336, -49.05784;Itaberá;Terra
+SP 259;312;-23.94104, -49.05913;Itaberá;Terra
+SP 259;312;-23.94104, -49.05913;Itaberá;Terra
+SP 259;313;-23.95031, -49.06330;Itaberá;Terra
+SP 259;313;-23.95028, -49.06329;Itaberá;Terra
+SP 259;314;-23.95689, -49.06872;Itaberá;Terra
+SP 259;314;-23.95686, -49.06871;Itaberá;Terra
+SP 259;315;-23.96599, -49.06995;Itaberá;Terra
+SP 259;315;-23.96594, -49.06994;Itaberá;Terra
+SP 259;316;-23.97472, -49.07268;Itaberá;Terra
+SP 259;316;-23.97477, -49.07272;Itaberá;Terra
+SP 259;317;-23.98125, -49.07911;Itaberá;Terra
+SP 259;317;-23.98119, -49.07898;Itaberá;Terra
+SP 259;318;-23.98720, -49.08515;Itaberá;Terra
+SP 259;318;-23.98718, -49.08515;Itaberá;Terra
+SP 259;319;-23.99610, -49.08124;Itaberá;Terra
+SP 259;319;-23.99606, -49.08122;Itaberá;Terra
+SP 259;320;-24.00419, -49.07968;Itaberá;Terra
+SP 259;320;-24.00419, -49.07968;Itaberá;Terra
+SP 259;321;-24.01160, -49.08595;Itaberá;Terra
+SP 259;321;-24.01155, -49.08591;Itaberá;Terra
+SP 259;322;-24.01930, -49.09118;Itaberá;Terra
+SP 259;322;-24.01930, -49.09118;Itaberá;Terra
+SP 259;323;-24.02204, -49.09853;Itaberá;Terra
+SP 259;324;-24.02637, -49.10672;Itaberá;Terra
+SP 259;325;-24.03167, -49.11406;Itaberá;Terra
+SP 259;326;-24.03104, -49.12348;Itaberá;Terra
+SP 259;327,2;-24.02341, -49.13261;Itaberá;Terra
+SP 259;328;-24.02216, -49.13953;Itaberá;Terra
+SP 259;329;-24.02721, -49.14540;Itaberá;Terra
+SP 259;330;-24.02721, -49.14540;Itaberá;Terra
+SP 259;331;-24.03643, -49.16136;Itaberá;Terra
+SP 259;333;-24.03285, -49.18065;Itaberá;Terra
+SP 259;334;-24.02970, -49.18988;Itaberá;Terra
+SP 259;335;-24.02961, -49.20045;Itaberá;Terra
+SP 259;336;-24.03194, -49.20678;Itaberá;Terra
+SP 259;337;-24.04157, -49.21383;Itaberá;Terra
+SP 259;338;-24.04989, -49.21464;Itaberá;Terra
+SP 259;339;-24.05863, -49.21474;Itaberá;Terra
+SP 259;340;-24.06638, -49.21916;Itaberá;Terra
+SP 259;341;-24.07432, -49.22367;Itaberá;Terra
+SP 259;342;-24.08328, -49.22837;Itaberá;Terra
+SP 259;343,7;-24.09469, -49.23607;Itaberá;Terra
+SP 259;343,7;-24.09469, -49.23606;Itaberá;Terra
+SP 259;344;-24.09704, -49.23770;Itaberá;Terra
+SP 259;344;-24.09705, -49.23771;Itaberá;Terra
+SP 259;345;-24.10291, -49.24548;Itaberá;Terra
+SP 259;345;-24.10291, -49.24548;Itaberá;Terra
+SP 259;346;-24.10723, -49.25471;Itaberá;Terra
+SP 259;346;-24.10723, -49.25462;Itaberá;Terra
+SP 259;347;-24.11099, -49.26393;Itaberá;Terra
+SP 259;347;-24.11097, -49.26389;Itaberá;Terra
+SP 259;348;-24.11687, -49.27155;Itaberá;Terra
+SP 259;348;-24.11688, -49.27150;Itaberá;Terra
+SP 259;349;-24.12293, -49.27835;Itaberá;Terra
+SP 259;349;-24.12292, -49.27835;Itaberá;Terra
+SP 259;350;-24.12102, -49.28753;Itaberá;Terra
+SP 259;350;-24.12104, -49.28748;Itaberá;Terra
+SP 259;351;-24.11763, -49.29543;Itaberá;Terra
+SP 259;351;-24.11763, -49.29543;Itaberá;Terra
+SP 259;352;-24.11515, -49.30531;Itaberá;Terra
+SP 259;352;-24.11517, -49.30525;Itaberá;Terra
+SP 259;353;-24.11078, -49.31509;Itaberá;Terra
+SP 259;353;-24.11078, -49.31509;Itaberá;Terra
+SP 268;118,3;-23.50473, -47.62211;Araçoiaba da Serra;Simples
+SP 267;322,3;-23.86030, -49.12858;Itaberá;Simples
+SP 267;323;-23.86571, -49.13196;Itaberá;Simples
+SP 267;324;-23.87442, -49.13450;Itaberá;Simples
+SP 267;325;-23.88189, -49.13739;Itaberá;Simples
+SP 267;326;-23.88991, -49.13986;Itaberá;Simples
+SP 267;327;-23.89903, -49.13733;Itaberá;Simples
+SP 267;328;-23.90845, -49.14022;Itaberá;Simples
+SP 267;329;-23.91649, -49.13658;Itaberá;Simples
+SP 267;330;-23.92479, -49.13910;Itaberá;Simples
+SP 267;331;-23.93404, -49.14062;Itaberá;Simples
+SP 267;332;-23.94267, -49.13622;Itaberá;Simples
+SP 267;333;-23.95198, -49.13574;Itaberá;Simples
+SP 267;334;-23.96134, -49.13665;Itaberá;Simples
+SP 267;335;-23.97035, -49.13932;Itaberá;Simples
+SP 267;336;-23.97946, -49.14188;Itaberá;Simples
+SP 267;337;-23.98837, -49.13966;Itaberá;Simples
+SP 267;338;-23.99749, -49.13752;Itaberá;Simples
+SP 267;339;-24.00672, -49.13561;Itaberá;Simples
+SP 267;340;-24.01608, -49.13512;Itaberá;Simples
+SP 267;341;-24.02394, -49.13147;Itaberá;Simples
+SP 267;342;-24.03039, -49.12428;Itaberá;Simples
+SP 267;343;-24.03948, -49.12270;Itaberá;Simples
+SP 267;344;-24.04844, -49.12221;Itaberá;Simples
+SP 267;345;-24.05792, -49.12218;Itaberá;Simples
+SP 267;346;-24.06650, -49.12401;Itaberá;Simples
+SP 267;346,5;-24.07139, -49.12509;Itaberá;Simples
+SP 268;119;-23.50352, -47.62478;Araçoiaba da Serra;Simples
+SP 268;120;-23.50180, -47.62830;Araçoiaba da Serra;Simples
+SP 268;121;-23.49779, -47.63894;Araçoiaba da Serra;Simples
+SP 268;122;-23.49519, -47.64678;Araçoiaba da Serra;Simples
+SP 268;123;-23.48783, -47.66357;Araçoiaba da Serra;Simples
+SP 268;124;-23.48768, -47.66376;Araçoiaba da Serra;Simples
+SP 268;125;-23.48360, -47.67211;Capela do Alto;Simples
+SP 268;126;-23.47612, -47.69110;Capela do Alto;Simples
+SP 268;127;-23.47455, -47.69855;Capela do Alto;Simples
+SP 268;128;-23.54941, -47.66013;Capela do Alto;Simples
+SP 268;129;-23.47029, -47.72478;Capela do Alto;Simples
+SP 268;130;-23.46255, -47.72497;Capela do Alto;Simples
+SP 268;131;-23.46706, -47.73140;Capela do Alto;Simples
+SP 268;133;-23.48011, -47.74191;Capela do Alto;Terra
+SP 268;134;-23.48479, -47.74775;Capela do Alto;Terra
+SP 268;135;-23.48345, -47.75800;Capela do Alto;Terra
+SP 268;136;-23.48574, -47.76691;Capela do Alto;Terra
+SP 268;137;-23.48439, -47.77760;Capela do Alto;Terra
+SP 268;138;-23.48037, -47.78584;Capela do Alto;Terra
+SP 268;139;-23.48037, -47.78579;Capela do Alto;Terra
+SP 268;140;-23.48839, -47.80088;Capela do Alto;Terra
+SP 268;140;-23.48836, -47.80099;Capela do Alto;Terra
+SP 268;141,1;-23.49384, -47.81029;Alambari;Terra
+SP 268;142;-23.49899, -47.81720;Alambari;Terra
+SP 268;143;-23.50605, -47.82495;Alambari;Terra
+SP 268;144;-23.51338, -47.82729;Alambari;Terra
+SP 268;145;-23.52175, -47.82995;Alambari;Terra
+SP 268;146;-23.53126, -47.83120;Alambari;Terra
+SP 268;147;-23.54007, -47.83237;Alambari;Terra
+SP 268;148;-23.54756, -47.83809;Alambari;Terra
+SP 268;149;-23.55369, -47.84373;Alambari;Terra
+SP 268;150;-23.55899, -47.85160;Alambari;Terra
+SP 268;151;-23.55634, -47.86103;Alambari;Terra
+SP 268;152;-23.55416, -47.86874;Alambari;Terra
+SP 268;154;-23.56496, -47.88829;Alambari;Simples
+SP 268;155;-23.54796, -47.89349;Alambari;Simples
+SP 268;156;-23.55132, -47.90423;Alambari;Simples
+SP 268;157;-23.54780, -47.91299;Alambari;Simples
+SP 268;158;-23.55161, -47.92189;Alambari;Simples
+SP 268;159;-23.55253, -47.93210;Alambari;Simples
+SP 268;160;-23.55237, -47.94099;Alambari;Simples
+SP 268;161;-23.55117, -47.95178;Alambari;Simples
+SP 268;162;-23.54319, -47.96590;Itapetininga;Simples
+SP 268;163;-23.56077, -47.96693;Itapetininga;Simples
+SP 268;164;-23.56726, -47.97352;Itapetininga;Simples
+SP 268;176,78;-23.55186, -48.09513;Itapetininga;Terra
+SP 268;177;-23.55237, -48.09708;Itapetininga;Terra
+SP 268;178;-23.55496, -48.10663;Itapetininga;Terra
+SP 268;179;-23.55745, -48.11255;Itapetininga;Terra
+SP 268;180;-23.56036, -48.12036;Itapetininga;Terra
+SP 268;181;-23.55651, -48.12617;Itapetininga;Terra
+SP 268;182;-23.55335, -48.13061;Itapetininga;Terra
+SP 268;183;-23.54850, -48.13561;Itapetininga;Terra
+SP 268;184;-23.55181, -48.14298;Itapetininga;Terra
+SP 268;185;-23.54800, -48.14911;Itapetininga;Terra
+SP 268;186;-23.54267, -48.15550;Itapetininga;Terra
+SP 268;187;-23.53734, -48.16190;Itapetininga;Terra
+SP 268;188;-23.53098, -48.16941;Itapetininga;Terra
+SP 268;190;-23.52120, -48.18026;Itapetininga;Terra
+SP 268;191;-23.52221, -48.18894;Itapetininga;Terra
+SP 268;193;-23.51474, -48.20124;Itapetininga;Terra
+SP 268;194;-23.51949, -48.21012;Itapetininga;Terra
+SP 268;195;-23.52433, -48.21793;Itapetininga;Terra
+SP 268;196;-23.52899, -48.22106;Itapetininga;Terra
+SP 268;197;-23.53493, -48.22692;Itapetininga;Terra
+SP 268;198;-23.54197, -48.23044;Itapetininga;Terra
+SP 268;199;-23.54657, -48.23778;Itapetininga;Terra
+SP 268;217,6;-23.52750, -48.40489;Angatuba;Simples
+SP 268;218;-23.52625, -48.40834;Angatuba;Simples
+SP 268;219;-23.52079, -48.41408;Angatuba;Simples
+SP 268;220;-23.51303, -48.41434;Angatuba;Simples
+SP 268;221;-23.50532, -48.41617;Angatuba;Simples
+SP 268;222;-23.49862, -48.41704;Angatuba;Simples
+SP 268;222,4;-23.49578, -48.41620;Angatuba;Simples
+SP 268;224,2;-23.48493, -48.41720;Angatuba;Simples
+SP 268;225;-23.47945, -48.41966;Angatuba;Simples
+SP 268;226;-23.47103, -48.42152;Angatuba;Simples
+SP 268;227;-23.46313, -48.42158;Angatuba;Simples
+SP 268;228;-23.45410, -48.42290;Angatuba;Simples
+SP 268;229;-23.44608, -48.42558;Angatuba;Simples
+SP 268;230;-23.43040, -48.43182;Angatuba;Terra
+SP 268;231;-23.43217, -48.43737;Angatuba;Terra
+SP 268;232;-23.42474, -48.44210;Angatuba;Terra
+SP 268;233;-23.41799, -48.44766;Angatuba;Terra
+SP 268;234;-23.41979, -48.45551;Angatuba;Terra
+SP 268;235;-23.42352, -48.46435;Angatuba;Terra
+SP 268;235,6;-23.42796, -48.46798;Angatuba;Terra
+SP 268;236;-23.43028, -48.47001;Angatuba;Terra
+SP 268;237;-23.42482, -48.47647;Angatuba;Terra
+SP 268;237,1;-23.42451, -48.47824;Angatuba;Terra
+SP 268;238;-23.42470, -48.48648;Angatuba;Terra
+SP 268;239;-23.42113, -48.49484;Angatuba;Terra
+SP 268;240;-23.42155, -48.50371;Angatuba;Terra
+SP 268;241;-23.42451, -48.51131;Angatuba;Terra
+SP 268;242;-23.42534, -48.51947;Angatuba;Terra
+SP 268;243;-23.42064, -48.52854;Angatuba;Terra
+SP 268;244;-23.41913, -48.53673;Angatuba;Terra
+SP 268;245;-23.41689, -48.54576;Angatuba;Terra
+SP 268;246;-23.41521, -48.55603;Angatuba;Terra
+SP 268;247;-23.41344, -48.56422;Angatuba;Terra
+SP 268;248;-23.42141, -48.56871;Angatuba;Terra
+SP 268;249;-23.42494, -48.57783;Angatuba;Terra
+SP 268;250;-23.42758, -48.58698;Angatuba;Terra
+SP 268;251;-23.42982, -48.59574;Angatuba;Terra
+SP 268;252;-23.435360, -48.60365;Angatuba;Terra
+SP 268;253;-23.43294, -48.61373;Angatuba;Terra
+SP 268;254;-23.42832, -48.62080;Angatuba;Terra
+SP 268;255;-23.42321, -48.62857;Angatuba;Terra
+SP 268;256;-23.41702, -48.63587;Angatuba;Terra
+SP 268;257;-23.41545, -48.64532;Angatuba;Terra
+SP 268;258;-23.41280, -48.65472;Angatuba;Terra
+SP 268;259;-23.41076, -48.66427;Angatuba;Terra
+SP 268;260;-23.41062, -48.67407;Angatuba;Terra
+SP 268;260,6;-23.41098, -48.68247;Angatuba;Terra
+SP 268;273,4;-23.38824, -48.72903;Paranapanema;Terra
+SP 268;274;-23.38738, -48.73449;Paranapanema;Terra
+SP 268;275;-23.38843, -48.74417;Paranapanema;Terra
+SP 268;276;-23.39002, -48.75328;Paranapanema;Terra
+SP 268;277;-23.39658, -48.75997;Paranapanema;Terra
+SP 268;278;-23.39690, -48.76953;Paranapanema;Terra
+SP 268;279;-23.39995, -48.77872;Paranapanema;Terra
+SP 268;280;-23.40526, -48.78575;Paranapanema;Terra
+SP 268;281;-23.41194, -48.79185;Paranapanema;Terra
+SP 268;282;-23.41530, -48.80049;Paranapanema;Terra
+SP 268;283;-23.41566, -48.81054;Paranapanema;Terra
+SP 268;284;-23.41498, -48.81995;Paranapanema;Terra
+SP 268;285;-23.41535, -48.82831;Paranapanema;Terra
+SP 268;286;-23.42270, -48.83127;Paranapanema;Terra
+SP 268;287;-23.43158, -48.82889;Paranapanema;Terra
+SP 268;288;-23.43709, -48.82219;Paranapanema;Terra
+SP 268;289;-23.44504, -48.81760;Paranapanema;Terra
+SP 268;289,5;-23.44845, -48.81583;Paranapanema;Terra
+SP 268;303;-23.33067, -49.01866;Paranapanema;Terra
+SP 268;303;-23.33067, -49.01864;Paranapanema;Terra
+SP 268;303,6;-23.32763, -49.01651;Paranapanema;Terra
+SP 268;303,6;-23.32740, -49.01631;Paranapanema;Terra
+SP 268;304;-23.33814, -49.02407;Paranapanema;Terra
+SP 268;304;-23.33814, -49.02407;Paranapanema;Terra
+SP 268;305;-23.34547, -49.02994;Paranapanema;Terra
+SP 268;305;-23.34547, -49.02994;Paranapanema;Terra
+SP 268;305,5;-23.34881, -49.03319;Paranapanema;Terra
+SP 268;305,5;-23.34880, -49.03320;Paranapanema;Terra
+SP 268;306,7;-23.34901, -49.03357;Itaí;Terra
+SP 268;306,7;-23.34913, -49.03366;Itaí;Terra
+SP 268;307;-23.35092, -49.03547;Itaí;Terra
+SP 268;307;-23.35092, -49.03547;Itaí;Terra
+SP 268;308;-23.35757, -49.04204;Itaí;Terra
+SP 268;308;-23.35759, -49.04208;Itaí;Terra
+SP 268;309;-23.36533, -49.04719;Itaí;Terra
+SP 268;309;-23.36533, -49.04719;Itaí;Terra
+SP 268;310;-23.37130, -49.05454;Itaí;Terra
+SP 268;310;-23.37130, -49.05455;Itaí;Terra
+SP 268;311;-23.37926, -49.05893;Itaí;Terra
+SP 268;311;-23.37929, -49.05887;Itaí;Terra
+SP 268;312;-23.38808, -49.05688;Itaí;Terra
+SP 268;312;-23.38802, -49.05687;Itaí;Terra
+SP 268;313;-23.39630, -49.05794;Itaí;Terra
+SP 268;313;-23.39630, -49.05786;Itaí;Terra
+SP 268;314;-23.40077, -49.06602;Itaí;Terra
+SP 268;314;-23.40079, -49.06599;Itaí;Terra
+SP 268;315;-23.40383, -49.07519;Itaí;Terra
+SP 268;315;-23.40383, -49.07531;Itaí;Terra
+SP 268;316;-23.40677, -49.08425;Itaí;Terra
+SP 268;316;-23.40676, -49.08425;Itaí;Terra
+SP 268;317;-23.41253, -49.09183;Itaí;Terra
+SP 268;317;-23.41253, -49.09182;Itaí;Terra
+SP 268;323,1;-23.40458, -49.11884;Itaí;Terra
+SP 268;323,1;-23.40460, -49.11885;Itaí;Terra
+SP 268;324;-23.40093, -49.12667;Itaí;Terra
+SP 268;324;-23.40093, -49.12672;Itaí;Terra
+SP 268;324;-23.40091, -49.12678;Itaí;Terra
+SP 268;324;-23.40091, -49.12678;Itaí;Terra
+SP 268;325;-23.40004, -49.13664;Itaí;Terra
+SP 268;325;-23.40003, -49.13663;Itaí;Terra
+SP 268;326;-23.39486, -49.14512;Itaí;Terra
+SP 268;326;-23.39488, -49.14508;Itaí;Terra
+SP 268;327;-23.38912, -49.15281;Itaí;Terra
+SP 268;327;-23.38914, -49.15280;Itaí;Terra
+SP 268;328;-23.38434, -49.16154;Itaí;Terra
+SP 268;328;-23.38435, -49.16158;Itaí;Terra
+SP 268;329;-23.37767, -49.16798;Itaí;Terra
+SP 268;329;-23.37768, -49.16797;Itaí;Terra
+SP 268;330;-23.37141, -49.17543;Itaí;Terra
+SP 268;330;-23.37147, -49.17527;Itaí;Terra
+SP 268;331;-23.36539, -49.18332;Itaí;Terra
+SP 268;331;-23.36539, -49.18325;Itaí;Terra
+SP 268;331,4;-23.36304, -49.18647;Itaí;Terra
+SP 268;331,5;-23.36257, -49.18698;Itaí;Terra
+SP 268;332;-23.35961, -49.19097;Itaí;Terra
+SP 268;332;-23.35966, -49.19095;Itaí;Terra
+SP 268;333;-23.35789, -49.20009;Itaí;Terra
+SP 268;333;-23.35790, -49.20008;Itaí;Terra
+SP 268;334;-23.35518, -49.20948;Itaí;Terra
+SP 268;334;-23.35518, -49.20948;Itaí;Terra
+SP 270;169;-23.61610, -48.08428;Itapetininga;Multivias
+SP 270;170;-23.60745, -48.09198;Itapetininga;Multivias
+SP 270;171;-23.60181, -48.09676;Itapetininga;Multivias
+SP 270;172;-23.59598, -48.10092;Itapetininga;Multivias
+SP 270;173;-23.58773, -48.10863;Itapetininga;Multivias
+SP 270;174;-23.58286, -48.11469;Itapetininga;Multivias
+SP 270;175;-23.58180, -48.12600;Itapetininga;Multivias
+SP 270;176;-23.58271, -48.13489;Itapetininga;Multivias
+SP 270;177;-23.58355, -48.14472;Itapetininga;Multivias
+SP 270;178;-23.58448, -48.15477;Itapetininga;Multivias
+SP 270;179;-23.58177, -48.16396;Itapetininga;Multivias
+SP 270;180;-23.57650, -48.17134;Itapetininga;Multivias
+SP 270;181;-23.56933, -48.17810;Itapetininga;Multivias
+SP 270;182;-23.56576, -48.18649;Itapetininga;Multivias
+SP 270;183;-23.56205, -48.19494;Itapetininga;Multivias
+SP 270;184;-23.55687, -48.20271;Itapetininga;Multivias
+SP 270;185;-23.55276, -48.21140;Itapetininga;Multivias
+SP 270;186;-23.54987, -48.22146;Itapetininga;Multivias
+SP 270;187;-23.54867, -48.23144;Itapetininga;Multivias
+SP 270;188;-23.54769, -48.23993;Itapetininga;Multivias
+SP 270;189;-23.54662, -48.24964;Itapetininga;Multivias
+SP 270;190;-23.54496, -48.25933;Campina do Monte Alegre;Multivias
+SP 270;191;-23.54525, -48.26898;Campina do Monte Alegre;Multivias
+SP 270;192;-23.54660, -48.27881;Campina do Monte Alegre;Multivias
+SP 270;193;-23.54741, -48.28871;Campina do Monte Alegre;Multivias
+SP 270;194;-23.54627, -48.29852;Campina do Monte Alegre;Multivias
+SP 270;195;-23.54536, -48.30798;Campina do Monte Alegre;Multivias
+SP 270;196;-23.54542, -48.31759;Campina do Monte Alegre;Multivias
+SP 270;197;-23.54360, -48.32753;Campina do Monte Alegre;Multivias
+SP 270;198;-23.53929, -48.33592;Campina do Monte Alegre;Multivias
+SP 270;199;-23.53295, -48.34209;Campina do Monte Alegre;Multivias
+SP 270;200;-23.52941, -48.35132;Campina do Monte Alegre;Multivias
+SP 270;201;-23.52826, -48.36065;Campina do Monte Alegre;Multivias
+SP 270;202;-23.52962, -48.37043;Campina do Monte Alegre;Multivias
+SP 270;203;-23.53101, -48.37981;Campina do Monte Alegre;Multivias
+SP 270;204;-23.53016, -48.38979;Campina do Monte Alegre;Multivias
+SP 270;205;-23.52777, -48.39929;Campina do Monte Alegre;Multivias
+SP 270;206;-23.52834, -48.40852;Campina do Monte Alegre;Multivias
+SP 270;207;-23.53268, -48.41795;Campina do Monte Alegre;Multivias
+SP 270;208;-23.53425, -48.42721;Campina do Monte Alegre;Multivias
+SP 270;209;-23.53280, -48.43608;Campina do Monte Alegre;Multivias
+SP 270;210;-23.53023, -48.44649;Angatuba;Multivias
+SP 270;211;-23.52777, -48.45517;Angatuba;Multivias
+SP 270;212;-23.52688, -48.46472;Angatuba;Multivias
+SP 270;213;-23.52617, -48.47429;Angatuba;Multivias
+SP 270;214;-23.52340, -48.48397;Angatuba;Multivias
+SP 270;215;-23.52083, -48.49295;Angatuba;Multivias
+SP 270;216;-23.51688, -48.50202;Angatuba;Multivias
+SP 270;217;-23.51098, -48.51008;Angatuba;Multivias
+SP 270;218;-23.50579, -48.51731;Angatuba;Multivias
+SP 270;219;-23.50351, -48.52657;Angatuba;Multivias
+SP 270;220;-23.50157, -48.53666;Angatuba;Multivias
+SP 270;221;-23.49790, -48.54519;Angatuba;Multivias
+SP 270;222;-23.49306, -48.55355;Angatuba;Multivias
+SP 270;223;-23.48986, -48.56322;Angatuba;Multivias
+SP 270;224;-23.48756, -48.57258;Angatuba;Multivias
+SP 270;225;-23.48565, -48.58320;Angatuba;Multivias
+SP 270;226;-23.48366, -48.59345;Angatuba;Multivias
+SP 270;227;-23.48188, -48.60344;Angatuba;Multivias
+SP 270;228;-23.47998, -48.61413;Angatuba;Multivias
+SP 270;229;-23.47818, -48.62367;Angatuba;Multivias
+SP 270;230;-23.47648, -48.63318;Angatuba;Multivias
+SP 270;231;-23.47544, -48.64295;Paranapanema;Multivias
+SP 270;232;-23.47524, -48.65284;Paranapanema;Multivias
+SP 270;233;-23.47504, -48.66297;Paranapanema;Multivias
+SP 270;234;-23.47488, -48.67234;Paranapanema;Multivias
+SP 270;235;-23.47467, -48.68227;Paranapanema;Multivias
+SP 270;236;-23.47444, -48.69206;Paranapanema;Multivias
+SP 270;237;-23.47428, -48.70150;Paranapanema;Multivias
+SP 270;238;-23.47408, -48.70961;Paranapanema;Multivias
+SP 270;239;-23.47373, -48.72150;Paranapanema;Multivias
+SP 270;240;-23.47362, -48.73056;Paranapanema;Multivias
+SP 270;241;-23.47334, -48.73752;Paranapanema;Multivias
+SP 270;242;-23.47321, -48.74680;Paranapanema;Multivias
+SP 270;243;-23.47302, -48.75671;Paranapanema;Multivias
+SP 270;244;-23.47280, -48.76792;Paranapanema;Multivias
+SP 270;245;-23.46915, -48.77589;Paranapanema;Multivias
+SP 270;246;-23.46353, -48.78664;Paranapanema;Multivias
+SP 270;247;-23.45909, -48.79506;Paranapanema;Multivias
+SP 270;248;-23.45594, -48.80095;Paranapanema;Multivias
+SP 270;249;-23.45156, -48.80913;Paranapanema;Multivias
+SP 270;250;-23.44884, -48.81843;Paranapanema;Multivias
+SP 270;251;-23.45074, -48.82806;Paranapanema;Multivias
+SP 270;252;-23.44851, -48.84009;Paranapanema;Multivias
+SP 270;253;-23.44455, -48.84449;Paranapanema;Multivias
+SP 270;254;-23.44101, -48.85288;Paranapanema;Multivias
+SP 270;255;-23.43686, -48.86060;Paranapanema;Multivias
+SP 270;256;-23.43041, -48.86578;Paranapanema;Multivias
+SP 270;257;-23.42447, -48.87339;Paranapanema;Multivias
+SP 270;259;-23.41204, -48.88849;Paranapanema;Multivias
+SP 270;260;-23.40596, -48.89558;Paranapanema;Multivias
+SP 270;261;-23.39974, -48.90288;Paranapanema;Multivias
+SP 270;262;-23.39354, -48.91014;Paranapanema;Multivias
+SP 270;263;-23.39022, -48.91822;Paranapanema;Multivias
+SP 270;264;-23.38355, -48.92558;Paranapanema;Multivias
+SP 270;265;-23.38093, -48.93462;Paranapanema;Multivias
+SP 270;266;-23.38177, -48.94896;Paranapanema;Multivias
+SP 270;267;-23.38268, -48.95941;Paranapanema;Multivias
+SP 270;268;-23.38310, -48.96860;Paranapanema;Multivias
+SP 270;269;-23.37986, -48.97762;Paranapanema;Multivias
+SP 270;270;-23.37794, -48.98256;Paranapanema;Multivias
+SP 270;271;-23.37788, -48.98263;Paranapanema;Multivias
+SP 270;272;-23.37118, -49.00004;Paranapanema;Multivias
+SP 270;273;-23.36672, -49.00895;Itaí;Multivias
+SP 270;274;-23.36108, -49.01671;Itaí;Multivias
+SP 270;275;-23.35553, -49.02433;Itaí;Multivias
+SP 270;276;-23.34980, -49.03213;Itaí;Multivias
+SP 270;277;-23.34430, -49.03966;Itaí;Multivias
+SP 270;278;-23.33885, -49.04714;Itaí;Multivias
+SP 270;279;-23.33332, -49.05524;Itaí;Multivias
+SP 270;280;-23.32971, -49.06447;Itaí;Multivias
+SP 270;281;-23.32594, -49.07414;Itaí;Multivias
+SP 270;282;-23.32280, -49.08226;Itaí;Multivias
+SP 270;283;-23.31940, -49.09128;Itaí;Multivias
+SP 270;284;-23.31586, -49.10035;Itaí;Multivias
+SP 270;285;-23.31238, -49.10941;Itaí;Multivias
+SP 270;286;-23.30874, -49.11878;Itaí;Multivias
+SP 270;287;-23.30538, -49.12744;Itaí;Multivias
+SP 270;288;-23.30193, -49.13651;Itaí;Multivias
+SP 270;289;-23.29729, -49.14470;Itaí;Multivias
+SP 270;290;-23.29240, -49.15298;Itaí;Multivias
+SP 270;291;-23.28788, -49.16136;Itaí;Multivias
+SP 270;292;-23.28475, -49.17108;Itaí;Multivias
+SP 270;293;-23.28185, -49.18008;Itaí;Multivias
+SP 270;294;-23.27884, -49.18932;Itaí;Multivias
+SP 270;295;-23.27968, -49.19823;Itaí;Multivias
+SP 275;324,5;-23.85458, -49.15564;Itaberá;Simples
+SP 275;325;-23.85326, -49.16020;Itaberá;Simples
+SP 275;326;-23.85197, -49.16961;Itaberá;Simples
+SP 275;327;-23.85111, -49.17932;Itaberá;Simples
+SP 275;328;-23.85746, -49.18582;Itaberá;Simples
+SP 275;329;-23.86224, -49.19472;Itaberá;Simples
+SP 275;330;-23.86659, -49.20143;Itaberá;Simples
+SP 275;331;-23.86583, -49.21000;Itaberá;Simples
+SP 275;332;-23.86262, -49.21954;Itaberá;Simples
+SP 275;333;-23.86090, -49.22843;Itaberá;Simples
+SP 275;334;-23.85768, -49.23771;Itaberá;Terra
+SP 275;335;-23.85618, -49.24799;Itaberá;Terra
+SP 275;336;-23.85448, -49.25683;Itaberá;Terra
+SP 275;337;-23.85583, -49.26662;Itaberá;Terra
+SP 275;338;-23.85896, -49.27501;Itaberá;Terra
+SP 275;339;-23.85837, -49.28458;Itaberá;Terra
+SP 275;340;-23.85984, -49.29367;Itaberá;Terra
+SP 275;341;-23.86169, -49.30204;Itaberá;Terra
+SP 275;342;-23.86662, -49.30911;Itaberá;Terra
+SP 275;343;-23.86997, -49.31748;Itaberá;Terra
+SP 275;344;-23.87244, -49.32417;Itaberá;Terra
+SP 275;345;-23.86827, -49.33190;Itaberá;Terra
+SP 275;346;-23.87418, -49.33855;Riversul;Terra
+SP 275;347;-23.87748, -49.34589;Riversul;Terra
+SP 275;348;-23.87628, -49.35511;Riversul;Terra
+SP 275;348,8;-23.87749, -49.36671;Riversul;Terra
+SP 281;0;-24.09759, -49.33250;Itararé;Simples
+SP 281;1;-24.09014, -49.33790;Itararé;Simples
+SP 281;3;-24.07682, -49.33106;Itararé;Simples
+SP 281;4;-24.06888, -49.33194;Itararé;Simples
+SP 281;5;-24.06044, -49.33518;Itararé;Simples
+SP 281;6;-24.05481, -49.34264;Itararé;Simples
+SP 281;7;-24.04589, -49.34809;Itararé;Simples
+SP 281;8;-24.04064, -49.34469;Itararé;Simples
+SP 281;9;-24.03187, -49.33981;Itararé;Simples
+SP 281;10;-24.02883, -49.33384;Itararé;Simples
+SP 281;11;-24.02157, -49.33164;Itararé;Simples
+SP 281;12;-24.01463, -49.33146;Itararé;Simples
+SP 281;13;-24.00597, -49.33014;Itararé;Simples
+SP 281;14;-23.99901, -49.32732;Itararé;Simples
+SP 281;15;-23.99305, -49.31925;Itararé;Simples
+SP 281;16;-23.98697, -49.31984;Itararé;Simples
+SP 281;17;-23.98414, -49.32541;Itararé;Simples
+SP 281;18;-23.97794, -49.32593;Itararé;Simples
+SP 281;19;-23.97081, -49.32270;Itararé;Simples
+SP 281;20;-23.96531, -49.32756;Itararé;Simples
+SP 281;21;-23.95916, -49.33306;Itararé;Simples
+SP 281;22;-23.95602, -49.34082;Itararé;Simples
+SP 281;23;-23.94941, -49.34801;Itararé;Simples
+SP 281;24;-23.94551, -49.35220;Itararé;Simples
+SP 281;25;-23.94381, -49.36043;Itararé;Simples
+SP 281;26;-23.93592, -49.36298;Itararé;Simples
+SP 281;27;-23.92844, -49.36122;Itararé;Simples
+SP 281;28;-23.92241, -49.36489;Itararé;Simples
+SP 281;29;-23.91511, -49.37218;Riversul;Simples
+SP 281;30;-23.90677, -49.37381;Riversul;Simples
+SP 281;31;-23.90243, -49.37162;Riversul;Simples
+SP 281;32;-23.89545, -49.36798;Riversul;Simples
+SP 281;33;-23.88521, -49.36846;Riversul;Simples
+SP 281;34;-23.87892, -49.36783;Riversul;Simples
+SP 281;35;-23.87107, -49.36755;Riversul;Simples
+SP 281;36;-23.86318, -49.37354;Riversul;Simples
+SP 281;37;-23.85997, -49.38055;Riversul;Simples
+SP 281;38;-23.85166, -49.38802;Riversul;Simples
+SP 281;39;-23.84387, -49.39125;Riversul;Simples
+SP 281;40;-23.83659, -49.39428;Riversul;Simples
+SP 281;41;-23.82979, -49.39989;Riversul;Simples
+SP 281;42;-23.82253, -49.40508;Riversul;Simples
+SP 281;43;-23.81411, -49.40744;Riversul;Simples
+SPA 003/245;2;-23.11906, -48.98926;Arandu;Simples
+SPA 003/245;3;-23.12423, -48.99734;Arandu;Simples
+SPA 003/245;4;-23.12848, -49.00498;Arandu;Simples
+SPA 003/245;5;-23.13007, -49.01498;Arandu;Simples
+SPA 003/245;6;-23.12879, -49.02362;Arandu;Simples
+SPA 003/245;7;-23.13025, -49.03341;Arandu;Simples
+SPA 003/245;8;-23.13214, -49.04288;Arandu;Simples
+SPA 003/245;8,7;-23.13316, -49.04812;Arandu;Simples
+SPA 005/245;0;-23.09748, -48.98931;Arandu;Simples
+SPA 005/245;0,15;-23.09701, -48.98874;Arandu;Simples
+SPA 005/245;0,3;-23.09593, -48.98778;Arandu;Simples
+SPA 039/281;0;-23.84163, -49.39572;Riversul;Terra
+SPA 039/281;0,1;-23.84223, -49.39652;Riversul;Terra
+SPA 039/281;0,18;-23.84242, -49.39691;Riversul;Terra
+SPA 039/281;0,3;-23.84304, -49.39855;Riversul;Terra
+SPA 039/281;0,5;-23.84342, -49.40050;Riversul;Terra
+SPA 039/281;0,7;-23.84311, -49.40200;Riversul;Terra
+SPA 039/281;1;-23.84159, -49.40453;Riversul;Terra
+SPA 040/079;1;-23.22955, -47.30462;Salto;Dupla
+SPA 040/079;1;-23.23010, -47.30477;Salto;Dupla
+SPA 040/079;2;-23.23877, -47.30653;Salto;Dupla
+SPA 040/079;2;-23.23713, -47.30618;Salto;Dupla
+SPA 040/079;3;-23.24798, -47.30648;Salto;Dupla
+SPA 040/079;3;-23.24849, -47.30633;Salto;Dupla
+SPA 341/258;0;-24.11416, -49.36069;Itararé;Simples
+SPA 341/258;0,1;-24.11460, -49.36010;Itararé;Simples
+SPA 341/258;0,2;-24.11439, -49.35838;Itararé;Simples
+SPA 341/258;0,4;-24.11429, -49.35695;Itararé;Simples
+SPA 341/258;0,5;-24.11422, -49.35618;Itararé;Simples
+SPA 341/258;0,6;-24.11419, -49.35546;Itararé;Simples
+SPA 341/258;0,7;-24.11428, -49.35417;Itararé;Simples
+SPA 097/250;16;-23.60645, -47.45565;Votorantim;Terra
+SPA 097/250;17;-23.60191, -47.46270;Votorantim;Terra
+SPA 097/300;0,1;-23.24858, -47.22667;Itu;Simples
+SPA 097/300;1;-23.24184, -47.23085;Itu;Simples
+SPA 097/300;2;-23.23688, -47.23718;Itu;Simples
+SPA 097/300;3;-23.22981, -47.24356;Itu;Simples
+SPA 097/300;4;-23.22627, -47.25189;Itu;Simples
+SPA 097/300;5;-23.22059, -47.25957;Itu;Simples
+SPA 097/300;6;-23.21570, -47.26784;Itu;Simples
+SPA 097/300;7;-23.21464, -47.27697;Itu;Simples
+SPA 097/300;8;-23.21293, -47.28647;Itu;Simples
+SPA 099/139;0;-23.88975, -48.01094;São Miguel Arcanjo;Terra
+SPA 099/139;0,56;-23.88523, -48.01078;São Miguel Arcanjo;Terra
+SPA 099/139;1;-23.88055, -48.01082;São Miguel Arcanjo;Terra
+SPA 099/139;1,5;-23.87657, -48.01005;São Miguel Arcanjo;Terra
+SPA 099/139;2;-23.87469, -48.00901;São Miguel Arcanjo;Terra
+SPA 103/079;3;-23.5680.83, -47.4538.61;Votorantim;Dupla
+SPA 103/079;4,5;-23.5737.03, -47.4570.72;Votorantim;Dupla
+SPA 103/079;5;-23.5780.73, -47.4582.12;Votorantim;Dupla
+SPA 103/079;5,5;-23.5862.54, -47.4558.30;Votorantim;Dupla
+SPA 103/079;6;-23.5930.84, -47.4549.31;Votorantim;Dupla
+SPA 103/079;6,5;-23.5946.31, -47.4560.56;Votorantim;Dupla
+SPA 103/079;7;-23.5949.52, -47.4562.89;Votorantim;Dupla
+SPA 115/280;0;-23.29793, -47.67842;Boituva;Simples
+SPA 115/280;1;-23.30578, -47.68144;Boituva;Simples
+SPA 115/280;2;-23.31465, -47.68222;Boituva;Simples
+SPA 115/280;3;-23.32351, -47.68246;Boituva;Simples
+SPA 115/280;4;-23.33258, -47.68352;Boituva;Simples
+SPA 115/280;5;-23.33860, -47.68831;Boituva;Simples
+SPA 142/270;0,2;-23.56271, -47.84405;Sarapuí;Simples
+SPA 142/270;1;-23.56840, -47.83853;Sarapuí;Simples
+SPA 142/270;2;-23.57529, -47.83649;Sarapuí;Simples
+SPA 142/270;3;-23.57945, -47.82776;Sarapuí;Simples
+SPA 142/270;4;-23.58658, -47.82360;Sarapuí;Simples
+SPA 142/270;5;-23.59584, -47.82273;Sarapuí;Simples
+SPA 142/270;6;-23.60534, -47.82335;Sarapuí;Simples
+SPA 142/270;7;-23.61321, -47.82327;Sarapuí;Dupla
+SPA 142/270;8;-23.62206, -47.82494;Sarapuí;Dupla
+SPA 142/270;9;-23.63101, -47.82585;Sarapuí;Dupla
+SPA 142/270;9,8;-23.63781, -47.82634;Sarapuí;Dupla
+SPA 145/270;0;-23.56362, -47.87805;Alambari;Simples
+SPA 145/270;0,5;-23.56359, -47.87803;Alambari;Simples
+SPA 145/270;1;-23.56013, -47.87855;Alambari;Simples
+SPA 162/270;0;-23.59756, -48.03175;itapetininga;Simples
+SPA 162/270;0,4;-23.59384, -48.03302;itapetininga;Simples
+SPA 162/270;0,8;-23.59032, -48.03494;itapetininga;Simples
+SPA 162/270;1;-23.58839, -48.03551;itapetininga;Simples
+SPA 162/270;1,17;-23.58599, -48.03619;itapetininga;Simples
+SPA 162/280;0,3;-23.22957, -48.12079;Porangaba;Simples
+SPA 162/280;1;-23.22871, -48.12063;Porangaba;Simples
+SPA 162/280;2;-23.21204, -48.12077;Porangaba;Simples
+SPA 162/280;3;-23.20326, -48.12218;Porangaba;Simples
+SPA 162/280;4;-23.20350, -48.12252;Porangaba;Simples
+SPA 162/280;5;-23.19653, -48.12285;Porangaba;Simples
+SPA 162/280;5,8;-23.18907, -48.12230;Porangaba;Simples
+SPA 173/250;0;-23.88893, -47.98097;São Miguel Arcanjo;Simples
+SPA 173/250;0,5;-23.88615, -47.98480;São Miguel Arcanjo;Simples
+SPA 173/250;1;-23.88271, -47.93780;São Miguel Arcanjo;Simples
+SPA 173/250;1,6;-23.87989, -47.99075;São Miguel Arcanjo;Simples
+SPA 180/250;0;-23.88275, -48.01012;São Miguel Arcanjo;Simples
+SPA 180/250;0,5;-23.88259, -48.00614;São Miguel Arcanjo;Simples
+SPA 294/250;17;-24.44300, -48.59517;Apiaí;Terra
+SPA 204/270;0;-23.52866, -48.39482;Angatuba;Simples
+SPA 204/270;1;-23.52133, -48.39594;Angatuba;Simples
+SPA 204/270;2;-23.51498, -48.39983;Angatuba;Simples
+SPA 204/270;3;-23.50759, -48.40529;Angatuba;Simples
+SPA 204/270;4;-23.49890, -48.40758;Angatuba;Simples
+SPA 204/270;5;-23.48979, -48.40969;Angatuba;Simples
+SPA 205/270;0;-23.52881, -48.40511;Angatuba;Terra
+SPA 205/270;1;-23.53470, -48.40863;Angatuba;Terra
+SPA 205/270;2;-23.54060, -48.40256;Angatuba;Terra
+SPA 205/270;3;-23.54941, -48.40072;Angatuba;Terra
+SPA 205/270;4;-23.55677, -48.39654;Angatuba;Terra
+SPA 205/270;5;-23.56263, -48.39011;Angatuba;Terra
+SPA 205/270;6;-23.57218, -48.38696;Angatuba;Terra
+SPA 205/270;6,35;-23.57302, -48.38651;Angatuba;Terra
+SPA 205/270;0;-23.52881, -48.40511;Angatuba;Terra
+SPA 205/270;1;-23.53470, -48.40863;Angatuba;Terra
+SPA 205/270;2;-23.54060, -48.40256;Angatuba;Terra
+SPA 205/270;3;-23.54941, -48.40072;Angatuba;Terra
+SPA 205/270;4;-23.55677, -48.39654;Angatuba;Terra
+SPA 205/270;5;-23.56263, -48.39011;Angatuba;Terra
+SPA 205/270;6;-23.57218, -48.38696;Angatuba;Terra
+SPA 205/270;6,35;-23.57302, -48.38651;Angatuba;Terra
+SPA 223/270;0;-23.48764, -48.56940;Angatuba;Simples
+SPA 223/270;1;-23.47955, -48.57210;Angatuba;Simples
+SPA 223/270;2;-23.47073, -48.57670;Angatuba;Terra
+SPA 223/270;3;-23.46226, -48.57841;Angatuba;Terra
+SPA 223/270;4;-23.45446, -48.58260;Angatuba;Terra
+SPA 223/270;5;-23.44550, -48.59002;Angatuba;Terra
+SPA 223/270;6;-23.44141, -48.59816;Angatuba;Terra
+SPA 245/270;0;-23.46791, -48.77620;Paranapanema;Simples
+SPA 245/270;1;-23.46023, -48.77459;Paranapanema;Simples
+SPA 245/270;2;-23.45150, -48.77275;Paranapanema;Simples
+SPA 245/270;3;-23.44200, -48.77080;Paranapanema;Simples
+SPA 245/270;4;-23.43545, -48.76643;Paranapanema;Simples
+SPA 245/270;5;-23.42930, -48.75901;Paranapanema;Simples
+SPA 245/270;6;-23.42120, -48.75510;Paranapanema;Simples
+SPA 245/270;7;-23.41105, -48.75751;Paranapanema;Simples
+SPA 245/270;8;-23.40439, -48.75300;Paranapanema;Simples
+SPA 245/270;9;-23.39841, -48.74568;Paranapanema;Simples
+SPA 245/270;10;-23.39738, -48.73660;Paranapanema;Simples
+SPA 245/270;11;-23.39206, -48.72733;Paranapanema;Simples
+SPA 282/258;0;-23.97275, -48.86184;Itapeva;Dupla
+SPA 282/258;0;-23.97275, -48.86184;Itapeva;Dupla
+SPA 282/258;0,2;-23.97384, -48.86399;Itapeva;Dupla
+SPA 282/258;0,2;-23.97384, -48.86399;Itapeva;Dupla
+SPA 282/258;0,2;-23.97394, -48.86338;Itapeva;Dupla
+SPA 282/258;0,2;-23.97394, -48.86338;Itapeva;Dupla
+SPA 282/258;0,5;-23.97375, -48.86683;Itapeva;Dupla
+SPA 282/258;0,5;-23.97375, -48.86683;Itapeva;Dupla
+SPA 282/258;0,5;-23.97387, -48.86671;Itapeva;Dupla
+SPA 282/258;0,5;-23.97387, -48.86671;Itapeva;Dupla
+SPA 282/258;0,8;-23.97516, -48.86838;Itapeva;Dupla
+SPA 282/258;0,8;-23.97516, -48.86838;Itapeva;Dupla
+SPA 282/258;0,8;-23.97517, -48.86823;Itapeva;Dupla
+SPA 282/258;0,8;-23.97517, -48.86823;Itapeva;Dupla
+SPA 282/258;1;-23.97722, -48.86929;Itapeva;Dupla
+SPA 282/258;1;-23.97722, -48.86929;Itapeva;Dupla
+SPA 282/258;1,3;-23.97956, -48.87084;Itapeva;Dupla
+SPA 282/258;1,3;-23.97956, -48.87084;Itapeva;Dupla
+SPA 282/258;1,3;-23.97807, -48.86971;Itapeva;Dupla
+SPA 282/258;1,3;-23.97807, -48.86971;Itapeva;Dupla
+SPA 282/258;1,5;-23.97982, -48.87274;Itapeva;Dupla
+SPA 282/258;1,5;-23.97982, -48.87274;Itapeva;Dupla
+SPA 282/258;1,5;-23.97986, -48.87241;Itapeva;Dupla
+SPA 282/258;1,5;-23.97986, -48.87241;Itapeva;Dupla
+SPA 282/258;1,8;-23.97998, -48.87368;Itapeva;Dupla
+SPA 282/258;1,8;-23.97998, -48.87368;Itapeva;Dupla
+SPA 284/258;0;-23.96515, -48.88051;Itapeva;Dupla
+SPA 284/258;0;-23.96537, -48.88039;Itapeva;Dupla
+SPA 284/258;0,2;-23.96674, -48.88015;Itapeva;Dupla
+SPA 284/258;0,2;-23.96708, -48.87980;Itapeva;Dupla
+SPA 284/258;0,1;-23.96847, -48.87951;Itapeva;Dupla
+SPA 284/258;0,1;-23.96877, -48.87920;Itapeva;Dupla
+SPA 284/258;0,6;-23.97046, -48.87881;Itapeva;Dupla
+SPA 284/258;0,6;-23.97029, -48.87873;Itapeva;Dupla
+SPA 284/258;0,8;-23.97215, -48.87833;Itapeva;Dupla
+SPA 284/258;0,8;-23.97197, -48.87825;Itapeva;Dupla
+SPA 294/250;15;-24.43065, -48.58255;Apiaí;Terra
+SPA 294/250;18;-24.44174, -48.60124;Apiaí;Terra
+SPA 294/250;0;-24.40058, -48.64534;Apiaí;Terra
+SPA 294/250;1;-24.39891, -48.63861;Apiaí;Terra
+SPA 294/250;2;-24.39285, -48.63187;Apiaí;Terra
+SPA 294/250;3;-24.39085, -48.62987;Apiaí;Terra
+SPA 294/250;4;-24.39921, -48.62121;Apiaí;Terra
+SPA 294/250;5;-24.39814, -48.61497;Apiaí;Terra
+SPA 294/250;6;-24.39896, -48.60818;Apiaí;Terra
+SPA 294/250;7;-24.40101, -48.60081;Apiaí;Terra
+SPA 294/250;8;-24.40387, -48.59420;Apiaí;Terra
+SPA 294/250;9;-24.40732, -48.58807;Apiaí;Terra
+SPA 294/250;10;-24.40719, -48.58176;Apiaí;Terra
+SPA 294/250;11;-24.40917, -48.57589;Apiaí;Terra
+SPA 294/250;12;-24.40977, -48.57285;Apiaí;Terra
+SPA 294/250;13;-24.41696, -48.57114;Apiaí;Terra
+SPA 294/250;14;-24.42346, -48.57677;Apiaí;Terra
+SPA 294/250;16;-24.43731, -48.58936;Iporanga;Terra
+SPA 294/250;19;-24.44188, -48.60840;Iporanga;Terra
+SPA 324/259;0;-24.03163, -49.11057;Itaberá;Terra
+SPA 324/259;1;-24.03285, -49.10095;Itaberá;Terra
+SPA 324/259;2;-24.04065, -49.09649;Itaberá;Terra
+SPA 324/259;2,7;-24.04380, -49.09123;Itaberá;Terra
+SPA 338/258;0;-24.09757, -49.33255;Itararé;Simples
+SPA 338/258;0,1;-24.09839, -49.33194;Itararé;Simples
+SPA 338/258;0,2;-24.09917, -49.33136;Itararé;Simples
+SPA 338/258;0,3;-24.09997, -49.33081;Itararé;Simples
