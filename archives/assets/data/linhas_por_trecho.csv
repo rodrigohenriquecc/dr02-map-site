@@ -1,0 +1,4 @@
+rodovia,km_inicial,km_final,cor,espessura
+SP-129,0,10,#FF0000,3
+SP-160,15,25,#00FF00,2
+SP-070,30,45,#0000FF,4
