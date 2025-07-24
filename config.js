@@ -4,7 +4,7 @@
  */
 
 // ⚠️ IMPORTANTE: Substitua pela sua nova chave do Google Cloud Console
-const GOOGLE_MAPS_API_KEY = 'SUA_NOVA_CHAVE_SEGURA_AQUI';
+const GOOGLE_MAPS_API_KEY = 'AIzaSyDRgz2fjGIsRXztCQpIWXMlsQifV1C4IDM';
 
 // Função para carregar a API dinamicamente
 function carregarGoogleMapsAPI() {
