@@ -267,6 +267,21 @@
     
     // Carregar configuração quando página estiver pronta
     document.addEventListener('DOMContentLoaded', carregarConfiguracao);
+    
+    // FALLBACK: Executar também após um delay se DOMContentLoaded não funcionar
+    setTimeout(() => {
+      console.log('🔄 FALLBACK: Verificando se configuração foi executada...');
+      if (!window.GOOGLE_MAPS_API_KEY && !document.getElementById('modalConfigAPI')) {
+        console.log('⚠️ Configuração não executada, forçando execução...');
+        carregarConfiguracao();
+      }
+    }, 2000);
+    
+    // FALLBACK 2: Executar imediatamente para GitHub Pages
+    if (window.location.hostname.includes('github.io')) {
+      console.log('🎯 GitHub Pages detectado - executando configuração imediatamente');
+      setTimeout(carregarConfiguracao, 1000);
+    }
   </script>
 
   <!-- =========== ESTILOS BÁSICOS =========== -->
