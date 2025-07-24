@@ -4,10 +4,16 @@
  */
 
 // ⚠️ IMPORTANTE: Substitua pela sua nova chave do Google Cloud Console
-const GOOGLE_MAPS_API_KEY = 'AIzaSyDRgz2fjGIsRXztCQpIWXMlsQifV1C4IDM';
+const GOOGLE_MAPS_API_KEY = 'AIzaSyB2UoBUuLZIq7wQTlNEONXJSMIdHbC342M';
 
 // Função para carregar a API dinamicamente
 function carregarGoogleMapsAPI() {
+  if (GOOGLE_MAPS_API_KEY === 'SUA_NOVA_CHAVE_AQUI_SUBSTITUA_ESTA_LINHA') {
+    console.error('❌ ERRO: Configure sua chave de API no arquivo config.js');
+    alert('⚠️ Configure sua chave de API no arquivo config.js antes de usar o sistema');
+    return;
+  }
+  
   if (typeof google !== 'undefined') {
     console.log('Google Maps já carregado');
     return;

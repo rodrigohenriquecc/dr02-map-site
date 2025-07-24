@@ -72,8 +72,53 @@
     console.log('✅ initMap definida globalmente');
   </script>
   
-  <!-- Configuração protegida da API -->
-  <script src="config.js"></script>
+  <!-- TESTE TEMPORÁRIO: Chave embutida para diagnóstico -->
+  <script>
+    console.log('🧪 MODO TESTE: Carregando diretamente com chave fornecida');
+    
+    // Nova chave gerada (TEMPORÁRIO - apenas para teste)
+    const CHAVE_TESTE = 'AIzaSyDktuBso1pmwaQNwKsqvb54aslwRurHB5c';
+    
+    // Carregar Google Maps diretamente
+    function carregarMapsComChaveTeste() {
+      console.log('🚀 Carregando Google Maps com chave de teste...');
+      
+      if (typeof google !== 'undefined') {
+        console.log('⚠️ Google Maps já carregado');
+        return;
+      }
+      
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${CHAVE_TESTE}&libraries=geometry,places,visualization,drawing&callback=initMap&v=weekly&loading=async`;
+      script.async = true;
+      script.defer = true;
+      
+      script.onload = function() {
+        console.log('✅ Google Maps API carregada com sucesso (teste)');
+      };
+      
+      script.onerror = function() {
+        console.error('❌ Falha ao carregar Google Maps API (teste)');
+        console.log('🔍 Possíveis causas:');
+        console.log('1. Chave inválida ou expirada');
+        console.log('2. APIs não habilitadas no Google Cloud');
+        console.log('3. Restrições de URL incorretas');
+        console.log('4. Billing não configurado');
+      };
+      
+      document.head.appendChild(script);
+    }
+    
+    // Executar imediatamente
+    carregarMapsComChaveTeste();
+    
+    // Diagnóstico adicional
+    console.log('🔍 Informações do ambiente:');
+    console.log('- Hostname:', window.location.hostname);
+    console.log('- Protocol:', window.location.protocol);
+    console.log('- URL completa:', window.location.href);
+    console.log('- User Agent:', navigator.userAgent);
+  </script>
 
   <!-- =========== ESTILOS BÁSICOS =========== -->
   <style>

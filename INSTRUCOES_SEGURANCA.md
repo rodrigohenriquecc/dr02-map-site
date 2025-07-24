@@ -2,10 +2,12 @@
 
 ## ⚠️ CHAVE DE API EXPOSTA - AÇÃO IMEDIATA NECESSÁRIA
 
-### 1. **DESATIVE A CHAVE ATUAL IMEDIATAMENTE:**
+### 1. **DESATIVE AS CHAVES EXPOSTAS IMEDIATAMENTE:**
 - Acesse: [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
-- Encontre: `AIzaSyB3nNHYBU1qCnR9LiXgewa3WaLYnx4n-tQ`
-- **DESATIVE** ou **EXCLUA** esta chave
+- Encontre e **DESATIVE** estas chaves:
+  - `[CHAVE_REMOVIDA_POR_SEGURANCA]`
+  - `[CHAVE_REMOVIDA_POR_SEGURANCA]`
+- **EXCLUA** estas chaves
 
 ### 2. **CRIE UMA NOVA CHAVE SEGURA:**
 ```bash
