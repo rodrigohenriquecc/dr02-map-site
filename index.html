@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>CGR 02 - Sistema de Localização (Google Maps)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- favicon "vazio" evita 404 -->
+  <link rel="icon" href="data:," />
+
+  <!-- JSZip, shp.js, Turf, PapaParse, toGeoJSON -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/shpjs@3.6.2/dist/shp.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7.2.0/turf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
+
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- Função initMap DEVE ser definida ANTES de carregar a API -->
+  <script>
+    // Função que será chamada pela API do Google Maps
+    function initMap() {
+      console.log('🚀 initMap chamada pela API do Google Maps');
+      
+      try {
+        // Criar o mapa
+        const mapa = new google.maps.Map(document.getElementById("map"), {
+          zoom: 7,
+          center: { lat: -23.8, lng: -48.5 },
+          mapTypeId: google.maps.MapTypeId.ROADMAP,
+          gestureHandling: "greedy",
+          zoomControl: true,
+          mapTypeControl: true,
+          scaleControl: true,
+          streetViewControl: true,
+          rotateControl: false,
+          fullscreenControl: true
+        });
+        
+        console.log('✅ Google Maps inicializado com sucesso!');
+        
+        // Carregar script adicional após mapa estar pronto
+        if (typeof carregarSistemaCompleto === 'function') {
+          carregarSistemaCompleto(mapa);
+        } else {
+          console.log('⚠️ Sistema completo não disponível, carregando...');
+          // Carregar o script do sistema completo
+          const script = document.createElement('script');
+          script.src = 'archives/assets/js/script_google_maps.js';
+          script.onload = function() {
+            console.log('✅ Script do sistema carregado');
+            if (typeof carregarSistemaCompleto === 'function') {
+              carregarSistemaCompleto(mapa);
+            }
+          };
+          document.head.appendChild(script);
+        }
+        
+        // Expor globalmente
+        window.mapa = mapa;
+        
+      } catch (error) {
+        console.error('❌ Erro ao inicializar Google Maps:', error);
+      }
+    }
+    
+    // Garantir que está disponível globalmente
+    window.initMap = initMap;
+    console.log('✅ initMap definida globalmente');
+  </script>
+  
+  <!-- Google Maps API (carregado por último) com bibliotecas avançadas -->
+  <!-- SUBSTITUA 'SUA_NOVA_CHAVE_AQUI' pela chave que você copiou do Google Cloud Console -->
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDRkRnlqb3o5wZQzc9qrOv-9vRZY27eDKQ&libraries=geometry,places,visualization,drawing&callback=initMap&v=weekly&loading=async">
+  </script>
+
+  <!-- =========== ESTILOS BÁSICOS =========== -->
+  <style>
+    html, body, #map { height: 100%; margin: 0; padding: 0; }
+
+    /* botão flutuante (recarregar planilhas) */
+    .fab{
+      /* removido pois não será mais usado */
+      display: none;
+    }
+
+    /* Labels das RCs */
+    .rc-label{
+      background:rgba(0,0,0,0.5);
+      color:#fff;
+      padding:2px 4px;
+      border-radius:3px;
+      border:1px solid #555;
+      font-weight:600;
+      box-shadow:0 0 2px rgba(0,0,0,.35);
+      white-space:nowrap;
+      pointer-events:none;
+      z-index:1000;
+      font-size: 7px;
+      letter-spacing: 0.1px;
+      backdrop-filter: blur(1px);
+    }
+
+    /* ─── NOVO: cartucho branco dos nomes de rodovia ─── */
+    .rod-label{
+      background:rgba(255,255,255,0.85);
+      color:#000;
+      padding:2px 4px;
+      border-radius:3px;
+      border:1px solid #d0d0d0;
+      font-weight:600;
+      box-shadow:0 0 2px rgba(0,0,0,.35);
+      white-space:nowrap;
+      pointer-events:none;
+      z-index:1000;
+      font-size: 8px;
+      letter-spacing: 0.1px;
+      margin-bottom: 2px;
+      margin-right: 2px;
+      backdrop-filter: blur(1px);
+    }
+    /* Evita sobreposição dos labels de rodovia */
+    .rod-label.stacked {
+      position: relative;
+      top: 0;
+      left: 0;
+      margin-bottom: 2px;
+      margin-right: 2px;
+      z-index: 1000;
+    }
+
+    /* Cartão de localização de Km */
+    .import-card {
+      position: fixed;
+      bottom:20px;
+      left: 12px;
+      z-index: 1000;
+      padding: 2px 16px 2px 16px;
+      min-width: 96px;
+      max-width: 130px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: left 0.3s, bottom 0.3s;
+    }
+    .card-fixo-esquerda {
+      left: 24px;
+      bottom: 20px;
+      right: auto;
+      top: auto;
+    }
+
+    /* Filtro de rodovia e km */
+    .filtro-rodovia-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f7faff 100%);
+      border-radius: 14px;
+      padding: 10px 14px 8px 14px;
+      margin-bottom: 12px;
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border: none;
+    }
+    .filtro-rodovia-label {
+      font-size: 15px;
+      color: #1565c0;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: 0.2px;
+    }
+    .filtro-rodovia-select, .filtro-km-input {
+      font-size: 15px;
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: 1.5px solid #90caf9;
+      outline: none;
+      margin-bottom: 2px;
+      background: #fafdff;
+      color: #0d47a1;
+      transition: border 0.2s;
+    }
+    .filtro-rodovia-select:focus, .filtro-km-input:focus {
+      border: 1.5px solid #1976d2;
+      background: #e3f0ff;
+    }
+    .filtro-km-btn {
+      background: linear-gradient(90deg, #1976d2 60%, #42a5f5 100%);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 0;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 2px;
+      transition: background 0.2s, box-shadow 0.2s;
+      box-shadow: 0 1px 4px #1976d222;
+    }
+    .filtro-km-btn:hover {
+      background: linear-gradient(90deg, #1251a3 60%, #1976d2 100%);
+    }
+    .filtro-km-link {
+      font-size: 14px;
+      color: #1976d2;
+      text-decoration: underline;
+      margin-top: 2px;
+      word-break: break-all;
+      display: none;
+    }
+    .filtro-km-link.active {
+      display: block;
+    }
+    #msgKmProximo {
+      color: #c62828;
+      font-size: 13px;
+      margin-bottom: 2px;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+    }
+
+    @media (max-width: 600px) {
+      .import-card {
+        min-width: 180px;
+        font-size: 13px;
+        padding: 12px 8px 8px 8px;
+        right: 8px;
+        bottom: 20px;
+      }
+      .import-toggle-btn {
+        right: 8px;
+        top: 8px;
+        font-size: 13px;
+        padding: 6px 10px;
+      }
+    }
+    /* ====== RESPONSIVIDADE MOBILE ====== */
+    @media (max-width: 700px) {
+      .import-card {
+        min-width: unset;
+        width: 98vw;
+        left: 1vw;
+        right: 1vw;
+        bottom: 20px;
+        padding: 10px 4vw 8px 4vw;
+        font-size: 14px;
+      }
+      .filtro-rodovia-card {
+        padding: 10px 4vw 8px 4vw;
+        border-radius: 10px;
+        gap: 8px;
+      }
+      .filtro-rodovia-select, .filtro-km-input {
+        font-size: 14px;
+        padding: 7px 7px;
+      }
+      .filtro-km-btn {
+        font-size: 14px;
+        padding: 7px 0;
+      }
+    }
+    @media (max-width: 480px) {
+      .import-card {
+        width: 99vw;
+        left: 0.5vw;
+        right: 0.5vw;
+        bottom: 15px;
+        padding: 7px 2vw 6px 2vw;
+        font-size: 13px;
+      }
+      .filtro-rodovia-card {
+        padding: 7px 2vw 6px 2vw;
+        border-radius: 7px;
+        gap: 6px;
+      }
+      .filtro-rodovia-label {
+        font-size: 13px;
+      }
+      .filtro-rodovia-select, .filtro-km-input {
+        font-size: 13px;
+        padding: 6px 5px;
+      }
+      .filtro-km-btn {
+        font-size: 13px;
+        padding: 6px 0;
+      }
+    }
+    
+    /* ====== BOTÕES DE ACESSO ÀS PLANILHAS ====== */
+    .planilhas-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .btn-planilha {
+      background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 3px 12px rgba(25, 118, 210, 0.3);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      min-width: 160px;
+      justify-content: flex-start;
+    }
+    
+    .btn-planilha:hover {
+      background: linear-gradient(135deg, #1251a3 0%, #1976d2 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 16px rgba(25, 118, 210, 0.4);
+    }
+    
+    .btn-planilha:active {
+      transform: translateY(0px);
+      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+    }
+    
+    .btn-pontos {
+      background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);
+      box-shadow: 0 3px 12px rgba(233, 30, 99, 0.3);
+    }
+    
+    .btn-pontos:hover {
+      background: linear-gradient(135deg, #c2185b 0%, #e91e63 100%);
+      box-shadow: 0 5px 16px rgba(233, 30, 99, 0.4);
+    }
+    
+    .btn-calor {
+      background: linear-gradient(135deg, #ff5722 0%, #ff8a65 100%);
+      box-shadow: 0 3px 12px rgba(255, 87, 34, 0.3);
+    }
+    
+    .btn-calor:hover {
+      background: linear-gradient(135deg, #e64a19 0%, #ff5722 100%);
+      box-shadow: 0 5px 16px rgba(255, 87, 34, 0.4);
+    }
+    
+    @media (max-width: 768px) {
+      .planilhas-container {
+        top: 10px;
+        right: 10px;
+        gap: 6px;
+      }
+      
+      .btn-planilha {
+        padding: 8px 12px;
+        font-size: 12px;
+        min-width: 140px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .planilhas-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        top: 8px;
+        right: 8px;
+        left: 8px;
+        gap: 4px;
+      }
+      
+      .btn-planilha {
+        flex: 1;
+        min-width: auto;
+        padding: 6px 8px;
+        font-size: 11px;
+        justify-content: center;
+      }
+    }
+    
+    /* ====== BOTÃO DE GEOLOCALIZAÇÃO ====== */
+    .geolocalizacao-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .btn-geolocalizacao {
+      background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      width: 56px;
+      height: 56px;
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(76, 175, 80, 0.4);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .btn-geolocalizacao:hover {
+      background: linear-gradient(135deg, #43a047 0%, #4caf50 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+    }
+    
+    .btn-geolocalizacao:active {
+      transform: translateY(0px);
+      box-shadow: 0 2px 12px rgba(76, 175, 80, 0.4);
+    }
+    
+    .btn-geolocalizacao.ativo {
+      background: linear-gradient(135deg, #f44336 0%, #ef5350 100%);
+      box-shadow: 0 4px 16px rgba(244, 67, 54, 0.4);
+      animation: pulse 2s infinite;
+    }
+    
+    .btn-geolocalizacao.ativo:hover {
+      background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%);
+      box-shadow: 0 6px 20px rgba(244, 67, 54, 0.5);
+    }
+    
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 4px 16px rgba(244, 67, 54, 0.4);
+      }
+      50% {
+        box-shadow: 0 4px 16px rgba(244, 67, 54, 0.7), 0 0 0 10px rgba(244, 67, 54, 0.1);
+      }
+      100% {
+        box-shadow: 0 4px 16px rgba(244, 67, 54, 0.4);
+      }
+    }
+    
+    .geolocalizacao-info {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+      font-size: 12px;
+      color: #333;
+      text-align: center;
+      min-width: 160px;
+      backdrop-filter: blur(5px);
+      display: none;
+    }
+    
+    .geolocalizacao-info.ativo {
+      display: block;
+    }
+    
+    @media (max-width: 768px) {
+      .geolocalizacao-container {
+        bottom: 15px;
+        right: 15px;
+      }
+      
+      .btn-geolocalizacao {
+        width: 50px;
+        height: 50px;
+        font-size: 18px;
+      }
+      
+      .geolocalizacao-info {
+        font-size: 11px;
+        padding: 6px 10px;
+        min-width: 140px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .geolocalizacao-container {
+        bottom: 12px;
+        right: 12px;
+      }
+      
+      .btn-geolocalizacao {
+        width: 45px;
+        height: 45px;
+        font-size: 16px;
+      }
+      
+      .geolocalizacao-info {
+        font-size: 10px;
+        padding: 5px 8px;
+        min-width: 120px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Botões de Acesso às Planilhas -->
+  <div class="planilhas-container">
+    <a href="https://docs.google.com/spreadsheets/d/1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI/edit?gid=1698628532#gid=1698628532" target="_blank" class="btn-planilha btn-pontos">
+      Pontos de Interesse
+    </a>
+    <a href="https://docs.google.com/spreadsheets/d/1IcM6qrF9JpZlJ6c6P1pvb8O5bhmdgDz4gKCtf8V2JUg/edit?usp=drive_link" target="_blank" class="btn-planilha btn-calor">
+      Mapa de Calor
+    </a>
+    <a href="https://docs.google.com/spreadsheets/d/1r-7wdW8IwNhDMmGJ_QoflML-Mo1wvgAuw6ILK_LFlpo/edit?usp=drive_link" target="_blank" class="btn-planilha">
+      Linhas por Trecho
+    </a>
+  </div>
+
+  <!-- Geolocalização -->
+  <div class="geolocalizacao-container">
+    <div id="geolocalizacaoInfo" class="geolocalizacao-info">
+      <div id="geoStatus">Clique para ativar localização</div>
+      <div id="geoCoordenadas" style="font-size: 10px; margin-top: 2px;"></div>
+    </div>
+    <button id="btnGeolocalizacao" class="btn-geolocalizacao" title="Ativar/Desativar localização em tempo real">
+      📍
+    </button>
+  </div>
+
+  <!-- Sidebar esquerda -->
+  <div class="import-card" id="importCard">
+    <div class="filtro-rodovia-card" id="filtroRodoviaCard">
+      <label class="filtro-rodovia-label" for="filtroRodovia">Rodovia</label>
+      <select id="filtroRodovia" class="filtro-rodovia-select">
+        <option value="">Rodovia</option>
+      </select>
+      <label class="filtro-rodovia-label" for="filtroKm">Km</label>
+      <select id="filtroKm" class="filtro-km-input" disabled>
+        <option value="">Selecione o Km</option>
+      </select>
+      <button id="filtroKmBtn" class="filtro-km-btn" disabled>Localizar</button>
+      <a id="filtroKmLink" class="filtro-km-link" href="#" target="_blank" style="display:none;"></a>
+      <div id="msgKmProximo" style="display:none;"></div>
+      <div id="quadroFotoKm" style="display:none;margin-top:8px;text-align:left;"></div>
+    </div>
+  </div>
+
+  <!-- MAPA GOOGLE MAPS -->
+  <div id="map"></div>
+
+  <script>
+    // Função utilitária para exibir mensagens discretas
+    function mostrarMensagemDiscreta(texto, tempo = 2500) {
+      let msgDiv = document.getElementById('msgDiscreta');
+      if (!msgDiv) {
+        msgDiv = document.createElement('div');
+        msgDiv.id = 'msgDiscreta';
+        msgDiv.style.position = 'fixed';
+        msgDiv.style.bottom = '18px';
+        msgDiv.style.left = '50%';
+        msgDiv.style.transform = 'translateX(-50%)';
+        msgDiv.style.background = 'rgba(25, 118, 210, 0.08)';
+        msgDiv.style.color = '#1976d2';
+        msgDiv.style.fontSize = '13px';
+        msgDiv.style.padding = '4px 16px';
+        msgDiv.style.borderRadius = '8px';
+        msgDiv.style.boxShadow = '0 2px 8px #1976d222';
+        msgDiv.style.zIndex = '9999';
+        msgDiv.style.pointerEvents = 'none';
+        document.body.appendChild(msgDiv);
+      }
+      msgDiv.textContent = texto;
+      msgDiv.style.opacity = '1';
+      msgDiv.style.display = 'block';
+      clearTimeout(msgDiv._hideTimeout);
+      msgDiv._hideTimeout = setTimeout(() => {
+        msgDiv.style.opacity = '0';
+        setTimeout(() => { msgDiv.style.display = 'none'; }, 400);
+      }, tempo);
+    }
+  </script>
+</body>
+</html>
