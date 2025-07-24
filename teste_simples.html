@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>CGR 02 - Sistema de Localização (Google Maps)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:," />
+  
+  <style>
+    html, body, #map { height: 100%; margin: 0; padding: 0; }
+    
+    .loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255,255,255,0.9);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      text-align: center;
+      z-index: 10000;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading" class="loading">
+    <div>🗺️ Carregando Google Maps...</div>
+    <div style="font-size: 12px; margin-top: 10px;">Aguarde alguns segundos</div>
+  </div>
+  
+  <div id="map"></div>
+
+  <script>
+    // Função que será chamada pela API do Google Maps
+    function initMap() {
+      console.log('🚀 initMap chamada pela API');
+      
+      try {
+        // Remover indicador de carregamento
+        const loading = document.getElementById('loading');
+        if (loading) loading.style.display = 'none';
+        
+        // Criar mapa básico
+        const map = new google.maps.Map(document.getElementById("map"), {
+          zoom: 7,
+          center: { lat: -23.8, lng: -48.5 }, // São Paulo
+          mapTypeId: google.maps.MapTypeId.ROADMAP,
+          gestureHandling: "greedy",
+          zoomControl: true,
+          mapTypeControl: true,
+          scaleControl: true,
+          streetViewControl: true,
+          rotateControl: false,
+          fullscreenControl: true
+        });
+        
+        console.log('✅ Mapa criado com sucesso!');
+        
+        // Adicionar marcador de exemplo
+        const marker = new google.maps.Marker({
+          position: { lat: -23.8, lng: -48.5 },
+          map: map,
+          title: 'Estado de São Paulo'
+        });
+        
+        console.log('✅ Marcador adicionado!');
+        
+      } catch (error) {
+        console.error('❌ Erro ao criar mapa:', error);
+        const loading = document.getElementById('loading');
+        if (loading) {
+          loading.innerHTML = '<div style="color: red;">❌ Erro ao carregar o mapa</div><div style="font-size: 12px;">Verifique a chave da API</div>';
+        }
+      }
+    }
+    
+    // Garantir que a função está disponível globalmente
+    window.initMap = initMap;
+    console.log('✅ initMap registrada globalmente');
+    
+    // Detectar se a API falhou em carregar
+    setTimeout(() => {
+      if (typeof google === 'undefined') {
+        console.error('❌ Google Maps API não carregou');
+        const loading = document.getElementById('loading');
+        if (loading) {
+          loading.innerHTML = '<div style="color: red;">❌ Falha ao carregar Google Maps API</div><div style="font-size: 12px;">Verifique sua conexão e chave da API</div>';
+        }
+      }
+    }, 10000); // 10 segundos
+  </script>
+  
+  <!-- Google Maps API -->
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATqOLfz4oHNnqXFT6svI27ZJbg0wMtOvA&callback=initMap&v=weekly">
+  </script>
+</body>
+</html>

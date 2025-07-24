@@ -1,58 +1,128 @@
-# CGR 02 - Sistema de Localização
+# 🗺️ CGR 02 - Sistema de Localização
 
-Sistema de mapeamento e localização de rodovias com interface web interativa.
+Sistema de mapeamento e geolocalização em tempo real para a CGR 02, desenvolvido com Google Maps JavaScript API.
+
+## ✨ Funcionalidades
+
+- 🌍 **Mapa Google Maps** com visualização profissional
+- 📍 **Geolocalização em tempo real** - rastreamento GPS preciso
+- 🗂️ **Shapefiles das RCs** - polígonos das regiões com labels
+- 🛣️ **Malha rodoviária KMZ** - visualização das rodovias
+- 📊 **Pontos de interesse** - marcadores interativos
+- 🔥 **Mapa de calor** - visualização de dados térmicos
+- 🔍 **Filtros inteligentes** - busca por rodovia e KM
+- 📱 **Design responsivo** - otimizado para mobile e desktop
+- 📈 **Integração com planilhas** - links diretos para Google Sheets
+
+## 🚀 Tecnologias Utilizadas
+
+- **Google Maps JavaScript API** v3
+- **HTML5 Geolocation API**
+- **JavaScript ES6+**
+- **CSS3 com Flexbox/Grid**
+- **Papa Parse** (processamento CSV)
+- **JSZip** (arquivos comprimidos)
+- **shpjs** (shapefiles)
+- **toGeoJSON** (conversão KMZ)
+
+## 📋 Pré-requisitos
+
+- Chave de API do Google Maps Platform
+- Navegador moderno com suporte a HTML5
+- Conexão com internet para carregar os dados
+
+## ⚙️ Configuração
+
+1. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/SEU_USUARIO/NOME_DO_REPO.git
+   ```
+
+2. **Configure a chave da API:**
+   - Substitua `AIzaSyDRkRnlqb3o5wZQzc9qrOv-9vRZY27eDKQ` no `index.html`
+   - Configure as restrições no Google Cloud Console
+
+3. **Abra o arquivo:**
+   ```
+   index.html
+   ```
+
+## 🎯 Como Usar
+
+### Geolocalização
+- Clique no botão verde 📍 no canto inferior direito
+- Autorize o acesso à localização quando solicitado
+- Sua posição será mostrada em tempo real no mapa
+
+### Filtros de Localização
+- Use o painel esquerdo para selecionar uma rodovia
+- Escolha um KM específico
+- Clique em "Localizar" para navegar até o ponto
+
+### Acesso às Planilhas
+- Use os botões no canto superior direito
+- Links diretos para os dados no Google Sheets
 
 ## 📁 Estrutura do Projeto
 
 ```
-📁 Site Completo/
-├── index.html                    ← Arquivo principal (abrir no navegador)
-├── favicon.ico                   ← Ícone do site
-├── package.json                  ← Configurações do projeto
-├── 📁 assets/                    ← Recursos organizados
-│   ├── 📁 css/                   ← Estilos
-│   │   └── style.css
-│   ├── 📁 js/                    ← Scripts JavaScript
-│   │   ├── script_colaborativo.js  ← Script principal
-│   │   ├── script_backup.js         ← Backup do script
-│   │   └── script.js                ← Script alternativo
-│   ├── 📁 data/                  ← Dados e arquivos CSV
-│   │   ├── PLANILHA BI - OFICIAL.csv ← Dados principais
-│   │   ├── meta.csv                  ← Metadados das rodovias
-│   │   ├── *.kmz                     ← Arquivos KMZ
-│   │   └── *.zip                     ← Arquivos compactados
-│   └── 📁 docs/                  ← Documentação
-│       ├── README.md
-│       ├── GUIA_GOOGLE_DRIVE.md
-│       └── *.md
-└── 📁 scripts/                   ← Scripts utilitários
-    └── validar-csv.js
+├── index.html                      # Página principal
+├── archives/
+│   └── assets/
+│       ├── js/
+│       │   └── script_google_maps.js    # Sistema completo
+│       └── data/
+│           ├── *.csv               # Dados CSV
+│           ├── *.kmz               # Malha rodoviária
+│           └── RC_*.zip            # Shapefiles das RCs
+├── .gitignore                      # Arquivos ignorados
+└── README.md                       # Documentação
 ```
 
-## 🚀 Como Usar
+## 🌐 Demo Online
 
-1. **Abrir o site**: Clique duas vezes em `index.html`
-2. **Filtrar rodovias**: Use o painel lateral esquerdo
-3. **Acessar planilhas**: Use os botões no canto superior direito
+Acesse: [https://SEU_USUARIO.github.io/NOME_DO_REPO](https://SEU_USUARIO.github.io/NOME_DO_REPO)
 
-## 📋 Funcionalidades
+## 📱 Responsividade
 
-- ✅ Mapeamento interativo de rodovias
-- ✅ Filtro por rodovia e quilometragem
-- ✅ Visualização de pontos de interesse
-- ✅ Links diretos para Google Sheets
-- ✅ Interface responsiva (mobile/desktop)
+- ✅ **Desktop** - Interface completa
+- ✅ **Tablet** - Layout adaptado
+- ✅ **Mobile** - Controles otimizados
 
-## 🛠️ Para Publicação
+## 🔒 Segurança
 
-- **Arquivo principal**: `index.html` (manter na raiz)
-- **Recursos**: Pasta `assets/` (pode ser enviada junto)
-- **Opcional**: Pastas `scripts/`, `src/`, `.github/`, `.vscode/`
+- Chave de API restrita por domínio
+- Validação de dados de entrada
+- HTTPS recomendado para produção
 
-## 📊 Dados
+## 📊 Dados Suportados
 
-O sistema usa exclusivamente dados da **PLANILHA BI - OFICIAL.csv** localizada em `assets/data/`.
+- **Shapefiles** (.zip) - RCs
+- **KMZ** - Malha rodoviária
+- **CSV** - Pontos, calor, linhas
+
+## 🛠️ Desenvolvimento
+
+### Estrutura Modular
+- `initMap()` - Inicialização básica
+- `carregarSistemaCompleto()` - Carregamento avançado
+- Funções específicas para cada tipo de dado
+
+### Performance
+- Carregamento assíncrono
+- Otimização para dispositivos móveis
+- Cache de dados quando possível
+
+## 📧 Contato
+
+**Desenvolvedor:** [Seu Nome]  
+**Email:** seu.email@gmail.com  
+**Projeto:** CGR 02 - Sistema de Localização
+
+## 📄 Licença
+
+Este projeto é licenciado sob a [MIT License](LICENSE).
 
 ---
 
-**Desenvolvido para CGR 02 - Sistema de Localização**
+⭐ **Se este projeto foi útil, deixe uma estrela!**

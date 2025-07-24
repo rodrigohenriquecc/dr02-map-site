@@ -1,15 +1,13 @@
 # Arquivos do sistema
 .DS_Store
 Thumbs.db
-desktop.ini
 
 # Logs
 *.log
 npm-debug.log*
 
-# Dependências Node.js
+# Dependências node_modules (se houver)
 node_modules/
-package-lock.json
 
 # Arquivos temporários
 *.tmp
@@ -19,20 +17,17 @@ package-lock.json
 *.bak
 *~
 
-# Arquivos IDE
-.vscode/settings.json
-.idea/
-*.swp
-*.swo
+# Arquivos do Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Arquivos do Windows
+desktop.ini
+$RECYCLE.BIN/
 
 # Arquivos de cache
 .cache/
-
-# Arquivos de build (se houver)
-dist/
-build/
-
-# Variáveis de ambiente
-.env
-.env.local
-.env.production
+*.cache

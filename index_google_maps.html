@@ -8,75 +8,24 @@
   <!-- favicon "vazio" evita 404 -->
   <link rel="icon" href="data:," />
 
-  <!-- JSZip, shp.js, Turf, PapaParse, toGeoJSON -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/shpjs@3.6.2/dist/shp.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7.2.0/turf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
-
-  <!-- Firebase (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-  <!-- Função initMap DEVE ser definida ANTES de carregar a API -->
-  <script>
-    // Função que será chamada pela API do Google Maps
-    function initMap() {
-      console.log('🚀 initMap chamada pela API do Google Maps');
-      
-      try {
-        // Criar o mapa
-        const mapa = new google.maps.Map(document.getElementById("map"), {
-          zoom: 7,
-          center: { lat: -23.8, lng: -48.5 },
-          mapTypeId: google.maps.MapTypeId.ROADMAP,
-          gestureHandling: "greedy",
-          zoomControl: true,
-          mapTypeControl: true,
-          scaleControl: true,
-          streetViewControl: true,
-          rotateControl: false,
-          fullscreenControl: true
-        });
-        
-        console.log('✅ Google Maps inicializado com sucesso!');
-        
-        // Carregar script adicional após mapa estar pronto
-        if (typeof carregarSistemaCompleto === 'function') {
-          carregarSistemaCompleto(mapa);
-        } else {
-          console.log('⚠️ Sistema completo não disponível, carregando...');
-          // Carregar o script do sistema completo
-          const script = document.createElement('script');
-          script.src = 'archives/assets/js/script_google_maps.js';
-          script.onload = function() {
-            console.log('✅ Script do sistema carregado');
-            if (typeof carregarSistemaCompleto === 'function') {
-              carregarSistemaCompleto(mapa);
-            }
-          };
-          document.head.appendChild(script);
-        }
-        
-        // Expor globalmente
-        window.mapa = mapa;
-        
-      } catch (error) {
-        console.error('❌ Erro ao inicializar Google Maps:', error);
-      }
-    }
-    
-    // Garantir que está disponível globalmente
-    window.initMap = initMap;
-    console.log('✅ initMap definida globalmente');
+  <!-- Google Maps API -->
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&libraries=geometry,places&callback=initMap">
   </script>
   
-  <!-- Google Maps API (carregado por último) com bibliotecas avançadas -->
-  <!-- SUBSTITUA 'SUA_NOVA_CHAVE_AQUI' pela chave que você copiou do Google Cloud Console -->
-  <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDRkRnlqb3o5wZQzc9qrOv-9vRZY27eDKQ&libraries=geometry,places,visualization,drawing&callback=initMap&v=weekly&loading=async">
-  </script>
+  <!-- JSZip, shp.js, Turf, PapaParse, toGeoJSON -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"        defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/shpjs@3.6.2/dist/shp.min.js"                defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7.2.0/turf.min.js"               defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"           defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js" defer></script>
+
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"       defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" defer></script>
+
+  <!-- script principal para Google Maps -->
+  <script src="archives/assets/js/script_google_maps.js" defer></script>
 
   <!-- =========== ESTILOS BÁSICOS =========== -->
   <style>
@@ -582,6 +531,17 @@
         setTimeout(() => { msgDiv.style.display = 'none'; }, 400);
       }, tempo);
     }
+    
+    // Aguardar carregamento das dependências
+    function verificarDependencias() {
+      if (typeof google === 'undefined' || !google.maps) {
+        setTimeout(verificarDependencias, 100);
+        return;
+      }
+      console.log('✅ Google Maps API carregada!');
+    }
+    
+    verificarDependencias();
   </script>
 </body>
 </html>

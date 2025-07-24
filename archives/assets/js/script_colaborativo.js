@@ -34,7 +34,7 @@ let indexMalhaOficial = {};
  */
 async function carregarMalhaOficial() {
   try {
-    const response = await fetch('assets/data/PLANILHA BI - OFICIAL.csv');
+    const response = await fetch('archives/assets/data/PLANILHA BI - OFICIAL.csv');
     if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     const csvText = await response.text();
     return new Promise((resolve, reject) => {
@@ -103,7 +103,7 @@ async function carregarMetadadosRodovias() {
   console.log("📊 Carregando metadados das rodovias (meta.csv)...");
   
   try {
-    const response = await fetch('assets/data/meta.csv');
+    const response = await fetch('archives/assets/data/meta.csv');
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
@@ -720,12 +720,12 @@ async function carregarRC() {
   console.log("🗺️ Carregando shapefiles das RCs...");
   
   const rcList = [
-    "assets/data/RC_2.1.zip",
-    "assets/data/RC_2.2.zip", 
-    "assets/data/RC_2.4.zip",
-    "assets/data/RC_2.5.zip",
-    "assets/data/RC_2.6_2.8.zip",
-    "assets/data/RC_2.7.zip",
+    "archives/assets/data/RC_2.1.zip",
+    "archives/assets/data/RC_2.2.zip", 
+    "archives/assets/data/RC_2.4.zip",
+    "archives/assets/data/RC_2.5.zip",
+    "archives/assets/data/RC_2.6_2.8.zip",
+    "archives/assets/data/RC_2.7.zip",
   ];
 
   for (const p of rcList) {
@@ -754,7 +754,7 @@ async function carregarRC() {
 async function carregarMalha() {
   console.log("🛣️ Carregando malha rodoviária...");
   
-  const MALHA_PATH = "assets/data/malha_dr02.kmz";
+  const MALHA_PATH = "archives/assets/data/malha_dr02.kmz";
   try {
     if (typeof JSZip !== 'undefined' && typeof toGeoJSON !== 'undefined') {
       const resp = await fetch(MALHA_PATH);
