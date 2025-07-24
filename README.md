@@ -39,7 +39,7 @@ Sistema de mapeamento e geolocalização em tempo real para a CGR 02, desenvolvi
    ```
 
 2. **Configure a chave da API:**
-   - Substitua `AIzaSyDRkRnlqb3o5wZQzc9qrOv-9vRZY27eDKQ` no `index.html`
+   - Substitua `SUA_CHAVE_DE_API_AQUI` no `index.html`
    - Configure as restrições no Google Cloud Console
 
 3. **Abra o arquivo:**

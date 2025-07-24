@@ -17,6 +17,19 @@ node_modules/
 *.bak
 *~
 
+# ⚠️ SEGURANÇA - Arquivos com chaves de API
+config.js
+.env
+.env.*
+api-keys.txt
+secrets.txt
+credentials.json
+**/config.js
+**/credentials.*
+*api-key*
+*apikey*
+*API_KEY*
+
 # Arquivos do Visual Studio Code
 .vscode/
 !.vscode/settings.json
