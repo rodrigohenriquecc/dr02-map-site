@@ -74,47 +74,121 @@
   
   <!-- Configuração protegida da API -->
   <script>
+    // Variável global para a chave
+    window.GOOGLE_MAPS_API_KEY = null;
+    
     // Sistema híbrido: detecta se está em GitHub Pages ou local
     function carregarConfiguracao() {
-      const isGitHubPages = window.location.hostname === 'rodrigohenriquecc.github.io';
+      const isGitHubPages = window.location.hostname.includes('github.io');
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      
+      console.log('🔍 Detectando ambiente:', { 
+        hostname: window.location.hostname, 
+        isGitHubPages, 
+        isLocal 
+      });
       
       if (isGitHubPages) {
-        // Para GitHub Pages - solicita chave do usuário
-        console.log('🌐 Detectado GitHub Pages - solicitando configuração...');
-        const chaveAPI = prompt(
-          '🔑 Configure sua Chave de API do Google Maps:\n\n' +
-          '1. Acesse: https://console.cloud.google.com/apis/credentials\n' +
-          '2. Copie sua chave de API\n' +
-          '3. Cole abaixo:\n\n' +
-          'Sua chave ficará apenas na sessão atual (segura)'
-        );
-        
-        if (chaveAPI && chaveAPI.trim()) {
-          window.GOOGLE_MAPS_API_KEY = chaveAPI.trim();
-          carregarGoogleMapsAPI();
-        } else {
-          alert('⚠️ Chave de API necessária para usar o sistema');
-        }
+        // Para GitHub Pages - mostrar modal de configuração
+        console.log('🌐 GitHub Pages detectado - criando interface de configuração...');
+        criarModalConfiguracao();
       } else {
         // Para desenvolvimento local - tenta carregar config.js
+        console.log('💻 Desenvolvimento local detectado - carregando config.js...');
         const script = document.createElement('script');
         script.src = 'config.js';
         script.onload = function() {
-          console.log('✅ Configuração local carregada');
+          console.log('✅ Config.js carregado');
+          // config.js define GOOGLE_MAPS_API_KEY e chama carregarGoogleMapsAPI()
         };
         script.onerror = function() {
-          console.error('❌ Erro ao carregar config.js local');
-          alert('Configure o arquivo config.js para desenvolvimento local');
+          console.error('❌ Erro ao carregar config.js');
+          criarModalConfiguracao(); // Fallback para modal
         };
         document.head.appendChild(script);
       }
+    }
+    
+    // Criar modal para inserir chave de API
+    function criarModalConfiguracao() {
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8); z-index: 10000;
+        display: flex; align-items: center; justify-content: center;
+      `;
+      
+      const content = document.createElement('div');
+      content.style.cssText = `
+        background: white; padding: 30px; border-radius: 10px;
+        max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      `;
+      
+      content.innerHTML = `
+        <h2 style="color: #1976d2; margin-bottom: 20px;">🔑 Configuração da API</h2>
+        <p style="margin-bottom: 20px; line-height: 1.5;">
+          Para usar o sistema, insira sua chave de API do Google Maps:<br>
+          <small style="color: #666;">
+            <a href="https://console.cloud.google.com/apis/credentials" target="_blank">
+              → Obter chave no Google Cloud Console
+            </a>
+          </small>
+        </p>
+        <input type="text" id="apiKeyInput" placeholder="Cole sua chave de API aqui" 
+               style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; margin-bottom: 20px;">
+        <br>
+        <button onclick="configurarChave()" style="
+          background: #1976d2; color: white; border: none; padding: 12px 24px;
+          border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 10px;">
+          ✅ Configurar
+        </button>
+        <button onclick="fecharModal()" style="
+          background: #666; color: white; border: none; padding: 12px 24px;
+          border-radius: 5px; cursor: pointer; font-size: 16px;">
+          ❌ Cancelar
+        </button>
+      `;
+      
+      modal.appendChild(content);
+      document.body.appendChild(modal);
+      
+      // Focar no input
+      setTimeout(() => {
+        document.getElementById('apiKeyInput').focus();
+      }, 100);
+      
+      // Configurar chave
+      window.configurarChave = function() {
+        const chave = document.getElementById('apiKeyInput').value.trim();
+        if (chave && chave.startsWith('AIza')) {
+          window.GOOGLE_MAPS_API_KEY = chave;
+          document.body.removeChild(modal);
+          console.log('✅ Chave configurada, carregando Google Maps...');
+          carregarGoogleMapsAPI();
+        } else {
+          alert('⚠️ Por favor, insira uma chave válida (deve começar com "AIza")');
+        }
+      };
+      
+      // Fechar modal
+      window.fecharModal = function() {
+        document.body.removeChild(modal);
+        console.log('❌ Configuração cancelada');
+      };
+      
+      // Enter para confirmar
+      document.getElementById('apiKeyInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          configurarChave();
+        }
+      });
     }
     
     // Função para carregar a API dinamicamente
     function carregarGoogleMapsAPI() {
       const apiKey = window.GOOGLE_MAPS_API_KEY;
       
-      if (!apiKey || apiKey === 'SUA_NOVA_CHAVE_AQUI_SUBSTITUA_ESTA_LINHA') {
+      if (!apiKey) {
         console.error('❌ ERRO: Chave de API não configurada');
         return;
       }
@@ -124,19 +198,26 @@
         return;
       }
       
+      console.log('🚀 Carregando Google Maps API...');
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry,places,visualization,drawing&callback=initMap&v=weekly&loading=async`;
       script.async = true;
       script.defer = true;
       
+      script.onload = function() {
+        console.log('✅ Google Maps API carregada com sucesso');
+      };
+      
       script.onerror = function() {
         console.error('❌ Falha ao carregar Google Maps API');
-        alert('Erro ao carregar Google Maps. Verifique sua chave de API.');
+        alert('❌ Erro ao carregar Google Maps. Verifique:\n\n1. Chave de API válida\n2. APIs habilitadas no Google Cloud\n3. Restrições de URL configuradas');
       };
       
       document.head.appendChild(script);
-      console.log('🔐 Google Maps API carregada de forma segura');
     }
+    
+    // Expor função globalmente para config.js local
+    window.carregarGoogleMapsAPI = carregarGoogleMapsAPI;
     
     // Carregar configuração quando página estiver pronta
     document.addEventListener('DOMContentLoaded', carregarConfiguracao);
