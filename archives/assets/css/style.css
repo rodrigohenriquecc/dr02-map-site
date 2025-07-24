@@ -35,6 +35,7 @@ h1   { background:#2c3e50; color:#fff; padding:.6rem 1rem;
   #map{ height:55vh; flex:none; }
 }
 
+/* Labels das rodovias removidos - CSS desabilitado
 .rod-label {
   background: #fff;
   padding: 2px 6px;
@@ -47,3 +48,4 @@ h1   { background:#2c3e50; color:#fff; padding:.6rem 1rem;
   white-space: nowrap;
   pointer-events: none;
 }
+*/
