@@ -80,108 +80,154 @@
     // Sistema híbrido: detecta se está em GitHub Pages ou local
     function carregarConfiguracao() {
       const isGitHubPages = window.location.hostname.includes('github.io');
-      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
       
-      console.log('🔍 Detectando ambiente:', { 
-        hostname: window.location.hostname, 
+      console.log('🔍 DIAGNÓSTICO:', { 
+        hostname: window.location.hostname,
+        protocol: window.location.protocol,
+        href: window.location.href,
         isGitHubPages, 
         isLocal 
       });
       
       if (isGitHubPages) {
         // Para GitHub Pages - mostrar modal de configuração
-        console.log('🌐 GitHub Pages detectado - criando interface de configuração...');
-        criarModalConfiguracao();
-      } else {
+        console.log('🌐 GitHub Pages detectado - criando modal...');
+        setTimeout(() => {
+          criarModalConfiguracao();
+        }, 1000); // Aguardar DOM estar pronto
+      } else if (isLocal) {
         // Para desenvolvimento local - tenta carregar config.js
         console.log('💻 Desenvolvimento local detectado - carregando config.js...');
         const script = document.createElement('script');
         script.src = 'config.js';
         script.onload = function() {
-          console.log('✅ Config.js carregado');
-          // config.js define GOOGLE_MAPS_API_KEY e chama carregarGoogleMapsAPI()
+          console.log('✅ Config.js carregado localmente');
         };
         script.onerror = function() {
-          console.error('❌ Erro ao carregar config.js');
-          criarModalConfiguracao(); // Fallback para modal
+          console.error('❌ Config.js não encontrado, exibindo modal...');
+          criarModalConfiguracao();
         };
         document.head.appendChild(script);
+      } else {
+        // Ambiente desconhecido - mostrar modal por segurança
+        console.log('❓ Ambiente desconhecido, exibindo modal...');
+        criarModalConfiguracao();
       }
     }
     
     // Criar modal para inserir chave de API
     function criarModalConfiguracao() {
+      console.log('🎯 Criando modal de configuração...');
+      
+      // Verificar se modal já existe
+      if (document.getElementById('modalConfigAPI')) {
+        console.log('⚠️ Modal já existe');
+        return;
+      }
+      
       const modal = document.createElement('div');
+      modal.id = 'modalConfigAPI';
       modal.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.8); z-index: 10000;
-        display: flex; align-items: center; justify-content: center;
+        position: fixed !important; 
+        top: 0 !important; 
+        left: 0 !important; 
+        width: 100vw !important; 
+        height: 100vh !important;
+        background: rgba(0,0,0,0.9) !important; 
+        z-index: 999999 !important;
+        display: flex !important; 
+        align-items: center !important; 
+        justify-content: center !important;
       `;
       
       const content = document.createElement('div');
       content.style.cssText = `
-        background: white; padding: 30px; border-radius: 10px;
-        max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        background: white !important; 
+        padding: 30px !important; 
+        border-radius: 10px !important;
+        max-width: 600px !important; 
+        width: 90% !important;
+        text-align: center !important; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+        position: relative !important;
       `;
       
       content.innerHTML = `
-        <h2 style="color: #1976d2; margin-bottom: 20px;">🔑 Configuração da API</h2>
-        <p style="margin-bottom: 20px; line-height: 1.5;">
-          Para usar o sistema, insira sua chave de API do Google Maps:<br>
-          <small style="color: #666;">
-            <a href="https://console.cloud.google.com/apis/credentials" target="_blank">
-              → Obter chave no Google Cloud Console
+        <h2 style="color: #1976d2; margin-bottom: 20px; font-size: 24px;">🔑 Configuração Necessária</h2>
+        <p style="margin-bottom: 20px; line-height: 1.6; font-size: 16px;">
+          <strong>Para usar o sistema CGR-02, você precisa inserir sua chave de API do Google Maps:</strong><br><br>
+          <small style="color: #666; font-size: 14px;">
+            <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color: #1976d2;">
+              🔗 Clique aqui para obter sua chave no Google Cloud Console
             </a>
           </small>
         </p>
-        <input type="text" id="apiKeyInput" placeholder="Cole sua chave de API aqui" 
-               style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; margin-bottom: 20px;">
+        <input type="text" id="apiKeyInput" placeholder="Cole sua chave de API aqui (exemplo: AIzaSy...)" 
+               style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; margin-bottom: 20px; font-size: 14px; box-sizing: border-box;">
         <br>
-        <button onclick="configurarChave()" style="
-          background: #1976d2; color: white; border: none; padding: 12px 24px;
-          border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 10px;">
-          ✅ Configurar
+        <button onclick="configurarChaveAPI()" style="
+          background: #1976d2; color: white; border: none; padding: 15px 30px;
+          border-radius: 5px; cursor: pointer; font-size: 16px; margin: 0 10px;">
+          ✅ Configurar e Continuar
         </button>
-        <button onclick="fecharModal()" style="
-          background: #666; color: white; border: none; padding: 12px 24px;
-          border-radius: 5px; cursor: pointer; font-size: 16px;">
-          ❌ Cancelar
-        </button>
+        <br><br>
+        <small style="color: #666; font-size: 12px;">
+          ⚡ Sua chave ficará apenas nesta sessão (não será salva)
+        </small>
       `;
       
       modal.appendChild(content);
       document.body.appendChild(modal);
       
-      // Focar no input
+      console.log('✅ Modal criado e adicionado ao DOM');
+      
+      // Focar no input após um pequeno delay
       setTimeout(() => {
-        document.getElementById('apiKeyInput').focus();
-      }, 100);
+        const input = document.getElementById('apiKeyInput');
+        if (input) {
+          input.focus();
+          console.log('🎯 Foco no input definido');
+        }
+      }, 200);
       
       // Configurar chave
-      window.configurarChave = function() {
+      window.configurarChaveAPI = function() {
+        console.log('🎯 Tentando configurar chave...');
         const chave = document.getElementById('apiKeyInput').value.trim();
-        if (chave && chave.startsWith('AIza')) {
+        console.log('🔍 Chave inserida:', chave ? `${chave.substring(0,10)}...` : 'vazia');
+        
+        if (chave && chave.startsWith('AIza') && chave.length > 30) {
           window.GOOGLE_MAPS_API_KEY = chave;
-          document.body.removeChild(modal);
-          console.log('✅ Chave configurada, carregando Google Maps...');
-          carregarGoogleMapsAPI();
+          console.log('✅ Chave válida configurada');
+          
+          // Remover modal
+          const modalElement = document.getElementById('modalConfigAPI');
+          if (modalElement) {
+            modalElement.remove();
+            console.log('✅ Modal removido');
+          }
+          
+          // Carregar Google Maps
+          setTimeout(() => {
+            carregarGoogleMapsAPI();
+          }, 500);
+          
         } else {
-          alert('⚠️ Por favor, insira uma chave válida (deve começar com "AIza")');
+          alert('⚠️ Por favor, insira uma chave válida do Google Maps\n\n• Deve começar com "AIza"\n• Deve ter mais de 30 caracteres\n\nExemplo: AIzaSyB2UoBUuLZIq7wQTlNEONXJSMIdHbC342M');
+          console.log('❌ Chave inválida fornecida');
         }
-      };
-      
-      // Fechar modal
-      window.fecharModal = function() {
-        document.body.removeChild(modal);
-        console.log('❌ Configuração cancelada');
       };
       
       // Enter para confirmar
-      document.getElementById('apiKeyInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-          configurarChave();
-        }
-      });
+      const input = document.getElementById('apiKeyInput');
+      if (input) {
+        input.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            configurarChaveAPI();
+          }
+        });
+      }
     }
     
     // Função para carregar a API dinamicamente
