@@ -304,7 +304,8 @@ function processarKMZ(geojson) {
         map: mapa
       });
       
-      // Adicionar label da rodovia se disponível
+      // Labels das rodovias removidos - desabilitado por solicitação do usuário
+      /*
       if (feature.properties && feature.properties.name) {
         const midPoint = coords[Math.floor(coords.length / 2)];
         
@@ -323,6 +324,7 @@ function processarKMZ(geojson) {
           }
         });
       }
+      */
     }
   });
   
