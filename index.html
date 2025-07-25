@@ -1005,12 +1005,11 @@
         linhas.forEach((linha, index) => {
           console.log(`🔍 Processando linha ${index + 1}:`, linha);
           
-          // Buscar coordenadas para km inicial e final
-          const coordsInicial = buscarCoordenadasPorRodoviaKm(linha.rodovia, linha.km_inicial);
-          const coordsFinal = buscarCoordenadasPorRodoviaKm(linha.rodovia, linha.km_final);
+          // Buscar todos os pontos do trecho na rodovia seguindo o traçado real
+          const pontosTraçado = buscarPontosTraçadoRodovia(linha.rodovia, linha.km_inicial, linha.km_final);
           
-          if (!coordsInicial || !coordsFinal) {
-            console.warn(`⚠️ Coordenadas não encontradas para ${linha.rodovia} km ${linha.km_inicial} - ${linha.km_final}`);
+          if (!pontosTraçado || pontosTraçado.length < 2) {
+            console.warn(`⚠️ Traçado não encontrado para ${linha.rodovia} km ${linha.km_inicial} - ${linha.km_final}`);
             return;
           }
           
@@ -1018,14 +1017,11 @@
           const cor = linha.cor && linha.cor.trim() ? linha.cor.trim() : '#FF0000';
           const espessura = linha.espessura ? parseFloat(linha.espessura) : 5;
           
-          console.log(`🎨 Configurações linha: cor=${cor}, espessura=${espessura}px`);
+          console.log(`🎨 Configurações linha: cor=${cor}, espessura=${espessura}px, pontos=${pontosTraçado.length}`);
           
-          // Criar polyline no mapa
+          // Criar polyline no mapa seguindo o traçado real da rodovia
           const polyline = new google.maps.Polyline({
-            path: [
-              { lat: coordsInicial.lat, lng: coordsInicial.lng },
-              { lat: coordsFinal.lat, lng: coordsFinal.lng }
-            ],
+            path: pontosTraçado,
             geodesic: true,
             strokeColor: cor,
             strokeOpacity: 1.0,
@@ -1033,7 +1029,11 @@
             map: linhasTrechoAtivas ? window.mapa : null
           });
           
+          // Calcular ponto médio para o InfoWindow
+          const pontoMedio = pontosTraçado[Math.floor(pontosTraçado.length / 2)];
+          
           // Criar conteúdo do InfoWindow
+          const extensaoReal = calcularExtensaoReal(pontosTraçado);
           const infoContent = `
             <div style="font-family: Arial, sans-serif; max-width: 300px; line-height: 1.5;">
               <div style="background: linear-gradient(135deg, ${cor}, ${cor}dd); color: white; margin: -10px -10px 15px -10px; padding: 15px; border-radius: 8px 8px 0 0;">
@@ -1044,19 +1044,22 @@
               </div>
               <p style="margin: 8px 0;"><strong>🛣️ Rodovia:</strong> ${linha.rodovia}</p>
               <p style="margin: 8px 0;"><strong>📏 Trecho:</strong> Km ${linha.km_inicial} - ${linha.km_final}</p>
-              <p style="margin: 8px 0;"><strong>📐 Extensão:</strong> ${(parseFloat(linha.km_final) - parseFloat(linha.km_inicial)).toFixed(3)} km</p>
+              <p style="margin: 8px 0;"><strong>📐 Extensão Linear:</strong> ${(parseFloat(linha.km_final) - parseFloat(linha.km_inicial)).toFixed(3)} km</p>
+              <p style="margin: 8px 0;"><strong>📍 Extensão Real:</strong> ${extensaoReal.toFixed(3)} km</p>
+              <p style="margin: 8px 0;"><strong>🗺️ Pontos no Traçado:</strong> ${pontosTraçado.length}</p>
               
               <div style="background: #f5f5f5; padding: 10px; border-radius: 6px; margin: 10px 0;">
                 <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #666;">Detalhes Visuais:</h4>
                 <p style="margin: 4px 0; font-size: 13px;"><strong>Cor:</strong> ${cor}</p>
                 <p style="margin: 4px 0; font-size: 13px;"><strong>Espessura:</strong> ${espessura}px</p>
+                <p style="margin: 4px 0; font-size: 13px;"><strong>Tipo:</strong> Traçado Real da Rodovia</p>
               </div>
               
               <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
-                <p style="margin: 4px 0;"><strong>Coordenadas Inicial:</strong> ${coordsInicial.lat.toFixed(6)}, ${coordsInicial.lng.toFixed(6)}</p>
-                <p style="margin: 4px 0;"><strong>Coordenadas Final:</strong> ${coordsFinal.lat.toFixed(6)}, ${coordsFinal.lng.toFixed(6)}</p>
+                <p style="margin: 4px 0;"><strong>Coordenadas Inicial:</strong> ${pontosTraçado[0].lat.toFixed(6)}, ${pontosTraçado[0].lng.toFixed(6)}</p>
+                <p style="margin: 4px 0;"><strong>Coordenadas Final:</strong> ${pontosTraçado[pontosTraçado.length-1].lat.toFixed(6)}, ${pontosTraçado[pontosTraçado.length-1].lng.toFixed(6)}</p>
                 <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
-                  <a href="https://www.google.com/maps/dir/${coordsInicial.lat},${coordsInicial.lng}/${coordsFinal.lat},${coordsFinal.lng}" 
+                  <a href="https://www.google.com/maps/dir/${pontosTraçado[0].lat},${pontosTraçado[0].lng}/${pontosTraçado[pontosTraçado.length-1].lat},${pontosTraçado[pontosTraçado.length-1].lng}" 
                      target="_blank" 
                      style="background: ${cor}; color: white; padding: 6px 10px; text-decoration: none; border-radius: 4px; font-size: 11px;">
                     🗺️ Rota no Google Maps
@@ -1068,10 +1071,7 @@
           
           const infoWindow = new google.maps.InfoWindow({
             content: infoContent,
-            position: {
-              lat: (coordsInicial.lat + coordsFinal.lat) / 2,
-              lng: (coordsInicial.lng + coordsFinal.lng) / 2
-            }
+            position: pontoMedio
           });
           
           // Event listener para a polyline
@@ -1092,13 +1092,156 @@
           const linhaItem = {
             polyline: polyline,
             infoWindow: infoWindow,
-            data: linha
+            data: linha,
+            pontos: pontosTraçado
           };
           
           linhasPorTrecho.push(linhaItem);
         });
         
-        console.log(`✅ ${linhasPorTrecho.length} linhas por trecho criadas`);
+        console.log(`✅ ${linhasPorTrecho.length} linhas por trecho criadas seguindo o traçado real`);
+      }
+      
+      // Buscar pontos do traçado real da rodovia entre dois kms
+      function buscarPontosTraçadoRodovia(rodovia, kmInicial, kmFinal) {
+        if (!dadosOriginais || dadosOriginais.length === 0) {
+          console.warn('⚠️ Dados de rodovias não carregados ainda');
+          return null;
+        }
+        
+        // Normalizar valores
+        const rodoviaLimpa = rodovia.toString().trim().toUpperCase();
+        const kmIni = parseFloat(kmInicial.toString().replace(',', '.'));
+        const kmFim = parseFloat(kmFinal.toString().replace(',', '.'));
+        
+        // Garantir que kmIni <= kmFim
+        const kmMin = Math.min(kmIni, kmFim);
+        const kmMax = Math.max(kmIni, kmFim);
+        
+        console.log(`🔍 Buscando traçado para ${rodoviaLimpa} entre km ${kmMin} e ${kmMax}`);
+        
+        // Filtrar todos os pontos da rodovia no intervalo especificado
+        const pontosNoTraçado = dadosOriginais.filter(item => {
+          const rodoviaItem = item.SP ? item.SP.toString().trim().toUpperCase() : '';
+          const kmItem = parseFloat(item['KM '] ? item['KM '].toString().replace(',', '.') : '0');
+          
+          return rodoviaItem === rodoviaLimpa && 
+                 kmItem >= kmMin && 
+                 kmItem <= kmMax && 
+                 item.LOCALIZAÇÃO;
+        });
+        
+        if (pontosNoTraçado.length === 0) {
+          console.warn(`⚠️ Nenhum ponto encontrado para ${rodoviaLimpa} entre km ${kmMin} e ${kmMax}`);
+          return null;
+        }
+        
+        // Ordenar pontos por quilometragem
+        pontosNoTraçado.sort((a, b) => {
+          const kmA = parseFloat(a['KM '].toString().replace(',', '.'));
+          const kmB = parseFloat(b['KM '].toString().replace(',', '.'));
+          return kmA - kmB;
+        });
+        
+        // Converter para array de coordenadas do Google Maps
+        const coordenadas = [];
+        
+        pontosNoTraçado.forEach(ponto => {
+          const coords = ponto.LOCALIZAÇÃO.split(',');
+          if (coords.length === 2) {
+            const lat = parseFloat(coords[0].trim());
+            const lng = parseFloat(coords[1].trim());
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+              coordenadas.push({ lat, lng });
+            }
+          }
+        });
+        
+        // Se não temos pontos suficientes, tentar interpolação
+        if (coordenadas.length < 2) {
+          console.warn(`⚠️ Poucos pontos encontrados (${coordenadas.length}), tentando busca aproximada`);
+          return buscarPontosAproximados(rodoviaLimpa, kmMin, kmMax);
+        }
+        
+        console.log(`✅ Traçado encontrado com ${coordenadas.length} pontos para ${rodoviaLimpa}`);
+        return coordenadas;
+      }
+      
+      // Buscar pontos aproximados quando não há dados suficientes
+      function buscarPontosAproximados(rodovia, kmMin, kmMax) {
+        // Buscar pontos próximos ao início e fim do trecho
+        const pontoInicial = buscarCoordenadasPorRodoviaKm(rodovia, kmMin);
+        const pontoFinal = buscarCoordenadasPorRodoviaKm(rodovia, kmMax);
+        
+        if (!pontoInicial || !pontoFinal) {
+          return null;
+        }
+        
+        // Buscar pontos intermediários disponíveis
+        const pontosIntermediarios = dadosOriginais.filter(item => {
+          const rodoviaItem = item.SP ? item.SP.toString().trim().toUpperCase() : '';
+          const kmItem = parseFloat(item['KM '] ? item['KM '].toString().replace(',', '.') : '0');
+          
+          return rodoviaItem === rodovia && 
+                 kmItem > kmMin && 
+                 kmItem < kmMax && 
+                 item.LOCALIZAÇÃO;
+        }).sort((a, b) => {
+          const kmA = parseFloat(a['KM '].toString().replace(',', '.'));
+          const kmB = parseFloat(b['KM '].toString().replace(',', '.'));
+          return kmA - kmB;
+        });
+        
+        const coordenadas = [pontoInicial];
+        
+        // Adicionar pontos intermediários
+        pontosIntermediarios.forEach(ponto => {
+          const coords = ponto.LOCALIZAÇÃO.split(',');
+          if (coords.length === 2) {
+            const lat = parseFloat(coords[0].trim());
+            const lng = parseFloat(coords[1].trim());
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+              coordenadas.push({ lat, lng });
+            }
+          }
+        });
+        
+        coordenadas.push(pontoFinal);
+        
+        console.log(`✅ Traçado aproximado criado com ${coordenadas.length} pontos`);
+        return coordenadas;
+      }
+      
+      // Calcular extensão real do traçado usando a distância entre pontos consecutivos
+      function calcularExtensaoReal(pontos) {
+        if (!pontos || pontos.length < 2) return 0;
+        
+        let distanciaTotal = 0;
+        
+        for (let i = 0; i < pontos.length - 1; i++) {
+          const ponto1 = pontos[i];
+          const ponto2 = pontos[i + 1];
+          
+          // Usar a fórmula de Haversine para calcular distância entre dois pontos
+          const distancia = calcularDistanciaHaversine(ponto1.lat, ponto1.lng, ponto2.lat, ponto2.lng);
+          distanciaTotal += distancia;
+        }
+        
+        return distanciaTotal;
+      }
+      
+      // Fórmula de Haversine para calcular distância entre dois pontos em km
+      function calcularDistanciaHaversine(lat1, lng1, lat2, lng2) {
+        const R = 6371; // Raio da Terra em km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
       }
       
       // Alternar visibilidade dos pontos de interesse
