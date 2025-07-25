@@ -199,6 +199,16 @@
       transform: translateX(-5px);
     }
     
+    .menu-item.active {
+      background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+      color: white;
+      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    }
+    
+    .menu-item.active:hover {
+      background: linear-gradient(135deg, #388e3c 0%, #4caf50 100%);
+    }
+    
     .menu-item-icon {
       width: 24px;
       height: 24px;
@@ -447,6 +457,29 @@
       }
     }
     
+    /* ====== ANIMAÇÕES ====== */
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+    
     /* (o restante dos seus estilos permanece inalterado) */
   </style>
 </head>
@@ -569,8 +602,419 @@
       let dadosFiltro = [];
       let dadosOriginais = [];
       let marcadoresFiltrados = [];
+      let marcadoresPontosInteresse = [];
+      let pontosInteresseAtivos = false;
       
-      // Carregar dados dos CSVs
+      // URL da planilha publicada do Google Sheets
+      const PLANILHA_PONTOS_INTERESSE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTOuJGzF-kutvv3tCIyRkIRWPjvTHMggWEvowKJMRWThq-nqZXAHftJ7hWzJavJaEwxOOdL9hRnIb81/pub?output=csv';
+      
+      // Carregar e processar pontos de interesse do Google Sheets
+      async function carregarPontosInteresse() {
+        try {
+          console.log('🔄 Carregando pontos de interesse da planilha...');
+          console.log('📋 URL:', PLANILHA_PONTOS_INTERESSE_URL);
+          
+          // Tentar diferentes métodos de fetch para resolver problemas de CORS
+          let response;
+          try {
+            response = await fetch(PLANILHA_PONTOS_INTERESSE_URL);
+          } catch (corsError) {
+            console.warn('⚠️ Erro CORS direto, tentando com proxy:', corsError);
+            // Se houver erro de CORS, tentar com diferentes métodos
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`;
+            response = await fetch(proxyUrl);
+          }
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}`);
+          }
+          
+          const csvText = await response.text();
+          console.log('📄 CSV bruto recebido:', csvText.substring(0, 500) + '...');
+          
+          Papa.parse(csvText, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+              if (results.errors.length > 0) {
+                console.warn('⚠️ Avisos ao processar CSV:', results.errors);
+              }
+              
+              console.log('📊 Dados recebidos:', results.data);
+              
+              const pontosValidos = results.data.filter(ponto => {
+                // Verificar se tem dados suficientes para criar o ponto
+                const temTipo = ponto.tipo && ponto.tipo.trim();
+                const temRodovia = ponto.rodovia && ponto.rodovia.trim();
+                const temKm = ponto.km && ponto.km.toString().trim();
+                const temCoordenadas = (ponto.Latitude && ponto.Longitude) || (temRodovia && temKm);
+                
+                return temTipo && temCoordenadas;
+              });
+              
+              console.log(`✅ ${pontosValidos.length} pontos válidos encontrados de ${results.data.length} total`);
+              
+              if (pontosValidos.length > 0) {
+                criarMarcadoresPontosInteresse(pontosValidos);
+              } else {
+                console.warn('⚠️ Nenhum ponto válido encontrado na planilha');
+                mostrarMensagemErro('Nenhum ponto válido encontrado na planilha');
+              }
+            },
+            error: function(error) {
+              console.error('❌ Erro ao processar CSV:', error);
+              mostrarMensagemErro('Erro ao processar dados da planilha');
+            }
+          });
+          
+        } catch (error) {
+          console.error('❌ Erro ao carregar pontos de interesse:', error);
+          mostrarMensagemErro('Erro ao conectar com a planilha do Google Sheets');
+        }
+      }
+      
+      // Criar marcadores dos pontos de interesse
+      function criarMarcadoresPontosInteresse(pontos) {
+        if (!window.mapa) {
+          console.warn('⚠️ Mapa não está disponível ainda');
+          setTimeout(() => criarMarcadoresPontosInteresse(pontos), 1000);
+          return;
+        }
+        
+        // Limpar marcadores anteriores se existirem
+        marcadoresPontosInteresse.forEach(item => {
+          if (item.marker) item.marker.setMap(null);
+          if (item.circle) item.circle.setMap(null);
+        });
+        marcadoresPontosInteresse = [];
+        
+        pontos.forEach((ponto, index) => {
+          console.log(`🔍 Processando ponto ${index + 1}:`, ponto);
+          
+          // Validar coordenadas baseadas em rodovia e km ou coordenadas diretas
+          let lat, lng;
+          
+          if (ponto.Latitude && ponto.Longitude) {
+            // Coordenadas diretas
+            lat = parseFloat(ponto.Latitude);
+            lng = parseFloat(ponto.Longitude);
+            console.log(`📍 Usando coordenadas diretas: ${lat}, ${lng}`);
+          } else if (ponto.rodovia && ponto.km) {
+            // Buscar coordenadas baseadas na rodovia e km
+            const coords = buscarCoordenadasPorRodoviaKm(ponto.rodovia, ponto.km);
+            if (coords) {
+              lat = coords.lat;
+              lng = coords.lng;
+              console.log(`🗺️ Coordenadas encontradas por rodovia/km: ${lat}, ${lng}`);
+            } else {
+              console.warn(`⚠️ Coordenadas não encontradas para ${ponto.rodovia} km ${ponto.km}`);
+            }
+          }
+          
+          if (isNaN(lat) || isNaN(lng)) {
+            console.warn(`⚠️ Coordenadas inválidas para: ${ponto.tipo}`);
+            return;
+          }
+          
+          // Configurações do círculo - usando valores padrão se não especificados
+          const cor = ponto.cor && ponto.cor.trim() ? ponto.cor.trim() : '#2196F3';
+          const opacidade = ponto.opacidade ? parseFloat(ponto.opacidade) : 0.7;
+          const raio = ponto.raio ? parseFloat(ponto.raio) : 200; // em metros
+          
+          console.log(`🎨 Configurações: cor=${cor}, opacidade=${opacidade}, raio=${raio}m`);
+          
+          // Criar círculo no mapa
+          const circle = new google.maps.Circle({
+            strokeColor: cor,
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: cor,
+            fillOpacity: opacidade,
+            map: pontosInteresseAtivos ? window.mapa : null,
+            center: { lat, lng },
+            radius: raio
+          });
+          
+          // Criar marcador central
+          const marker = new google.maps.Marker({
+            position: { lat, lng },
+            map: pontosInteresseAtivos ? window.mapa : null,
+            title: ponto.tipo,
+            icon: {
+              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" fill="${cor}" stroke="#fff" stroke-width="2"/>
+                  <circle cx="12" cy="12" r="4" fill="#fff"/>
+                </svg>
+              `),
+              scaledSize: new google.maps.Size(24, 24),
+              anchor: new google.maps.Point(12, 12)
+            },
+            animation: google.maps.Animation.DROP
+          });
+          
+          // Criar conteúdo do InfoWindow
+          let infoContent = `
+            <div style="font-family: Arial, sans-serif; max-width: 350px; line-height: 1.5;">
+              <div style="background: linear-gradient(135deg, ${cor}, ${cor}dd); color: white; margin: -10px -10px 15px -10px; padding: 15px; border-radius: 8px 8px 0 0;">
+                <h3 style="margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                  <span style="width: 16px; height: 16px; background: white; border-radius: 50%; display: inline-block;"></span>
+                  ${ponto.tipo}
+                </h3>
+              </div>
+          `;
+          
+          if (ponto.rodovia) {
+            infoContent += `<p style="margin: 8px 0;"><strong>🛣️ Rodovia:</strong> ${ponto.rodovia}</p>`;
+          }
+          
+          if (ponto.km) {
+            infoContent += `<p style="margin: 8px 0;"><strong>📏 Km:</strong> ${ponto.km}</p>`;
+          }
+          
+          if (ponto.obs) {
+            infoContent += `<p style="margin: 8px 0;"><strong>� Observações:</strong> ${ponto.obs}</p>`;
+          }
+          
+          // Informações técnicas
+          infoContent += `
+            <div style="background: #f5f5f5; padding: 10px; border-radius: 6px; margin: 10px 0;">
+              <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #666;">Detalhes Técnicos:</h4>
+              <p style="margin: 4px 0; font-size: 13px;"><strong>Raio:</strong> ${raio}m</p>
+              <p style="margin: 4px 0; font-size: 13px;"><strong>Cor:</strong> ${cor}</p>
+              <p style="margin: 4px 0; font-size: 13px;"><strong>Opacidade:</strong> ${(opacidade * 100).toFixed(0)}%</p>
+            </div>
+          `;
+          
+          // Fotos do Google Drive
+          if (ponto.fotos && ponto.fotos.trim()) {
+            const driveLink = ponto.fotos;
+            let driveId = '';
+            
+            // Extrair ID da pasta do Google Drive
+            const matches = driveLink.match(/folders\/([a-zA-Z0-9-_]+)/);
+            if (matches) {
+              driveId = matches[1];
+            }
+            
+            infoContent += `
+              <div style="margin: 15px 0; padding: 10px; background: #e8f5e8; border-radius: 6px; border-left: 4px solid #4caf50;">
+                <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #2e7d32;">� Fotos Disponíveis</h4>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <a href="${driveLink}" target="_blank" 
+                     style="background: #4caf50; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                    📂 Ver Pasta no Drive
+                  </a>
+            `;
+            
+            if (driveId) {
+              // Link direto para visualização das imagens
+              infoContent += `
+                  <a href="https://drive.google.com/drive/folders/${driveId}?usp=sharing" target="_blank" 
+                     style="background: #2196f3; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                    🖼️ Galeria
+                  </a>
+              `;
+            }
+            
+            infoContent += `
+                </div>
+              </div>
+            `;
+          }
+          
+          infoContent += `
+              <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+                <p style="margin: 4px 0;"><strong>Coordenadas:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+                  <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" 
+                     target="_blank" 
+                     style="background: ${cor}; color: white; padding: 6px 10px; text-decoration: none; border-radius: 4px; font-size: 11px;">
+                    🗺️ Navegar
+                  </a>
+                  <a href="https://www.google.com/maps/@${lat},${lng},18z" 
+                     target="_blank" 
+                     style="background: #666; color: white; padding: 6px 10px; text-decoration: none; border-radius: 4px; font-size: 11px;">
+                    📍 Ver Local
+                  </a>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          const infoWindow = new google.maps.InfoWindow({
+            content: infoContent,
+            maxWidth: 400
+          });
+          
+          // Event listeners para marker e círculo
+          const openInfoWindow = () => {
+            // Fechar outras info windows abertas
+            marcadoresPontosInteresse.forEach(item => {
+              if (item.infoWindow) {
+                item.infoWindow.close();
+              }
+            });
+            
+            infoWindow.open(window.mapa, marker);
+          };
+          
+          marker.addListener('click', openInfoWindow);
+          circle.addListener('click', openInfoWindow);
+          
+          // Armazenar referências
+          const pontoItem = {
+            marker: marker,
+            circle: circle,
+            infoWindow: infoWindow,
+            data: ponto
+          };
+          
+          marcadoresPontosInteresse.push(pontoItem);
+        });
+        
+        console.log(`✅ ${marcadoresPontosInteresse.length} pontos de interesse criados`);
+      }
+      
+      // Buscar coordenadas por rodovia e km (integração com dados existentes)
+      function buscarCoordenadasPorRodoviaKm(rodovia, km) {
+        // Esta função buscará nas planilhas existentes as coordenadas
+        // baseadas na rodovia e quilometragem fornecidas
+        
+        if (!dadosOriginais || dadosOriginais.length === 0) {
+          console.warn('⚠️ Dados de rodovias não carregados ainda');
+          return null;
+        }
+        
+        // Normalizar valores para busca
+        const rodoviaLimpa = rodovia.toString().trim().toUpperCase();
+        const kmNumerico = parseFloat(km.toString().replace(',', '.'));
+        
+        // Buscar correspondência exata ou próxima
+        const pontoEncontrado = dadosOriginais.find(item => {
+          const rodoviaItem = item.SP ? item.SP.toString().trim().toUpperCase() : '';
+          const kmItem = parseFloat(item['KM '] ? item['KM '].toString().replace(',', '.') : '0');
+          
+          return rodoviaItem === rodoviaLimpa && Math.abs(kmItem - kmNumerico) < 0.1;
+        });
+        
+        if (pontoEncontrado && pontoEncontrado.LOCALIZAÇÃO) {
+          const coords = pontoEncontrado.LOCALIZAÇÃO.split(',');
+          if (coords.length === 2) {
+            const lat = parseFloat(coords[0].trim());
+            const lng = parseFloat(coords[1].trim());
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+              return { lat, lng };
+            }
+          }
+        }
+        
+        console.warn(`⚠️ Coordenadas não encontradas para ${rodovia} km ${km}`);
+        return null;
+      }
+      
+      // Alternar visibilidade dos pontos de interesse
+      function togglePontosInteresse() {
+        pontosInteresseAtivos = !pontosInteresseAtivos;
+        
+        // Atualizar visual do botão
+        if (pontosInteresseAtivos) {
+          pontosInteresseBtn.classList.add('active');
+        } else {
+          pontosInteresseBtn.classList.remove('active');
+        }
+        
+        marcadoresPontosInteresse.forEach(item => {
+          if (item.marker) item.marker.setMap(pontosInteresseAtivos ? window.mapa : null);
+          if (item.circle) item.circle.setMap(pontosInteresseAtivos ? window.mapa : null);
+        });
+        
+        const mensagem = pontosInteresseAtivos ? 
+          `✅ ${marcadoresPontosInteresse.length} pontos de interesse ativados!` : 
+          '❌ Pontos de interesse ocultos';
+        
+        mostrarMensagemSucesso(mensagem);
+        
+        // Se ativando e não há marcadores, carregar dados
+        if (pontosInteresseAtivos && marcadoresPontosInteresse.length === 0) {
+          carregarPontosInteresse();
+        }
+        
+        // Zoom nos pontos se ativados
+        if (pontosInteresseAtivos && marcadoresPontosInteresse.length > 0) {
+          setTimeout(zoomNosPontosInteresse, 500);
+        }
+      }
+      
+      // Zoom nos pontos de interesse
+      function zoomNosPontosInteresse() {
+        if (marcadoresPontosInteresse.length === 0) return;
+        
+        const bounds = new google.maps.LatLngBounds();
+        marcadoresPontosInteresse.forEach(item => {
+          if (item.marker) {
+            bounds.extend(item.marker.getPosition());
+          }
+        });
+        
+        window.mapa.fitBounds(bounds);
+        
+        if (marcadoresPontosInteresse.length === 1) {
+          setTimeout(() => window.mapa.setZoom(16), 500);
+        }
+      }
+      
+      // Mostrar mensagem de sucesso
+      function mostrarMensagemSucesso(mensagem) {
+        if (typeof mostrarMensagemDiscreta === 'function') {
+          mostrarMensagemDiscreta(mensagem);
+        } else {
+          // Criar notificação personalizada
+          criarNotificacao(mensagem, 'success');
+        }
+      }
+      
+      // Mostrar mensagem de erro
+      function mostrarMensagemErro(mensagem) {
+        if (typeof mostrarMensagemDiscreta === 'function') {
+          mostrarMensagemDiscreta(mensagem);
+        } else {
+          criarNotificacao(mensagem, 'error');
+        }
+      }
+      
+      // Criar notificação personalizada
+      function criarNotificacao(mensagem, tipo = 'info') {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: ${tipo === 'error' ? '#f44336' : tipo === 'success' ? '#4caf50' : '#2196f3'};
+          color: white;
+          padding: 15px 20px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          z-index: 4000;
+          max-width: 300px;
+          font-family: Arial, sans-serif;
+          font-size: 14px;
+          animation: slideIn 0.3s ease;
+        `;
+        
+        notification.textContent = mensagem;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.style.animation = 'slideOut 0.3s ease forwards';
+          setTimeout(() => {
+            if (notification.parentNode) {
+              notification.parentNode.removeChild(notification);
+            }
+          }, 300);
+        }, 4000);
+      }
       async function carregarDadosFiltro() {
         try {
           // Carregar PLANILHA BI - OFICIAL.csv
@@ -815,13 +1259,7 @@
       // Funcionalidade do botão Pontos de Interesse
       pontosInteresseBtn.addEventListener('click', function() {
         console.log('🎯 Pontos de Interesse clicado');
-        
-        if (typeof mostrarMensagemDiscreta === 'function') {
-          mostrarMensagemDiscreta('Pontos de Interesse ativados!');
-        } else {
-          alert('Pontos de Interesse ativados!');
-        }
-        
+        togglePontosInteresse();
         fecharMenu();
       });
       
