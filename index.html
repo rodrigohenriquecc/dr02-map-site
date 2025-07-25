@@ -605,19 +605,16 @@
       let marcadoresPontosInteresse = [];
       let pontosInteresseAtivos = false;
       
-      // ID da planilha do Google Sheets
-      const PLANILHA_PONTOS_INTERESSE_ID = '1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI';
-      const PLANILHA_GID = '1698628532';
+      // URL da planilha publicada do Google Sheets
+      const PLANILHA_PONTOS_INTERESSE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTOuJGzF-kutvv3tCIyRkIRWPjvTHMggWEvowKJMRWThq-nqZXAHftJ7hWzJavJaEwxOOdL9hRnIb81/pub?output=csv';
       
       // Carregar e processar pontos de interesse do Google Sheets
       async function carregarPontosInteresse() {
         try {
-          // URL para acessar a planilha em formato CSV
-          const csvUrl = `https://docs.google.com/spreadsheets/d/${PLANILHA_PONTOS_INTERESSE_ID}/export?format=csv&gid=${PLANILHA_GID}`;
+          console.log('🔄 Carregando pontos de interesse da planilha...');
+          console.log('📋 URL:', PLANILHA_PONTOS_INTERESSE_URL);
           
-          console.log('🔄 Carregando pontos de interesse...');
-          
-          const response = await fetch(csvUrl);
+          const response = await fetch(PLANILHA_PONTOS_INTERESSE_URL);
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
@@ -632,12 +629,26 @@
                 console.warn('⚠️ Avisos ao processar CSV:', results.errors);
               }
               
+              console.log('📊 Dados recebidos:', results.data);
+              
               const pontosValidos = results.data.filter(ponto => {
-                return ponto.Latitude && ponto.Longitude && ponto.Nome;
+                // Verificar se tem dados suficientes para criar o ponto
+                const temTipo = ponto.tipo && ponto.tipo.trim();
+                const temRodovia = ponto.rodovia && ponto.rodovia.trim();
+                const temKm = ponto.km && ponto.km.toString().trim();
+                const temCoordenadas = (ponto.Latitude && ponto.Longitude) || (temRodovia && temKm);
+                
+                return temTipo && temCoordenadas;
               });
               
-              console.log(`✅ ${pontosValidos.length} pontos de interesse carregados`);
-              criarMarcadoresPontosInteresse(pontosValidos);
+              console.log(`✅ ${pontosValidos.length} pontos válidos encontrados de ${results.data.length} total`);
+              
+              if (pontosValidos.length > 0) {
+                criarMarcadoresPontosInteresse(pontosValidos);
+              } else {
+                console.warn('⚠️ Nenhum ponto válido encontrado na planilha');
+                mostrarMensagemErro('Nenhum ponto válido encontrado na planilha');
+              }
             },
             error: function(error) {
               console.error('❌ Erro ao processar CSV:', error);
@@ -667,6 +678,8 @@
         marcadoresPontosInteresse = [];
         
         pontos.forEach((ponto, index) => {
+          console.log(`🔍 Processando ponto ${index + 1}:`, ponto);
+          
           // Validar coordenadas baseadas em rodovia e km ou coordenadas diretas
           let lat, lng;
           
@@ -674,24 +687,30 @@
             // Coordenadas diretas
             lat = parseFloat(ponto.Latitude);
             lng = parseFloat(ponto.Longitude);
+            console.log(`📍 Usando coordenadas diretas: ${lat}, ${lng}`);
           } else if (ponto.rodovia && ponto.km) {
             // Buscar coordenadas baseadas na rodovia e km
             const coords = buscarCoordenadasPorRodoviaKm(ponto.rodovia, ponto.km);
             if (coords) {
               lat = coords.lat;
               lng = coords.lng;
+              console.log(`🗺️ Coordenadas encontradas por rodovia/km: ${lat}, ${lng}`);
+            } else {
+              console.warn(`⚠️ Coordenadas não encontradas para ${ponto.rodovia} km ${ponto.km}`);
             }
           }
           
           if (isNaN(lat) || isNaN(lng)) {
-            console.warn(`⚠️ Coordenadas inválidas para: ${ponto.tipo || ponto.Nome}`);
+            console.warn(`⚠️ Coordenadas inválidas para: ${ponto.tipo}`);
             return;
           }
           
-          // Configurações do círculo
-          const cor = ponto.cor || '#2196F3';
-          const opacidade = parseFloat(ponto.opacidade) || 0.7;
-          const raio = parseFloat(ponto.raio) || 200; // em metros
+          // Configurações do círculo - usando valores padrão se não especificados
+          const cor = ponto.cor && ponto.cor.trim() ? ponto.cor.trim() : '#2196F3';
+          const opacidade = ponto.opacidade ? parseFloat(ponto.opacidade) : 0.7;
+          const raio = ponto.raio ? parseFloat(ponto.raio) : 200; // em metros
+          
+          console.log(`🎨 Configurações: cor=${cor}, opacidade=${opacidade}, raio=${raio}m`);
           
           // Criar círculo no mapa
           const circle = new google.maps.Circle({
@@ -709,7 +728,7 @@
           const marker = new google.maps.Marker({
             position: { lat, lng },
             map: pontosInteresseAtivos ? window.mapa : null,
-            title: ponto.tipo || ponto.Nome,
+            title: ponto.tipo,
             icon: {
               url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -729,7 +748,7 @@
               <div style="background: linear-gradient(135deg, ${cor}, ${cor}dd); color: white; margin: -10px -10px 15px -10px; padding: 15px; border-radius: 8px 8px 0 0;">
                 <h3 style="margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
                   <span style="width: 16px; height: 16px; background: white; border-radius: 50%; display: inline-block;"></span>
-                  ${ponto.tipo || ponto.Nome}
+                  ${ponto.tipo}
                 </h3>
               </div>
           `;
@@ -757,7 +776,7 @@
           `;
           
           // Fotos do Google Drive
-          if (ponto.fotos) {
+          if (ponto.fotos && ponto.fotos.trim()) {
             const driveLink = ponto.fotos;
             let driveId = '';
             
