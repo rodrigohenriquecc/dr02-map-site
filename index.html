@@ -229,6 +229,224 @@
       }
     }
     
+    /* ====== MODAL DE FILTROS ====== */
+    .filter-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      width: 90%;
+      max-width: 500px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      z-index: 3000;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    
+    .filter-modal.active {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    
+    .filter-content {
+      padding: 0;
+    }
+    
+    .filter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 25px;
+      border-bottom: 1px solid #e0e0e0;
+      background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+      color: white;
+      border-radius: 16px 16px 0 0;
+    }
+    
+    .filter-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.2s ease;
+    }
+    
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .filter-body {
+      padding: 25px;
+    }
+    
+    .filter-group {
+      margin-bottom: 20px;
+    }
+    
+    .filter-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+    
+    .filter-group select,
+    .filter-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s ease;
+      box-sizing: border-box;
+    }
+    
+    .filter-group select:focus,
+    .filter-group input:focus {
+      outline: none;
+      border-color: #1976d2;
+    }
+    
+    .km-inputs {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .km-inputs input {
+      flex: 1;
+      width: auto;
+    }
+    
+    .km-separator {
+      color: #666;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    
+    .filter-info {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    
+    .info-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .filter-actions {
+      display: flex;
+      gap: 10px;
+      padding: 20px 25px;
+      border-top: 1px solid #e0e0e0;
+    }
+    
+    .btn-filter {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-apply {
+      background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+      color: white;
+    }
+    
+    .btn-apply:hover {
+      background: linear-gradient(135deg, #388e3c 0%, #4caf50 100%);
+      transform: translateY(-1px);
+    }
+    
+    .btn-clear {
+      background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
+      color: white;
+    }
+    
+    .btn-clear:hover {
+      background: linear-gradient(135deg, #f57c00 0%, #ff9800 100%);
+      transform: translateY(-1px);
+    }
+    
+    .btn-zoom {
+      background: linear-gradient(135deg, #2196f3 0%, #64b5f6 100%);
+      color: white;
+    }
+    
+    .btn-zoom:hover {
+      background: linear-gradient(135deg, #1976d2 0%, #2196f3 100%);
+      transform: translateY(-1px);
+    }
+    
+    .filter-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 2999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .filter-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    @media (max-width: 768px) {
+      .filter-modal {
+        width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      
+      .filter-actions {
+        flex-direction: column;
+      }
+      
+      .km-inputs {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .km-separator {
+        text-align: center;
+        margin: 5px 0;
+      }
+    }
+    
     /* (o restante dos seus estilos permanece inalterado) */
   </style>
 </head>
@@ -249,7 +467,69 @@
       <div class="menu-item-icon">📍</div>
       <div class="menu-item-text">Pontos de Interesse</div>
     </button>
+    
+    <button class="menu-item" id="filtrosBtn">
+      <div class="menu-item-icon">🔍</div>
+      <div class="menu-item-text">Filtros de Trecho</div>
+    </button>
   </div>
+
+  <!-- Modal de Filtros -->
+  <div class="filter-modal" id="filterModal">
+    <div class="filter-content">
+      <div class="filter-header">
+        <h3>🔍 Filtros de Trecho</h3>
+        <button class="close-btn" id="closeFilterBtn">&times;</button>
+      </div>
+      
+      <div class="filter-body">
+        <div class="filter-group">
+          <label for="rodoviaSelect">Rodovia:</label>
+          <select id="rodoviaSelect">
+            <option value="">Todas as Rodovias</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="kmRange">Quilometragem:</label>
+          <div class="km-inputs">
+            <input type="number" id="kmInicial" placeholder="Km Inicial" step="0.1" min="0">
+            <span class="km-separator">até</span>
+            <input type="number" id="kmFinal" placeholder="Km Final" step="0.1" min="0">
+          </div>
+        </div>
+        
+        <div class="filter-group">
+          <label for="tipoSelect">Tipo de Pista:</label>
+          <select id="tipoSelect">
+            <option value="">Todos os Tipos</option>
+            <option value="Simples">Simples</option>
+            <option value="Dupla">Dupla</option>
+            <option value="Terra">Terra</option>
+            <option value="Simples - Intertravado">Simples - Intertravado</option>
+          </select>
+        </div>
+        
+        <div class="filter-info">
+          <div class="info-item">
+            <strong>Total de Pontos:</strong> <span id="totalPontos">0</span>
+          </div>
+          <div class="info-item">
+            <strong>Pontos Filtrados:</strong> <span id="pontosFiltrados">0</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="filter-actions">
+        <button class="btn-filter btn-apply" id="aplicarFiltro">Aplicar Filtro</button>
+        <button class="btn-filter btn-clear" id="limparFiltro">Limpar Filtros</button>
+        <button class="btn-filter btn-zoom" id="zoomFiltro">Zoom nos Resultados</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Overlay do Modal -->
+  <div class="filter-overlay" id="filterOverlay"></div>
 
   <!-- Geolocalização -->
   <!-- (mantido inalterado) -->
@@ -260,16 +540,210 @@
   <!-- MAPA GOOGLE MAPS -->
   <div id="map"></div>
 
-  <!-- JavaScript do Menu Hambúrguer -->
+  <!-- JavaScript do Menu Hambúrguer e Filtros -->
   <script>
-    // Controle do Menu Hambúrguer
+    // Controle do Menu Hambúrguer e Sistema de Filtros
     document.addEventListener('DOMContentLoaded', function() {
       const hamburgerBtn = document.getElementById('hamburgerBtn');
       const sidebarMenu = document.getElementById('sidebarMenu');
       const sidebarOverlay = document.getElementById('sidebarOverlay');
       const pontosInteresseBtn = document.getElementById('pontosInteresseBtn');
+      const filtrosBtn = document.getElementById('filtrosBtn');
+      
+      // Elementos do Modal de Filtros
+      const filterModal = document.getElementById('filterModal');
+      const filterOverlay = document.getElementById('filterOverlay');
+      const closeFilterBtn = document.getElementById('closeFilterBtn');
+      const rodoviaSelect = document.getElementById('rodoviaSelect');
+      const kmInicial = document.getElementById('kmInicial');
+      const kmFinal = document.getElementById('kmFinal');
+      const tipoSelect = document.getElementById('tipoSelect');
+      const aplicarFiltro = document.getElementById('aplicarFiltro');
+      const limparFiltro = document.getElementById('limparFiltro');
+      const zoomFiltro = document.getElementById('zoomFiltro');
+      const totalPontos = document.getElementById('totalPontos');
+      const pontosFiltrados = document.getElementById('pontosFiltrados');
       
       let menuAberto = false;
+      let modalAberto = false;
+      let dadosFiltro = [];
+      let dadosOriginais = [];
+      let marcadoresFiltrados = [];
+      
+      // Carregar dados dos CSVs
+      async function carregarDadosFiltro() {
+        try {
+          // Carregar PLANILHA BI - OFICIAL.csv
+          const response = await fetch('archives/assets/data/PLANILHA BI - OFICIAL.csv');
+          const csvText = await response.text();
+          
+          Papa.parse(csvText, {
+            header: true,
+            delimiter: ';',
+            complete: function(results) {
+              dadosOriginais = results.data.filter(row => row.SP && row['KM '] && row.LOCALIZAÇÃO);
+              dadosFiltro = [...dadosOriginais];
+              preencherSelectRodovias();
+              atualizarContadores();
+              console.log('✅ Dados de filtro carregados:', dadosOriginais.length, 'registros');
+            }
+          });
+        } catch (error) {
+          console.error('❌ Erro ao carregar dados de filtro:', error);
+        }
+      }
+      
+      // Preencher select de rodovias
+      function preencherSelectRodovias() {
+        const rodovias = [...new Set(dadosOriginais.map(item => item.SP))].sort();
+        rodoviaSelect.innerHTML = '<option value="">Todas as Rodovias</option>';
+        
+        rodovias.forEach(rodovia => {
+          if (rodovia) {
+            const option = document.createElement('option');
+            option.value = rodovia;
+            option.textContent = rodovia;
+            rodoviaSelect.appendChild(option);
+          }
+        });
+      }
+      
+      // Atualizar contadores
+      function atualizarContadores() {
+        totalPontos.textContent = dadosOriginais.length;
+        pontosFiltrados.textContent = dadosFiltro.length;
+      }
+      
+      // Aplicar filtros
+      function aplicarFiltros() {
+        let dadosFiltradosTemp = [...dadosOriginais];
+        
+        // Filtro por rodovia
+        const rodovia = rodoviaSelect.value;
+        if (rodovia) {
+          dadosFiltradosTemp = dadosFiltradosTemp.filter(item => item.SP === rodovia);
+        }
+        
+        // Filtro por quilometragem
+        const kmIni = parseFloat(kmInicial.value);
+        const kmFin = parseFloat(kmFinal.value);
+        
+        if (!isNaN(kmIni) || !isNaN(kmFin)) {
+          dadosFiltradosTemp = dadosFiltradosTemp.filter(item => {
+            const kmItem = parseFloat(item['KM '].replace(',', '.'));
+            if (isNaN(kmItem)) return false;
+            
+            let dentroDoRange = true;
+            if (!isNaN(kmIni)) dentroDoRange = dentroDoRange && kmItem >= kmIni;
+            if (!isNaN(kmFin)) dentroDoRange = dentroDoRange && kmItem <= kmFin;
+            
+            return dentroDoRange;
+          });
+        }
+        
+        // Filtro por tipo
+        const tipo = tipoSelect.value;
+        if (tipo) {
+          dadosFiltradosTemp = dadosFiltradosTemp.filter(item => item.TIPO === tipo);
+        }
+        
+        dadosFiltro = dadosFiltradosTemp;
+        atualizarContadores();
+        criarMarcadoresFiltrados();
+      }
+      
+      // Criar marcadores filtrados no mapa
+      function criarMarcadoresFiltrados() {
+        // Limpar marcadores anteriores
+        marcadoresFiltrados.forEach(marker => marker.setMap(null));
+        marcadoresFiltrados = [];
+        
+        if (!window.mapa) {
+          console.warn('⚠️ Mapa não está disponível ainda');
+          return;
+        }
+        
+        dadosFiltro.forEach(item => {
+          const coords = item.LOCALIZAÇÃO.split(',');
+          if (coords.length === 2) {
+            const lat = parseFloat(coords[0].trim());
+            const lng = parseFloat(coords[1].trim());
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+              const marker = new google.maps.Marker({
+                position: { lat, lng },
+                map: window.mapa,
+                title: `${item.SP} - Km ${item['KM ']} (${item.TIPO})`,
+                icon: {
+                  url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+                      <circle cx="10" cy="10" r="8" fill="#ff4444" stroke="#fff" stroke-width="2"/>
+                      <text x="10" y="14" text-anchor="middle" fill="white" font-size="10" font-weight="bold">•</text>
+                    </svg>
+                  `),
+                  scaledSize: new google.maps.Size(20, 20),
+                  anchor: new google.maps.Point(10, 10)
+                }
+              });
+              
+              // Info window
+              const infoWindow = new google.maps.InfoWindow({
+                content: `
+                  <div style="font-family: Arial, sans-serif; line-height: 1.4;">
+                    <h4 style="margin: 0 0 8px 0; color: #1976d2;">${item.SP}</h4>
+                    <p style="margin: 4px 0;"><strong>Km:</strong> ${item['KM ']}</p>
+                    <p style="margin: 4px 0;"><strong>Município:</strong> ${item.MUNICÍPIO}</p>
+                    <p style="margin: 4px 0;"><strong>Tipo:</strong> ${item.TIPO}</p>
+                    <p style="margin: 4px 0 0 0;"><small>Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}</small></p>
+                  </div>
+                `
+              });
+              
+              marker.addListener('click', () => {
+                infoWindow.open(window.mapa, marker);
+              });
+              
+              marcadoresFiltrados.push(marker);
+            }
+          }
+        });
+        
+        console.log(`✅ ${marcadoresFiltrados.length} marcadores criados`);
+      }
+      
+      // Zoom nos resultados filtrados
+      function zoomNosResultados() {
+        if (marcadoresFiltrados.length === 0) {
+          alert('Nenhum resultado para fazer zoom');
+          return;
+        }
+        
+        const bounds = new google.maps.LatLngBounds();
+        marcadoresFiltrados.forEach(marker => {
+          bounds.extend(marker.getPosition());
+        });
+        
+        window.mapa.fitBounds(bounds);
+        
+        if (marcadoresFiltrados.length === 1) {
+          setTimeout(() => window.mapa.setZoom(16), 500);
+        }
+      }
+      
+      // Limpar filtros
+      function limparFiltros() {
+        rodoviaSelect.value = '';
+        kmInicial.value = '';
+        kmFinal.value = '';
+        tipoSelect.value = '';
+        
+        dadosFiltro = [...dadosOriginais];
+        atualizarContadores();
+        
+        // Limpar marcadores
+        marcadoresFiltrados.forEach(marker => marker.setMap(null));
+        marcadoresFiltrados = [];
+      }
       
       // Função para abrir/fechar menu
       function toggleMenu() {
@@ -296,14 +770,45 @@
         }
       }
       
-      // Event listeners
+      // Função para abrir modal de filtros
+      function abrirModalFiltros() {
+        modalAberto = true;
+        filterModal.classList.add('active');
+        filterOverlay.classList.add('active');
+        fecharMenu();
+      }
+      
+      // Função para fechar modal de filtros
+      function fecharModalFiltros() {
+        if (modalAberto) {
+          modalAberto = false;
+          filterModal.classList.remove('active');
+          filterOverlay.classList.remove('active');
+        }
+      }
+      
+      // Event listeners do menu
       hamburgerBtn.addEventListener('click', toggleMenu);
       sidebarOverlay.addEventListener('click', fecharMenu);
       
-      // Fechar menu com ESC
+      // Event listeners do modal
+      filtrosBtn.addEventListener('click', abrirModalFiltros);
+      closeFilterBtn.addEventListener('click', fecharModalFiltros);
+      filterOverlay.addEventListener('click', fecharModalFiltros);
+      
+      // Event listeners dos filtros
+      aplicarFiltro.addEventListener('click', aplicarFiltros);
+      limparFiltro.addEventListener('click', limparFiltros);
+      zoomFiltro.addEventListener('click', zoomNosResultados);
+      
+      // Fechar menu/modal com ESC
       document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && menuAberto) {
-          fecharMenu();
+        if (e.key === 'Escape') {
+          if (modalAberto) {
+            fecharModalFiltros();
+          } else if (menuAberto) {
+            fecharMenu();
+          }
         }
       });
       
@@ -311,19 +816,17 @@
       pontosInteresseBtn.addEventListener('click', function() {
         console.log('🎯 Pontos de Interesse clicado');
         
-        // Aqui você pode adicionar a funcionalidade específica
-        // Por exemplo: mostrar/ocultar pontos, filtrar, etc.
-        
-        // Exemplo de funcionalidade
         if (typeof mostrarMensagemDiscreta === 'function') {
           mostrarMensagemDiscreta('Pontos de Interesse ativados!');
         } else {
           alert('Pontos de Interesse ativados!');
         }
         
-        // Fechar menu após ação
         fecharMenu();
       });
+      
+      // Carregar dados quando a página estiver pronta
+      carregarDadosFiltro();
     });
   </script>
 
