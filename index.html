@@ -91,21 +91,164 @@
   <!-- =========== ESTILOS BÁSICOS =========== -->
   <style>
     html, body, #map { height: 100%; margin: 0; padding: 0; }
+    
+    /* ====== BOTÃO HAMBÚRGUER ====== */
+    .hamburger-btn {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      z-index: 2000;
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 4px 16px rgba(25, 118, 210, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .hamburger-btn:hover {
+      background: linear-gradient(135deg, #1251a3 0%, #1976d2 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+    }
+    
+    .hamburger-line {
+      width: 20px;
+      height: 2px;
+      background: white;
+      transition: all 0.3s ease;
+      border-radius: 1px;
+    }
+    
+    .hamburger-btn.active .hamburger-line:nth-child(1) {
+      transform: rotate(45deg) translate(6px, 6px);
+    }
+    
+    .hamburger-btn.active .hamburger-line:nth-child(2) {
+      opacity: 0;
+    }
+    
+    .hamburger-btn.active .hamburger-line:nth-child(3) {
+      transform: rotate(-45deg) translate(6px, -6px);
+    }
+    
+    /* ====== MENU LATERAL ====== */
+    .sidebar-menu {
+      position: fixed;
+      top: 0;
+      right: -300px;
+      width: 280px;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      box-shadow: -2px 0 20px rgba(0, 0, 0, 0.1);
+      z-index: 1999;
+      transition: right 0.3s ease;
+      overflow-y: auto;
+      padding-top: 80px;
+    }
+    
+    .sidebar-menu.active {
+      right: 0;
+    }
+    
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1998;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .sidebar-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* ====== ITENS DO MENU ====== */
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
+      margin: 5px 15px;
+      background: transparent;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+      width: calc(100% - 30px);
+      font-size: 16px;
+      color: #333;
+    }
+    
+    .menu-item:hover {
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      transform: translateX(-5px);
+    }
+    
+    .menu-item-icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 15px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .menu-item-text {
+      font-weight: 500;
+      flex: 1;
+    }
+    
+    /* ====== RESPONSIVIDADE ====== */
+    @media (max-width: 768px) {
+      .sidebar-menu {
+        width: 100vw;
+        right: -100vw;
+      }
+      
+      .hamburger-btn {
+        top: 10px;
+        right: 10px;
+        width: 45px;
+        height: 45px;
+      }
+    }
+    
     /* (o restante dos seus estilos permanece inalterado) */
   </style>
 </head>
 <body>
-  <!-- Botões de Acesso às Planilhas -->
-  <div class="planilhas-container">
-    <a href="https://docs.google.com/spreadsheets/d/1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI/edit?gid=1698628532#gid=1698628532" target="_blank" class="btn-planilha btn-pontos">
-      Pontos de Interesse
-    </a>
-    <a href="https://docs.google.com/spreadsheets/d/1IcM6qrF9JpZlJ6c6P1pvb8O5bhmdgDz4gKCtf8V2JUg/edit?usp=drive_link" target="_blank" class="btn-planilha btn-calor">
-      Mapa de Calor
-    </a>
-    <a href="https://docs.google.com/spreadsheets/d/1r-7wdW8IwNhDMmGJ_QoflML-Mo1wvgAuw6ILK_LFlpo/edit?usp=drive_link" target="_blank" class="btn-planilha">
-      Linhas por Trecho
-    </a>
+  <!-- Botão Hambúrguer -->
+  <button class="hamburger-btn" id="hamburgerBtn">
+    <div class="hamburger-line"></div>
+    <div class="hamburger-line"></div>
+    <div class="hamburger-line"></div>
+  </button>
+  
+  <!-- Overlay do Menu -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  
+  <!-- Menu Lateral -->
+  <div class="sidebar-menu" id="sidebarMenu">
+    <button class="menu-item" id="pontosInteresseBtn">
+      <div class="menu-item-icon">📍</div>
+      <div class="menu-item-text">Pontos de Interesse</div>
+    </button>
   </div>
 
   <!-- Geolocalização -->
@@ -116,6 +259,73 @@
 
   <!-- MAPA GOOGLE MAPS -->
   <div id="map"></div>
+
+  <!-- JavaScript do Menu Hambúrguer -->
+  <script>
+    // Controle do Menu Hambúrguer
+    document.addEventListener('DOMContentLoaded', function() {
+      const hamburgerBtn = document.getElementById('hamburgerBtn');
+      const sidebarMenu = document.getElementById('sidebarMenu');
+      const sidebarOverlay = document.getElementById('sidebarOverlay');
+      const pontosInteresseBtn = document.getElementById('pontosInteresseBtn');
+      
+      let menuAberto = false;
+      
+      // Função para abrir/fechar menu
+      function toggleMenu() {
+        menuAberto = !menuAberto;
+        
+        if (menuAberto) {
+          hamburgerBtn.classList.add('active');
+          sidebarMenu.classList.add('active');
+          sidebarOverlay.classList.add('active');
+        } else {
+          hamburgerBtn.classList.remove('active');
+          sidebarMenu.classList.remove('active');
+          sidebarOverlay.classList.remove('active');
+        }
+      }
+      
+      // Função para fechar menu
+      function fecharMenu() {
+        if (menuAberto) {
+          menuAberto = false;
+          hamburgerBtn.classList.remove('active');
+          sidebarMenu.classList.remove('active');
+          sidebarOverlay.classList.remove('active');
+        }
+      }
+      
+      // Event listeners
+      hamburgerBtn.addEventListener('click', toggleMenu);
+      sidebarOverlay.addEventListener('click', fecharMenu);
+      
+      // Fechar menu com ESC
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && menuAberto) {
+          fecharMenu();
+        }
+      });
+      
+      // Funcionalidade do botão Pontos de Interesse
+      pontosInteresseBtn.addEventListener('click', function() {
+        console.log('🎯 Pontos de Interesse clicado');
+        
+        // Aqui você pode adicionar a funcionalidade específica
+        // Por exemplo: mostrar/ocultar pontos, filtrar, etc.
+        
+        // Exemplo de funcionalidade
+        if (typeof mostrarMensagemDiscreta === 'function') {
+          mostrarMensagemDiscreta('Pontos de Interesse ativados!');
+        } else {
+          alert('Pontos de Interesse ativados!');
+        }
+        
+        // Fechar menu após ação
+        fecharMenu();
+      });
+    });
+  </script>
 
   <!-- Função utilitária mostrarMensagemDiscreta -->
   <!-- (mantido inalterado) -->

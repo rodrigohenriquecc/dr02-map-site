@@ -16,12 +16,38 @@ let marcadorUsuario = null;
 let watchId = null;
 let geolocalizacaoAtiva = false;
 
+// Variável para armazenar os bounds dos shapefiles
+let boundsGlobais = null;
+
 // Arrays para armazenar dados
 let pontosInteresse = [];
 let mapaCalor = [];
 let linhasTrecho = [];
 let rodovias = [];
 let kmsDisponiveis = {};
+
+/**
+ * Verificar se todos os dados foram carregados e ajustar zoom
+ */
+function verificarCarregamentoCompleto() {
+  const todosCarregados = Object.values(dadosCarregados).every(valor => valor === true);
+  
+  if (todosCarregados && boundsGlobais && !boundsGlobais.isEmpty()) {
+    console.log('🎯 Ajustando zoom aos limites dos shapefiles...');
+    
+    // Ajustar o mapa aos bounds dos shapefiles
+    mapa.fitBounds(boundsGlobais);
+    
+    // Opcional: definir um zoom máximo para evitar zoom muito próximo
+    google.maps.event.addListenerOnce(mapa, 'bounds_changed', function() {
+      if (mapa.getZoom() > 10) {
+        mapa.setZoom(10);
+      }
+    });
+    
+    console.log('✅ Zoom ajustado aos limites dos dados!');
+  }
+}
 
 /**
  * Função principal que carrega todo o sistema
@@ -188,15 +214,33 @@ function carregarShapefiles() {
     'archives/assets/data/RC_2.7.zip'
   ];
   
+  let shapesCarregados = 0;
+  const totalShapes = arquivosRC.length;
+  
   arquivosRC.forEach(arquivo => {
     fetch(arquivo)
       .then(response => response.arrayBuffer())
       .then(buffer => shp(buffer))
       .then(geojson => {
         processarShapefile(geojson, arquivo);
+        shapesCarregados++;
+        
+        // Marcar como carregado apenas quando todos os shapefiles estiverem processados
+        if (shapesCarregados === totalShapes) {
+          dadosCarregados.shapefiles = true;
+          verificarCarregamentoCompleto();
+          console.log('✅ Todos os shapefiles carregados com sucesso');
+        }
       })
       .catch(error => {
         console.error(`Erro ao carregar ${arquivo}:`, error);
+        shapesCarregados++;
+        
+        // Mesmo com erro, verificar se todos foram processados
+        if (shapesCarregados === totalShapes) {
+          dadosCarregados.shapefiles = true;
+          verificarCarregamentoCompleto();
+        }
       });
   });
 }
@@ -207,6 +251,11 @@ function carregarShapefiles() {
 function processarShapefile(geojson, arquivo) {
   const nomeRC = arquivo.match(/RC_[\d._]+/)[0];
   console.log(`📍 Processando ${nomeRC}...`);
+  
+  // Inicializar boundsGlobais se ainda não existir
+  if (!boundsGlobais) {
+    boundsGlobais = new google.maps.LatLngBounds();
+  }
   
   geojson.features.forEach(feature => {
     if (feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon') {
@@ -220,13 +269,16 @@ function processarShapefile(geojson, arquivo) {
           lng: coord[0]
         }));
         
+        // Adicionar coordenadas aos bounds globais
+        paths.forEach(coord => boundsGlobais.extend(coord));
+        
         const polygon = new google.maps.Polygon({
           paths: paths,
           strokeColor: '#1976d2',
-          strokeOpacity: 0.8,
+          strokeOpacity: 0.6,
           strokeWeight: 2,
           fillColor: '#42a5f5',
-          fillOpacity: 0.2,
+          fillOpacity: 0.05,
           map: mapa
         });
         
@@ -253,8 +305,7 @@ function processarShapefile(geojson, arquivo) {
     }
   });
   
-  dadosCarregados.shapefiles = true;
-  console.log(`✅ ${nomeRC} carregado com sucesso`);
+  console.log(`✅ ${nomeRC} processado com sucesso`);
 }
 
 /**
@@ -329,6 +380,7 @@ function processarKMZ(geojson) {
   });
   
   dadosCarregados.kmz = true;
+  verificarCarregamentoCompleto();
   console.log('✅ Malha rodoviária carregada');
 }
 
@@ -393,6 +445,7 @@ function processarPontosInteresse() {
   });
   
   dadosCarregados.pontos = true;
+  verificarCarregamentoCompleto();
   console.log('✅ Pontos de interesse carregados');
 }
 
@@ -444,6 +497,7 @@ function processarMapaCalor() {
   }
   
   dadosCarregados.calor = true;
+  verificarCarregamentoCompleto();
   console.log('✅ Mapa de calor carregado');
 }
 
@@ -507,6 +561,7 @@ function processarLinhasTrecho() {
   });
   
   dadosCarregados.linhas = true;
+  verificarCarregamentoCompleto();
   console.log('✅ Linhas por trecho carregadas');
 }
 
