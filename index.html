@@ -614,12 +614,23 @@
           console.log('🔄 Carregando pontos de interesse da planilha...');
           console.log('📋 URL:', PLANILHA_PONTOS_INTERESSE_URL);
           
-          const response = await fetch(PLANILHA_PONTOS_INTERESSE_URL);
+          // Tentar diferentes métodos de fetch para resolver problemas de CORS
+          let response;
+          try {
+            response = await fetch(PLANILHA_PONTOS_INTERESSE_URL);
+          } catch (corsError) {
+            console.warn('⚠️ Erro CORS direto, tentando com proxy:', corsError);
+            // Se houver erro de CORS, tentar com diferentes métodos
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`;
+            response = await fetch(proxyUrl);
+          }
+          
           if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}`);
           }
           
           const csvText = await response.text();
+          console.log('📄 CSV bruto recebido:', csvText.substring(0, 500) + '...');
           
           Papa.parse(csvText, {
             header: true,
