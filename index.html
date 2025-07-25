@@ -501,6 +501,11 @@
       <div class="menu-item-text">Pontos de Interesse</div>
     </button>
     
+    <button class="menu-item" id="linhasTrechoBtn">
+      <div class="menu-item-icon">📏</div>
+      <div class="menu-item-text">Linhas por Trecho</div>
+    </button>
+    
     <button class="menu-item" id="filtrosBtn">
       <div class="menu-item-icon">🔍</div>
       <div class="menu-item-text">Filtros de Trecho</div>
@@ -581,6 +586,7 @@
       const sidebarMenu = document.getElementById('sidebarMenu');
       const sidebarOverlay = document.getElementById('sidebarOverlay');
       const pontosInteresseBtn = document.getElementById('pontosInteresseBtn');
+      const linhasTrechoBtn = document.getElementById('linhasTrechoBtn');
       const filtrosBtn = document.getElementById('filtrosBtn');
       
       // Elementos do Modal de Filtros
@@ -603,10 +609,15 @@
       let dadosOriginais = [];
       let marcadoresFiltrados = [];
       let marcadoresPontosInteresse = [];
+      let linhasPorTrecho = [];
       let pontosInteresseAtivos = false;
+      let linhasTrechoAtivas = false;
       
       // URL da planilha publicada do Google Sheets
       const PLANILHA_PONTOS_INTERESSE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTOuJGzF-kutvv3tCIyRkIRWPjvTHMggWEvowKJMRWThq-nqZXAHftJ7hWzJavJaEwxOOdL9hRnIb81/pub?output=csv';
+      
+      // URL da planilha de linhas por trecho
+      const PLANILHA_LINHAS_TRECHO_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR2wW76oOiHiip6-ThZWsw6hH5_y-7klCFeKUtR5J7VfSPEfN0G721SFxqLz9twIW25_JhYMXHsH69Z/pub?output=csv';
       
       // Carregar e processar pontos de interesse do Google Sheets
       async function carregarPontosInteresse() {
@@ -670,6 +681,69 @@
         } catch (error) {
           console.error('❌ Erro ao carregar pontos de interesse:', error);
           mostrarMensagemErro('Erro ao conectar com a planilha do Google Sheets');
+        }
+      }
+      
+      // Carregar e processar linhas por trecho do Google Sheets
+      async function carregarLinhasPorTrecho() {
+        try {
+          console.log('🔄 Carregando linhas por trecho da planilha...');
+          console.log('📋 URL:', PLANILHA_LINHAS_TRECHO_URL);
+          
+          // Tentar diferentes métodos de fetch para resolver problemas de CORS
+          let response;
+          try {
+            response = await fetch(PLANILHA_LINHAS_TRECHO_URL);
+          } catch (corsError) {
+            console.warn('⚠️ Erro CORS direto, tentando com proxy:', corsError);
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(PLANILHA_LINHAS_TRECHO_URL)}`;
+            response = await fetch(proxyUrl);
+          }
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}`);
+          }
+          
+          const csvText = await response.text();
+          console.log('📄 CSV linhas por trecho recebido:', csvText.substring(0, 500) + '...');
+          
+          Papa.parse(csvText, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+              if (results.errors.length > 0) {
+                console.warn('⚠️ Avisos ao processar CSV linhas:', results.errors);
+              }
+              
+              console.log('📊 Dados de linhas recebidos:', results.data);
+              
+              const linhasValidas = results.data.filter(linha => {
+                // Verificar se tem dados suficientes para criar a linha
+                const temRodovia = linha.rodovia && linha.rodovia.trim();
+                const temKmInicial = linha.km_inicial && linha.km_inicial.toString().trim();
+                const temKmFinal = linha.km_final && linha.km_final.toString().trim();
+                
+                return temRodovia && temKmInicial && temKmFinal;
+              });
+              
+              console.log(`✅ ${linhasValidas.length} linhas válidas encontradas de ${results.data.length} total`);
+              
+              if (linhasValidas.length > 0) {
+                criarLinhasPorTrecho(linhasValidas);
+              } else {
+                console.warn('⚠️ Nenhuma linha válida encontrada na planilha');
+                mostrarMensagemErro('Nenhuma linha válida encontrada na planilha');
+              }
+            },
+            error: function(error) {
+              console.error('❌ Erro ao processar CSV linhas:', error);
+              mostrarMensagemErro('Erro ao processar dados da planilha de linhas');
+            }
+          });
+          
+        } catch (error) {
+          console.error('❌ Erro ao carregar linhas por trecho:', error);
+          mostrarMensagemErro('Erro ao conectar com a planilha de linhas do Google Sheets');
         }
       }
       
@@ -914,6 +988,119 @@
         return null;
       }
       
+      // Criar linhas por trecho no mapa
+      function criarLinhasPorTrecho(linhas) {
+        if (!window.mapa) {
+          console.warn('⚠️ Mapa não está disponível ainda');
+          setTimeout(() => criarLinhasPorTrecho(linhas), 1000);
+          return;
+        }
+        
+        // Limpar linhas anteriores se existirem
+        linhasPorTrecho.forEach(item => {
+          if (item.polyline) item.polyline.setMap(null);
+        });
+        linhasPorTrecho = [];
+        
+        linhas.forEach((linha, index) => {
+          console.log(`🔍 Processando linha ${index + 1}:`, linha);
+          
+          // Buscar coordenadas para km inicial e final
+          const coordsInicial = buscarCoordenadasPorRodoviaKm(linha.rodovia, linha.km_inicial);
+          const coordsFinal = buscarCoordenadasPorRodoviaKm(linha.rodovia, linha.km_final);
+          
+          if (!coordsInicial || !coordsFinal) {
+            console.warn(`⚠️ Coordenadas não encontradas para ${linha.rodovia} km ${linha.km_inicial} - ${linha.km_final}`);
+            return;
+          }
+          
+          // Configurações da linha - usando valores padrão se não especificados
+          const cor = linha.cor && linha.cor.trim() ? linha.cor.trim() : '#FF0000';
+          const espessura = linha.espessura ? parseFloat(linha.espessura) : 5;
+          
+          console.log(`🎨 Configurações linha: cor=${cor}, espessura=${espessura}px`);
+          
+          // Criar polyline no mapa
+          const polyline = new google.maps.Polyline({
+            path: [
+              { lat: coordsInicial.lat, lng: coordsInicial.lng },
+              { lat: coordsFinal.lat, lng: coordsFinal.lng }
+            ],
+            geodesic: true,
+            strokeColor: cor,
+            strokeOpacity: 1.0,
+            strokeWeight: espessura,
+            map: linhasTrechoAtivas ? window.mapa : null
+          });
+          
+          // Criar conteúdo do InfoWindow
+          const infoContent = `
+            <div style="font-family: Arial, sans-serif; max-width: 300px; line-height: 1.5;">
+              <div style="background: linear-gradient(135deg, ${cor}, ${cor}dd); color: white; margin: -10px -10px 15px -10px; padding: 15px; border-radius: 8px 8px 0 0;">
+                <h3 style="margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                  <span style="width: 16px; height: 16px; background: white; border-radius: 50%; display: inline-block;"></span>
+                  ${linha.rodovia}
+                </h3>
+              </div>
+              <p style="margin: 8px 0;"><strong>🛣️ Rodovia:</strong> ${linha.rodovia}</p>
+              <p style="margin: 8px 0;"><strong>📏 Trecho:</strong> Km ${linha.km_inicial} - ${linha.km_final}</p>
+              <p style="margin: 8px 0;"><strong>📐 Extensão:</strong> ${(parseFloat(linha.km_final) - parseFloat(linha.km_inicial)).toFixed(3)} km</p>
+              
+              <div style="background: #f5f5f5; padding: 10px; border-radius: 6px; margin: 10px 0;">
+                <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #666;">Detalhes Visuais:</h4>
+                <p style="margin: 4px 0; font-size: 13px;"><strong>Cor:</strong> ${cor}</p>
+                <p style="margin: 4px 0; font-size: 13px;"><strong>Espessura:</strong> ${espessura}px</p>
+              </div>
+              
+              <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+                <p style="margin: 4px 0;"><strong>Coordenadas Inicial:</strong> ${coordsInicial.lat.toFixed(6)}, ${coordsInicial.lng.toFixed(6)}</p>
+                <p style="margin: 4px 0;"><strong>Coordenadas Final:</strong> ${coordsFinal.lat.toFixed(6)}, ${coordsFinal.lng.toFixed(6)}</p>
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+                  <a href="https://www.google.com/maps/dir/${coordsInicial.lat},${coordsInicial.lng}/${coordsFinal.lat},${coordsFinal.lng}" 
+                     target="_blank" 
+                     style="background: ${cor}; color: white; padding: 6px 10px; text-decoration: none; border-radius: 4px; font-size: 11px;">
+                    🗺️ Rota no Google Maps
+                  </a>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          const infoWindow = new google.maps.InfoWindow({
+            content: infoContent,
+            position: {
+              lat: (coordsInicial.lat + coordsFinal.lat) / 2,
+              lng: (coordsInicial.lng + coordsFinal.lng) / 2
+            }
+          });
+          
+          // Event listener para a polyline
+          polyline.addListener('click', (event) => {
+            // Fechar outras info windows abertas
+            linhasPorTrecho.forEach(item => {
+              if (item.infoWindow) {
+                item.infoWindow.close();
+              }
+            });
+            
+            // Posicionar o InfoWindow no local do clique
+            infoWindow.setPosition(event.latLng);
+            infoWindow.open(window.mapa);
+          });
+          
+          // Armazenar referências
+          const linhaItem = {
+            polyline: polyline,
+            infoWindow: infoWindow,
+            data: linha
+          };
+          
+          linhasPorTrecho.push(linhaItem);
+        });
+        
+        console.log(`✅ ${linhasPorTrecho.length} linhas por trecho criadas`);
+      }
+      
       // Alternar visibilidade dos pontos de interesse
       function togglePontosInteresse() {
         pontosInteresseAtivos = !pontosInteresseAtivos;
@@ -962,6 +1149,59 @@
         
         if (marcadoresPontosInteresse.length === 1) {
           setTimeout(() => window.mapa.setZoom(16), 500);
+        }
+      }
+      
+      // Alternar visibilidade das linhas por trecho
+      function toggleLinhasPorTrecho() {
+        linhasTrechoAtivas = !linhasTrechoAtivas;
+        
+        // Atualizar visual do botão
+        if (linhasTrechoAtivas) {
+          linhasTrechoBtn.classList.add('active');
+        } else {
+          linhasTrechoBtn.classList.remove('active');
+        }
+        
+        linhasPorTrecho.forEach(item => {
+          if (item.polyline) item.polyline.setMap(linhasTrechoAtivas ? window.mapa : null);
+        });
+        
+        const mensagem = linhasTrechoAtivas ? 
+          `✅ ${linhasPorTrecho.length} linhas por trecho ativadas!` : 
+          '❌ Linhas por trecho ocultas';
+        
+        mostrarMensagemSucesso(mensagem);
+        
+        // Se ativando e não há linhas, carregar dados
+        if (linhasTrechoAtivas && linhasPorTrecho.length === 0) {
+          carregarLinhasPorTrecho();
+        }
+        
+        // Zoom nas linhas se ativadas
+        if (linhasTrechoAtivas && linhasPorTrecho.length > 0) {
+          setTimeout(zoomNasLinhasTrecho, 500);
+        }
+      }
+      
+      // Zoom nas linhas por trecho
+      function zoomNasLinhasTrecho() {
+        if (linhasPorTrecho.length === 0) return;
+        
+        const bounds = new google.maps.LatLngBounds();
+        linhasPorTrecho.forEach(item => {
+          if (item.polyline) {
+            const path = item.polyline.getPath();
+            path.forEach(point => {
+              bounds.extend(point);
+            });
+          }
+        });
+        
+        window.mapa.fitBounds(bounds);
+        
+        if (linhasPorTrecho.length === 1) {
+          setTimeout(() => window.mapa.setZoom(14), 500);
         }
       }
       
@@ -1260,6 +1500,13 @@
       pontosInteresseBtn.addEventListener('click', function() {
         console.log('🎯 Pontos de Interesse clicado');
         togglePontosInteresse();
+        fecharMenu();
+      });
+      
+      // Funcionalidade do botão Linhas por Trecho
+      linhasTrechoBtn.addEventListener('click', function() {
+        console.log('📏 Linhas por Trecho clicado');
+        toggleLinhasPorTrecho();
         fecharMenu();
       });
       
