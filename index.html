@@ -660,109 +660,152 @@
         }
         
         // Limpar marcadores anteriores se existirem
-        marcadoresPontosInteresse.forEach(marker => marker.setMap(null));
+        marcadoresPontosInteresse.forEach(item => {
+          if (item.marker) item.marker.setMap(null);
+          if (item.circle) item.circle.setMap(null);
+        });
         marcadoresPontosInteresse = [];
         
         pontos.forEach((ponto, index) => {
-          const lat = parseFloat(ponto.Latitude);
-          const lng = parseFloat(ponto.Longitude);
+          // Validar coordenadas baseadas em rodovia e km ou coordenadas diretas
+          let lat, lng;
           
-          if (isNaN(lat) || isNaN(lng)) {
-            console.warn(`⚠️ Coordenadas inválidas para: ${ponto.Nome}`);
-            return;
-          }
-          
-          // Determinar cor do marcador baseado no tipo
-          let corMarcador = '#2196F3'; // Azul padrão
-          let iconeEmoji = '📍';
-          
-          if (ponto.Tipo) {
-            const tipo = ponto.Tipo.toLowerCase();
-            if (tipo.includes('hospital') || tipo.includes('saúde')) {
-              corMarcador = '#f44336';
-              iconeEmoji = '🏥';
-            } else if (tipo.includes('escola') || tipo.includes('educação')) {
-              corMarcador = '#ff9800';
-              iconeEmoji = '🏫';
-            } else if (tipo.includes('delegacia') || tipo.includes('polícia')) {
-              corMarcador = '#3f51b5';
-              iconeEmoji = '🚔';
-            } else if (tipo.includes('bombeiro')) {
-              corMarcador = '#f44336';
-              iconeEmoji = '🚒';
-            } else if (tipo.includes('posto') || tipo.includes('combustível')) {
-              corMarcador = '#4caf50';
-              iconeEmoji = '⛽';
-            } else if (tipo.includes('restaurante') || tipo.includes('alimentação')) {
-              corMarcador = '#ff5722';
-              iconeEmoji = '🍽️';
-            } else if (tipo.includes('hotel') || tipo.includes('pousada')) {
-              corMarcador = '#9c27b0';
-              iconeEmoji = '🏨';
+          if (ponto.Latitude && ponto.Longitude) {
+            // Coordenadas diretas
+            lat = parseFloat(ponto.Latitude);
+            lng = parseFloat(ponto.Longitude);
+          } else if (ponto.rodovia && ponto.km) {
+            // Buscar coordenadas baseadas na rodovia e km
+            const coords = buscarCoordenadasPorRodoviaKm(ponto.rodovia, ponto.km);
+            if (coords) {
+              lat = coords.lat;
+              lng = coords.lng;
             }
           }
           
+          if (isNaN(lat) || isNaN(lng)) {
+            console.warn(`⚠️ Coordenadas inválidas para: ${ponto.tipo || ponto.Nome}`);
+            return;
+          }
+          
+          // Configurações do círculo
+          const cor = ponto.cor || '#2196F3';
+          const opacidade = parseFloat(ponto.opacidade) || 0.7;
+          const raio = parseFloat(ponto.raio) || 200; // em metros
+          
+          // Criar círculo no mapa
+          const circle = new google.maps.Circle({
+            strokeColor: cor,
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: cor,
+            fillOpacity: opacidade,
+            map: pontosInteresseAtivos ? window.mapa : null,
+            center: { lat, lng },
+            radius: raio
+          });
+          
+          // Criar marcador central
           const marker = new google.maps.Marker({
             position: { lat, lng },
             map: pontosInteresseAtivos ? window.mapa : null,
-            title: ponto.Nome,
+            title: ponto.tipo || ponto.Nome,
             icon: {
               url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40">
-                  <path d="M15 0C6.716 0 0 6.716 0 15c0 8.284 15 25 15 25s15-16.716 15-25C30 6.716 23.284 0 15 0z" 
-                        fill="${corMarcador}" stroke="#fff" stroke-width="2"/>
-                  <circle cx="15" cy="15" r="8" fill="#fff"/>
-                  <text x="15" y="20" text-anchor="middle" font-size="12" fill="${corMarcador}" font-weight="bold">${iconeEmoji}</text>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" fill="${cor}" stroke="#fff" stroke-width="2"/>
+                  <circle cx="12" cy="12" r="4" fill="#fff"/>
                 </svg>
               `),
-              scaledSize: new google.maps.Size(30, 40),
-              anchor: new google.maps.Point(15, 40)
+              scaledSize: new google.maps.Size(24, 24),
+              anchor: new google.maps.Point(12, 12)
             },
             animation: google.maps.Animation.DROP
           });
           
           // Criar conteúdo do InfoWindow
           let infoContent = `
-            <div style="font-family: Arial, sans-serif; max-width: 300px; line-height: 1.5;">
-              <div style="background: linear-gradient(135deg, ${corMarcador}, ${corMarcador}dd); color: white; margin: -10px -10px 15px -10px; padding: 15px; border-radius: 8px 8px 0 0;">
+            <div style="font-family: Arial, sans-serif; max-width: 350px; line-height: 1.5;">
+              <div style="background: linear-gradient(135deg, ${cor}, ${cor}dd); color: white; margin: -10px -10px 15px -10px; padding: 15px; border-radius: 8px 8px 0 0;">
                 <h3 style="margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 20px;">${iconeEmoji}</span>
-                  ${ponto.Nome}
+                  <span style="width: 16px; height: 16px; background: white; border-radius: 50%; display: inline-block;"></span>
+                  ${ponto.tipo || ponto.Nome}
                 </h3>
               </div>
           `;
           
-          if (ponto.Tipo) {
-            infoContent += `<p style="margin: 8px 0;"><strong>🏷️ Tipo:</strong> ${ponto.Tipo}</p>`;
+          if (ponto.rodovia) {
+            infoContent += `<p style="margin: 8px 0;"><strong>🛣️ Rodovia:</strong> ${ponto.rodovia}</p>`;
           }
           
-          if (ponto.Endereço || ponto.Endereco) {
-            const endereco = ponto.Endereço || ponto.Endereco;
-            infoContent += `<p style="margin: 8px 0;"><strong>📍 Endereço:</strong> ${endereco}</p>`;
+          if (ponto.km) {
+            infoContent += `<p style="margin: 8px 0;"><strong>📏 Km:</strong> ${ponto.km}</p>`;
           }
           
-          if (ponto.Telefone) {
-            infoContent += `<p style="margin: 8px 0;"><strong>📞 Telefone:</strong> <a href="tel:${ponto.Telefone}" style="color: ${corMarcador};">${ponto.Telefone}</a></p>`;
+          if (ponto.obs) {
+            infoContent += `<p style="margin: 8px 0;"><strong>� Observações:</strong> ${ponto.obs}</p>`;
           }
           
-          if (ponto.Horario || ponto.Horário) {
-            const horario = ponto.Horario || ponto.Horário;
-            infoContent += `<p style="margin: 8px 0;"><strong>🕐 Horário:</strong> ${horario}</p>`;
-          }
+          // Informações técnicas
+          infoContent += `
+            <div style="background: #f5f5f5; padding: 10px; border-radius: 6px; margin: 10px 0;">
+              <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #666;">Detalhes Técnicos:</h4>
+              <p style="margin: 4px 0; font-size: 13px;"><strong>Raio:</strong> ${raio}m</p>
+              <p style="margin: 4px 0; font-size: 13px;"><strong>Cor:</strong> ${cor}</p>
+              <p style="margin: 4px 0; font-size: 13px;"><strong>Opacidade:</strong> ${(opacidade * 100).toFixed(0)}%</p>
+            </div>
+          `;
           
-          if (ponto.Observações || ponto.Observacoes) {
-            const obs = ponto.Observações || ponto.Observacoes;
-            infoContent += `<p style="margin: 8px 0;"><strong>📝 Observações:</strong> ${obs}</p>`;
+          // Fotos do Google Drive
+          if (ponto.fotos) {
+            const driveLink = ponto.fotos;
+            let driveId = '';
+            
+            // Extrair ID da pasta do Google Drive
+            const matches = driveLink.match(/folders\/([a-zA-Z0-9-_]+)/);
+            if (matches) {
+              driveId = matches[1];
+            }
+            
+            infoContent += `
+              <div style="margin: 15px 0; padding: 10px; background: #e8f5e8; border-radius: 6px; border-left: 4px solid #4caf50;">
+                <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #2e7d32;">� Fotos Disponíveis</h4>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <a href="${driveLink}" target="_blank" 
+                     style="background: #4caf50; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                    📂 Ver Pasta no Drive
+                  </a>
+            `;
+            
+            if (driveId) {
+              // Link direto para visualização das imagens
+              infoContent += `
+                  <a href="https://drive.google.com/drive/folders/${driveId}?usp=sharing" target="_blank" 
+                     style="background: #2196f3; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                    🖼️ Galeria
+                  </a>
+              `;
+            }
+            
+            infoContent += `
+                </div>
+              </div>
+            `;
           }
           
           infoContent += `
               <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
                 <p style="margin: 4px 0;"><strong>Coordenadas:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
                   <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" 
                      target="_blank" 
-                     style="background: ${corMarcador}; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;">
-                    🗺️ Navegar até aqui
+                     style="background: ${cor}; color: white; padding: 6px 10px; text-decoration: none; border-radius: 4px; font-size: 11px;">
+                    🗺️ Navegar
+                  </a>
+                  <a href="https://www.google.com/maps/@${lat},${lng},18z" 
+                     target="_blank" 
+                     style="background: #666; color: white; padding: 6px 10px; text-decoration: none; border-radius: 4px; font-size: 11px;">
+                    📍 Ver Local
                   </a>
                 </div>
               </div>
@@ -770,26 +813,75 @@
           `;
           
           const infoWindow = new google.maps.InfoWindow({
-            content: infoContent
+            content: infoContent,
+            maxWidth: 400
           });
           
-          marker.addListener('click', () => {
+          // Event listeners para marker e círculo
+          const openInfoWindow = () => {
             // Fechar outras info windows abertas
-            marcadoresPontosInteresse.forEach(m => {
-              if (m.infoWindow) {
-                m.infoWindow.close();
+            marcadoresPontosInteresse.forEach(item => {
+              if (item.infoWindow) {
+                item.infoWindow.close();
               }
             });
             
             infoWindow.open(window.mapa, marker);
-          });
+          };
           
-          // Armazenar referência do infoWindow no marker
-          marker.infoWindow = infoWindow;
-          marcadoresPontosInteresse.push(marker);
+          marker.addListener('click', openInfoWindow);
+          circle.addListener('click', openInfoWindow);
+          
+          // Armazenar referências
+          const pontoItem = {
+            marker: marker,
+            circle: circle,
+            infoWindow: infoWindow,
+            data: ponto
+          };
+          
+          marcadoresPontosInteresse.push(pontoItem);
         });
         
-        console.log(`✅ ${marcadoresPontosInteresse.length} marcadores de pontos de interesse criados`);
+        console.log(`✅ ${marcadoresPontosInteresse.length} pontos de interesse criados`);
+      }
+      
+      // Buscar coordenadas por rodovia e km (integração com dados existentes)
+      function buscarCoordenadasPorRodoviaKm(rodovia, km) {
+        // Esta função buscará nas planilhas existentes as coordenadas
+        // baseadas na rodovia e quilometragem fornecidas
+        
+        if (!dadosOriginais || dadosOriginais.length === 0) {
+          console.warn('⚠️ Dados de rodovias não carregados ainda');
+          return null;
+        }
+        
+        // Normalizar valores para busca
+        const rodoviaLimpa = rodovia.toString().trim().toUpperCase();
+        const kmNumerico = parseFloat(km.toString().replace(',', '.'));
+        
+        // Buscar correspondência exata ou próxima
+        const pontoEncontrado = dadosOriginais.find(item => {
+          const rodoviaItem = item.SP ? item.SP.toString().trim().toUpperCase() : '';
+          const kmItem = parseFloat(item['KM '] ? item['KM '].toString().replace(',', '.') : '0');
+          
+          return rodoviaItem === rodoviaLimpa && Math.abs(kmItem - kmNumerico) < 0.1;
+        });
+        
+        if (pontoEncontrado && pontoEncontrado.LOCALIZAÇÃO) {
+          const coords = pontoEncontrado.LOCALIZAÇÃO.split(',');
+          if (coords.length === 2) {
+            const lat = parseFloat(coords[0].trim());
+            const lng = parseFloat(coords[1].trim());
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+              return { lat, lng };
+            }
+          }
+        }
+        
+        console.warn(`⚠️ Coordenadas não encontradas para ${rodovia} km ${km}`);
+        return null;
       }
       
       // Alternar visibilidade dos pontos de interesse
@@ -803,8 +895,9 @@
           pontosInteresseBtn.classList.remove('active');
         }
         
-        marcadoresPontosInteresse.forEach(marker => {
-          marker.setMap(pontosInteresseAtivos ? window.mapa : null);
+        marcadoresPontosInteresse.forEach(item => {
+          if (item.marker) item.marker.setMap(pontosInteresseAtivos ? window.mapa : null);
+          if (item.circle) item.circle.setMap(pontosInteresseAtivos ? window.mapa : null);
         });
         
         const mensagem = pontosInteresseAtivos ? 
@@ -829,8 +922,10 @@
         if (marcadoresPontosInteresse.length === 0) return;
         
         const bounds = new google.maps.LatLngBounds();
-        marcadoresPontosInteresse.forEach(marker => {
-          bounds.extend(marker.getPosition());
+        marcadoresPontosInteresse.forEach(item => {
+          if (item.marker) {
+            bounds.extend(item.marker.getPosition());
+          }
         });
         
         window.mapa.fitBounds(bounds);
