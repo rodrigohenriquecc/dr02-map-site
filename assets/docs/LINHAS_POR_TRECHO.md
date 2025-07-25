@@ -49,7 +49,8 @@ https://docs.google.com/spreadsheets/d/e/2PACX-1vR2wW76oOiHiip6-ThZWsw6hH5_y-7kl
 ## 🎨 Funcionalidades
 
 ### **Visualização no Mapa:**
-- **Polylines**: Linhas retas conectando os pontos inicial e final
+- **Polylines Reais**: Linhas seguindo o traçado real da rodovia (não retas)
+- **Múltiplos Pontos**: Utiliza todos os pontos disponíveis na base de dados entre os kms
 - **Cores Personalizadas**: Cada linha pode ter sua própria cor
 - **Espessuras Variáveis**: Controle visual da importância do trecho
 - **InfoWindows Interativos**: Clique na linha para ver detalhes
@@ -57,15 +58,19 @@ https://docs.google.com/spreadsheets/d/e/2PACX-1vR2wW76oOiHiip6-ThZWsw6hH5_y-7kl
 ### **Informações Exibidas:**
 - Nome da rodovia
 - Trecho (Km inicial - Km final)
-- Extensão calculada automaticamente
+- Extensão linear (diferença entre kms)
+- Extensão real (calculada seguindo o traçado)
+- Quantidade de pontos no traçado
 - Detalhes visuais (cor e espessura)
 - Coordenadas dos pontos inicial e final
 - Link direto para rota no Google Maps
 
-### **Integração com Sistema:**
-- Busca automática de coordenadas na base existente de dados
-- Correspondência por rodovia e quilometragem
-- Fallback para interpolação entre pontos próximos
+### **Integração Inteligente com Sistema:**
+- Busca automática de **todos os pontos** entre os kms especificados
+- Ordenação por quilometragem para traçado sequencial
+- Correspondência exata por rodovia e intervalo de km
+- Fallback para pontos aproximados quando dados são escassos
+- Cálculo de extensão real usando fórmula de Haversine
 - Logs detalhados para debugging
 
 ## 🎯 Como Usar
@@ -103,9 +108,11 @@ https://docs.google.com/spreadsheets/d/e/2PACX-1vR2wW76oOiHiip6-ThZWsw6hH5_y-7kl
 ### **Processamento dos Dados:**
 1. Carregamento da planilha via CSV público
 2. Validação dos campos obrigatórios
-3. Busca de coordenadas na base de dados existente
-4. Criação de polylines no Google Maps
-5. Configuração de eventos e InfoWindows
+3. Busca de **todos os pontos** entre km inicial e final na base de dados
+4. Ordenação sequencial por quilometragem
+5. Criação de polylines com **traçado real** da rodovia no Google Maps
+6. Cálculo de extensão real usando fórmula de Haversine
+7. Configuração de eventos e InfoWindows
 
 ### **Tratamento de Erros:**
 - Fallback para CORS com proxy
@@ -117,3 +124,6 @@ https://docs.google.com/spreadsheets/d/e/2PACX-1vR2wW76oOiHiip6-ThZWsw6hH5_y-7kl
 - Carregamento sob demanda
 - Limpeza automática de elementos anteriores
 - Otimização para grandes volumes de dados
+- **Algoritmo inteligente** de busca de pontos no traçado
+- **Cálculo eficiente** de distâncias reais
+- **Fallback robusto** para trechos com poucos dados
