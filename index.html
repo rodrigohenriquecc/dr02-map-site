@@ -199,6 +199,16 @@
       transform: translateX(-5px);
     }
     
+    .menu-item.active {
+      background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+      color: white;
+      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    }
+    
+    .menu-item.active:hover {
+      background: linear-gradient(135deg, #388e3c 0%, #4caf50 100%);
+    }
+    
     .menu-item-icon {
       width: 24px;
       height: 24px;
@@ -447,6 +457,29 @@
       }
     }
     
+    /* ====== ANIMAÇÕES ====== */
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+    
     /* (o restante dos seus estilos permanece inalterado) */
   </style>
 </head>
@@ -569,8 +602,294 @@
       let dadosFiltro = [];
       let dadosOriginais = [];
       let marcadoresFiltrados = [];
+      let marcadoresPontosInteresse = [];
+      let pontosInteresseAtivos = false;
       
-      // Carregar dados dos CSVs
+      // ID da planilha do Google Sheets
+      const PLANILHA_PONTOS_INTERESSE_ID = '1Zxrq6L68fkTuygCE6yVVLOb9wU0UhoQfQHOMm_Xr8RI';
+      const PLANILHA_GID = '1698628532';
+      
+      // Carregar e processar pontos de interesse do Google Sheets
+      async function carregarPontosInteresse() {
+        try {
+          // URL para acessar a planilha em formato CSV
+          const csvUrl = `https://docs.google.com/spreadsheets/d/${PLANILHA_PONTOS_INTERESSE_ID}/export?format=csv&gid=${PLANILHA_GID}`;
+          
+          console.log('🔄 Carregando pontos de interesse...');
+          
+          const response = await fetch(csvUrl);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const csvText = await response.text();
+          
+          Papa.parse(csvText, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+              if (results.errors.length > 0) {
+                console.warn('⚠️ Avisos ao processar CSV:', results.errors);
+              }
+              
+              const pontosValidos = results.data.filter(ponto => {
+                return ponto.Latitude && ponto.Longitude && ponto.Nome;
+              });
+              
+              console.log(`✅ ${pontosValidos.length} pontos de interesse carregados`);
+              criarMarcadoresPontosInteresse(pontosValidos);
+            },
+            error: function(error) {
+              console.error('❌ Erro ao processar CSV:', error);
+              mostrarMensagemErro('Erro ao processar dados da planilha');
+            }
+          });
+          
+        } catch (error) {
+          console.error('❌ Erro ao carregar pontos de interesse:', error);
+          mostrarMensagemErro('Erro ao conectar com a planilha do Google Sheets');
+        }
+      }
+      
+      // Criar marcadores dos pontos de interesse
+      function criarMarcadoresPontosInteresse(pontos) {
+        if (!window.mapa) {
+          console.warn('⚠️ Mapa não está disponível ainda');
+          setTimeout(() => criarMarcadoresPontosInteresse(pontos), 1000);
+          return;
+        }
+        
+        // Limpar marcadores anteriores se existirem
+        marcadoresPontosInteresse.forEach(marker => marker.setMap(null));
+        marcadoresPontosInteresse = [];
+        
+        pontos.forEach((ponto, index) => {
+          const lat = parseFloat(ponto.Latitude);
+          const lng = parseFloat(ponto.Longitude);
+          
+          if (isNaN(lat) || isNaN(lng)) {
+            console.warn(`⚠️ Coordenadas inválidas para: ${ponto.Nome}`);
+            return;
+          }
+          
+          // Determinar cor do marcador baseado no tipo
+          let corMarcador = '#2196F3'; // Azul padrão
+          let iconeEmoji = '📍';
+          
+          if (ponto.Tipo) {
+            const tipo = ponto.Tipo.toLowerCase();
+            if (tipo.includes('hospital') || tipo.includes('saúde')) {
+              corMarcador = '#f44336';
+              iconeEmoji = '🏥';
+            } else if (tipo.includes('escola') || tipo.includes('educação')) {
+              corMarcador = '#ff9800';
+              iconeEmoji = '🏫';
+            } else if (tipo.includes('delegacia') || tipo.includes('polícia')) {
+              corMarcador = '#3f51b5';
+              iconeEmoji = '🚔';
+            } else if (tipo.includes('bombeiro')) {
+              corMarcador = '#f44336';
+              iconeEmoji = '🚒';
+            } else if (tipo.includes('posto') || tipo.includes('combustível')) {
+              corMarcador = '#4caf50';
+              iconeEmoji = '⛽';
+            } else if (tipo.includes('restaurante') || tipo.includes('alimentação')) {
+              corMarcador = '#ff5722';
+              iconeEmoji = '🍽️';
+            } else if (tipo.includes('hotel') || tipo.includes('pousada')) {
+              corMarcador = '#9c27b0';
+              iconeEmoji = '🏨';
+            }
+          }
+          
+          const marker = new google.maps.Marker({
+            position: { lat, lng },
+            map: pontosInteresseAtivos ? window.mapa : null,
+            title: ponto.Nome,
+            icon: {
+              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40">
+                  <path d="M15 0C6.716 0 0 6.716 0 15c0 8.284 15 25 15 25s15-16.716 15-25C30 6.716 23.284 0 15 0z" 
+                        fill="${corMarcador}" stroke="#fff" stroke-width="2"/>
+                  <circle cx="15" cy="15" r="8" fill="#fff"/>
+                  <text x="15" y="20" text-anchor="middle" font-size="12" fill="${corMarcador}" font-weight="bold">${iconeEmoji}</text>
+                </svg>
+              `),
+              scaledSize: new google.maps.Size(30, 40),
+              anchor: new google.maps.Point(15, 40)
+            },
+            animation: google.maps.Animation.DROP
+          });
+          
+          // Criar conteúdo do InfoWindow
+          let infoContent = `
+            <div style="font-family: Arial, sans-serif; max-width: 300px; line-height: 1.5;">
+              <div style="background: linear-gradient(135deg, ${corMarcador}, ${corMarcador}dd); color: white; margin: -10px -10px 15px -10px; padding: 15px; border-radius: 8px 8px 0 0;">
+                <h3 style="margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 20px;">${iconeEmoji}</span>
+                  ${ponto.Nome}
+                </h3>
+              </div>
+          `;
+          
+          if (ponto.Tipo) {
+            infoContent += `<p style="margin: 8px 0;"><strong>🏷️ Tipo:</strong> ${ponto.Tipo}</p>`;
+          }
+          
+          if (ponto.Endereço || ponto.Endereco) {
+            const endereco = ponto.Endereço || ponto.Endereco;
+            infoContent += `<p style="margin: 8px 0;"><strong>📍 Endereço:</strong> ${endereco}</p>`;
+          }
+          
+          if (ponto.Telefone) {
+            infoContent += `<p style="margin: 8px 0;"><strong>📞 Telefone:</strong> <a href="tel:${ponto.Telefone}" style="color: ${corMarcador};">${ponto.Telefone}</a></p>`;
+          }
+          
+          if (ponto.Horario || ponto.Horário) {
+            const horario = ponto.Horario || ponto.Horário;
+            infoContent += `<p style="margin: 8px 0;"><strong>🕐 Horário:</strong> ${horario}</p>`;
+          }
+          
+          if (ponto.Observações || ponto.Observacoes) {
+            const obs = ponto.Observações || ponto.Observacoes;
+            infoContent += `<p style="margin: 8px 0;"><strong>📝 Observações:</strong> ${obs}</p>`;
+          }
+          
+          infoContent += `
+              <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+                <p style="margin: 4px 0;"><strong>Coordenadas:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
+                <div style="margin-top: 10px;">
+                  <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" 
+                     target="_blank" 
+                     style="background: ${corMarcador}; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;">
+                    🗺️ Navegar até aqui
+                  </a>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          const infoWindow = new google.maps.InfoWindow({
+            content: infoContent
+          });
+          
+          marker.addListener('click', () => {
+            // Fechar outras info windows abertas
+            marcadoresPontosInteresse.forEach(m => {
+              if (m.infoWindow) {
+                m.infoWindow.close();
+              }
+            });
+            
+            infoWindow.open(window.mapa, marker);
+          });
+          
+          // Armazenar referência do infoWindow no marker
+          marker.infoWindow = infoWindow;
+          marcadoresPontosInteresse.push(marker);
+        });
+        
+        console.log(`✅ ${marcadoresPontosInteresse.length} marcadores de pontos de interesse criados`);
+      }
+      
+      // Alternar visibilidade dos pontos de interesse
+      function togglePontosInteresse() {
+        pontosInteresseAtivos = !pontosInteresseAtivos;
+        
+        // Atualizar visual do botão
+        if (pontosInteresseAtivos) {
+          pontosInteresseBtn.classList.add('active');
+        } else {
+          pontosInteresseBtn.classList.remove('active');
+        }
+        
+        marcadoresPontosInteresse.forEach(marker => {
+          marker.setMap(pontosInteresseAtivos ? window.mapa : null);
+        });
+        
+        const mensagem = pontosInteresseAtivos ? 
+          `✅ ${marcadoresPontosInteresse.length} pontos de interesse ativados!` : 
+          '❌ Pontos de interesse ocultos';
+        
+        mostrarMensagemSucesso(mensagem);
+        
+        // Se ativando e não há marcadores, carregar dados
+        if (pontosInteresseAtivos && marcadoresPontosInteresse.length === 0) {
+          carregarPontosInteresse();
+        }
+        
+        // Zoom nos pontos se ativados
+        if (pontosInteresseAtivos && marcadoresPontosInteresse.length > 0) {
+          setTimeout(zoomNosPontosInteresse, 500);
+        }
+      }
+      
+      // Zoom nos pontos de interesse
+      function zoomNosPontosInteresse() {
+        if (marcadoresPontosInteresse.length === 0) return;
+        
+        const bounds = new google.maps.LatLngBounds();
+        marcadoresPontosInteresse.forEach(marker => {
+          bounds.extend(marker.getPosition());
+        });
+        
+        window.mapa.fitBounds(bounds);
+        
+        if (marcadoresPontosInteresse.length === 1) {
+          setTimeout(() => window.mapa.setZoom(16), 500);
+        }
+      }
+      
+      // Mostrar mensagem de sucesso
+      function mostrarMensagemSucesso(mensagem) {
+        if (typeof mostrarMensagemDiscreta === 'function') {
+          mostrarMensagemDiscreta(mensagem);
+        } else {
+          // Criar notificação personalizada
+          criarNotificacao(mensagem, 'success');
+        }
+      }
+      
+      // Mostrar mensagem de erro
+      function mostrarMensagemErro(mensagem) {
+        if (typeof mostrarMensagemDiscreta === 'function') {
+          mostrarMensagemDiscreta(mensagem);
+        } else {
+          criarNotificacao(mensagem, 'error');
+        }
+      }
+      
+      // Criar notificação personalizada
+      function criarNotificacao(mensagem, tipo = 'info') {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: ${tipo === 'error' ? '#f44336' : tipo === 'success' ? '#4caf50' : '#2196f3'};
+          color: white;
+          padding: 15px 20px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          z-index: 4000;
+          max-width: 300px;
+          font-family: Arial, sans-serif;
+          font-size: 14px;
+          animation: slideIn 0.3s ease;
+        `;
+        
+        notification.textContent = mensagem;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.style.animation = 'slideOut 0.3s ease forwards';
+          setTimeout(() => {
+            if (notification.parentNode) {
+              notification.parentNode.removeChild(notification);
+            }
+          }, 300);
+        }, 4000);
+      }
       async function carregarDadosFiltro() {
         try {
           // Carregar PLANILHA BI - OFICIAL.csv
@@ -815,13 +1134,7 @@
       // Funcionalidade do botão Pontos de Interesse
       pontosInteresseBtn.addEventListener('click', function() {
         console.log('🎯 Pontos de Interesse clicado');
-        
-        if (typeof mostrarMensagemDiscreta === 'function') {
-          mostrarMensagemDiscreta('Pontos de Interesse ativados!');
-        } else {
-          alert('Pontos de Interesse ativados!');
-        }
-        
+        togglePontosInteresse();
         fecharMenu();
       });
       
