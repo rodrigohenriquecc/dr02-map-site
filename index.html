@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>CGR 02 - Sistema de Localização (Google Maps)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- favicon "vazio" evita 404 -->
+  <link rel="icon" href="data:," />
+
+  <!-- JSZip, shp.js, Turf, PapaParse, toGeoJSON -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/shpjs@3.6.2/dist/shp.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7.2.0/turf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
+
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- =================== GOOGLE MAPS =================== -->
+  <!-- 1) A função initMap PRECISA estar disponível antes de a API carregar -->
+  <script>
+    // Função chamada como callback pela API do Google Maps
+    function initMap() {
+      console.log('🚀 initMap chamada pela API do Google Maps');
+      try {
+        const mapa = new google.maps.Map(document.getElementById('map'), {
+          zoom: 7,
+          center: { lat: -23.8, lng: -48.5 },
+          mapTypeId: google.maps.MapTypeId.ROADMAP,
+          gestureHandling: 'greedy',
+          zoomControl: true,
+          mapTypeControl: true,
+          scaleControl: true,
+          streetViewControl: true,
+          rotateControl: false,
+          fullscreenControl: true,
+        });
+        console.log('✅ Google Maps inicializado com sucesso!');
+
+        // Carrega o restante do sistema (script_google_maps.js)
+        if (typeof carregarSistemaCompleto === 'function') {
+          carregarSistemaCompleto(mapa);
+        } else {
+          console.log('⚠️ Sistema completo não disponível, carregando...');
+          const script = document.createElement('script');
+          script.src = 'archives/assets/js/script_google_maps.js';
+          script.onload = () => {
+            console.log('✅ Script do sistema carregado');
+            if (typeof carregarSistemaCompleto === 'function') {
+              carregarSistemaCompleto(mapa);
+            }
+          };
+          document.head.appendChild(script);
+        }
+
+        // Expõe o objeto do mapa globalmente (útil para depuração)
+        window.mapa = mapa;
+      } catch (error) {
+        console.error('❌ Erro ao inicializar Google Maps:', error);
+      }
+    }
+    // Garante visibilidade global
+    window.initMap = initMap;
+    console.log('✅ initMap definida globalmente');
+  </script>
+
+  <!-- 2) Carrega a API JavaScript do Google Maps dinâmicamente -->
+  <script>
+    // 🔑 Chave de API — restrinja por domínio e por API no Google Cloud Console
+    const CHAVE_GOOGLE_MAPS = 'AIzaSyDktuBso1pmwaQNwKsqvb54aslwRurHB5c';
+
+    // Se a API ainda não estiver presente, injeta o <script>
+    if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+      const script = document.createElement('script');
+      script.src =
+        `https://maps.googleapis.com/maps/api/js?key=${CHAVE_GOOGLE_MAPS}` +
+        `&libraries=geometry,places,visualization,drawing` +
+        `&callback=initMap&v=weekly&loading=async`;
+      script.async = true;
+      script.defer = true;
+
+      script.onload = () => console.log('✅ Google Maps API carregada');
+      script.onerror = () => console.error('❌ Falha ao carregar Google Maps API');
+
+      document.head.appendChild(script);
+    }
+  </script>
+  <!-- =========== ESTILOS BÁSICOS =========== -->
+  <style>
+    html, body, #map { height: 100%; margin: 0; padding: 0; }
+    
+    /* ====== BOTÃO HAMBÚRGUER ====== */
+    .hamburger-btn {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      z-index: 2000;
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 4px 16px rgba(25, 118, 210, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .hamburger-btn:hover {
+      background: linear-gradient(135deg, #1251a3 0%, #1976d2 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+    }
+    
+    .hamburger-line {
+      width: 20px;
+      height: 2px;
+      background: white;
+      transition: all 0.3s ease;
+      border-radius: 1px;
+    }
+    
+    .hamburger-btn.active .hamburger-line:nth-child(1) {
+      transform: rotate(45deg) translate(6px, 6px);
+    }
+    
+    .hamburger-btn.active .hamburger-line:nth-child(2) {
+      opacity: 0;
+    }
+    
+    .hamburger-btn.active .hamburger-line:nth-child(3) {
+      transform: rotate(-45deg) translate(6px, -6px);
+    }
+    
+    /* ====== MENU LATERAL ====== */
+    .sidebar-menu {
+      position: fixed;
+      top: 0;
+      right: -300px;
+      width: 280px;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      box-shadow: -2px 0 20px rgba(0, 0, 0, 0.1);
+      z-index: 1999;
+      transition: right 0.3s ease;
+      overflow-y: auto;
+      padding-top: 80px;
+    }
+    
+    .sidebar-menu.active {
+      right: 0;
+    }
+    
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1998;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .sidebar-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* ====== ITENS DO MENU ====== */
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
+      margin: 5px 15px;
+      background: transparent;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+      width: calc(100% - 30px);
+      font-size: 16px;
+      color: #333;
+    }
+    
+    .menu-item:hover {
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      transform: translateX(-5px);
+    }
+    
+    .menu-item-icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 15px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .menu-item-text {
+      font-weight: 500;
+      flex: 1;
+    }
+    
+    /* ====== RESPONSIVIDADE ====== */
+    @media (max-width: 768px) {
+      .sidebar-menu {
+        width: 100vw;
+        right: -100vw;
+      }
+      
+      .hamburger-btn {
+        top: 10px;
+        right: 10px;
+        width: 45px;
+        height: 45px;
+      }
+    }
+    
+    /* (o restante dos seus estilos permanece inalterado) */
+  </style>
+</head>
+<body>
+  <!-- Botão Hambúrguer -->
+  <button class="hamburger-btn" id="hamburgerBtn">
+    <div class="hamburger-line"></div>
+    <div class="hamburger-line"></div>
+    <div class="hamburger-line"></div>
+  </button>
+  
+  <!-- Overlay do Menu -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  
+  <!-- Menu Lateral -->
+  <div class="sidebar-menu" id="sidebarMenu">
+    <button class="menu-item" id="pontosInteresseBtn">
+      <div class="menu-item-icon">📍</div>
+      <div class="menu-item-text">Pontos de Interesse</div>
+    </button>
+  </div>
+
+  <!-- Geolocalização -->
+  <!-- (mantido inalterado) -->
+
+  <!-- Sidebar esquerda -->
+  <!-- (mantido inalterado) -->
+
+  <!-- MAPA GOOGLE MAPS -->
+  <div id="map"></div>
+
+  <!-- JavaScript do Menu Hambúrguer -->
+  <script>
+    // Controle do Menu Hambúrguer
+    document.addEventListener('DOMContentLoaded', function() {
+      const hamburgerBtn = document.getElementById('hamburgerBtn');
+      const sidebarMenu = document.getElementById('sidebarMenu');
+      const sidebarOverlay = document.getElementById('sidebarOverlay');
+      const pontosInteresseBtn = document.getElementById('pontosInteresseBtn');
+      
+      let menuAberto = false;
+      
+      // Função para abrir/fechar menu
+      function toggleMenu() {
+        menuAberto = !menuAberto;
+        
+        if (menuAberto) {
+          hamburgerBtn.classList.add('active');
+          sidebarMenu.classList.add('active');
+          sidebarOverlay.classList.add('active');
+        } else {
+          hamburgerBtn.classList.remove('active');
+          sidebarMenu.classList.remove('active');
+          sidebarOverlay.classList.remove('active');
+        }
+      }
+      
+      // Função para fechar menu
+      function fecharMenu() {
+        if (menuAberto) {
+          menuAberto = false;
+          hamburgerBtn.classList.remove('active');
+          sidebarMenu.classList.remove('active');
+          sidebarOverlay.classList.remove('active');
+        }
+      }
+      
+      // Event listeners
+      hamburgerBtn.addEventListener('click', toggleMenu);
+      sidebarOverlay.addEventListener('click', fecharMenu);
+      
+      // Fechar menu com ESC
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && menuAberto) {
+          fecharMenu();
+        }
+      });
+      
+      // Funcionalidade do botão Pontos de Interesse
+      pontosInteresseBtn.addEventListener('click', function() {
+        console.log('🎯 Pontos de Interesse clicado');
+        
+        // Aqui você pode adicionar a funcionalidade específica
+        // Por exemplo: mostrar/ocultar pontos, filtrar, etc.
+        
+        // Exemplo de funcionalidade
+        if (typeof mostrarMensagemDiscreta === 'function') {
+          mostrarMensagemDiscreta('Pontos de Interesse ativados!');
+        } else {
+          alert('Pontos de Interesse ativados!');
+        }
+        
+        // Fechar menu após ação
+        fecharMenu();
+      });
+    });
+  </script>
+
+  <!-- Função utilitária mostrarMensagemDiscreta -->
+  <!-- (mantido inalterado) -->
+</body>
+</html>
