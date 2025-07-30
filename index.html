@@ -202,22 +202,57 @@
         // PRIORIDADE 1: Usar a nova coluna "Lat e Long" (coordenadas na mesma célula)
         if (ponto['Lat e Long']) {
           const coordText = ponto['Lat e Long'].toString().trim();
-          console.log(`🔍 Encontrada coluna "Lat e Long": ${coordText}`);
+          console.log(`🔍 Encontrada coluna "Lat e Long": "${coordText}"`);
           
           // Tentar diferentes separadores: vírgula, espaço, ponto-e-vírgula
           let coords = [];
           if (coordText.includes(',')) {
             coords = coordText.split(',');
+            console.log(`🔍 Dividindo por vírgula:`, coords);
           } else if (coordText.includes(';')) {
             coords = coordText.split(';');
+            console.log(`🔍 Dividindo por ponto-e-vírgula:`, coords);
           } else if (coordText.includes(' ') && coordText.split(' ').length >= 2) {
             coords = coordText.split(' ').filter(c => c.trim().length > 0);
+            console.log(`🔍 Dividindo por espaço:`, coords);
           }
           
           if (coords.length >= 2) {
-            lat = parseFloat(coords[0].trim().replace(',', '.'));
-            lng = parseFloat(coords[1].trim().replace(',', '.'));
-            console.log(`📍 Coordenadas extraídas da coluna "Lat e Long": Lat=${lat}, Long=${lng}`);
+            const coord1 = coords[0].trim().replace(',', '.');
+            const coord2 = coords[1].trim().replace(',', '.');
+            
+            console.log(`🔍 Coord1 (primeira): "${coord1}" -> ${parseFloat(coord1)}`);
+            console.log(`� Coord2 (segunda): "${coord2}" -> ${parseFloat(coord2)}`);
+            
+            // Detectar qual é latitude e qual é longitude
+            // Latitude: -90 a +90 (Brasil: -5 a -35)
+            // Longitude: -180 a +180 (Brasil: -35 a -75)
+            const val1 = parseFloat(coord1);
+            const val2 = parseFloat(coord2);
+            
+            if (!isNaN(val1) && !isNaN(val2)) {
+              // Brasil: Lat entre -5 e -35, Lng entre -35 e -75
+              // Se val1 está na faixa de latitude brasileira (-5 a -35)
+              if (val1 >= -35 && val1 <= -5 && val2 >= -75 && val2 <= -35) {
+                lat = val1;
+                lng = val2;
+                console.log(`✅ Ordem detectada: Lat primeiro (${lat}), Lng segundo (${lng})`);
+              }
+              // Se val2 está na faixa de latitude brasileira
+              else if (val2 >= -35 && val2 <= -5 && val1 >= -75 && val1 <= -35) {
+                lat = val2;
+                lng = val1;
+                console.log(`✅ Ordem detectada: Lng primeiro (${val1}), Lat segundo (${lat}) - INVERTIDO`);
+              }
+              // Fallback: assumir ordem tradicional Lat, Lng
+              else {
+                lat = val1;
+                lng = val2;
+                console.log(`⚠️ Ordem não detectada automaticamente, assumindo Lat primeiro: ${lat}, ${lng}`);
+              }
+              
+              console.log(`📍 Coordenadas finais extraídas: Lat=${lat}, Long=${lng}`);
+            }
           }
         }
         
@@ -291,6 +326,22 @@
           console.warn(`⚠️ Coordenadas inválidas para o ponto ${index + 1}:`, ponto);
           return;
         }
+
+        // Verificação de coordenadas do Brasil
+        if (lat > -5 || lat < -35 || lng > -35 || lng < -75) {
+          console.warn(`⚠️ Coordenadas fora do Brasil detectadas para ponto ${index + 1}: Lat=${lat}, Lng=${lng}`);
+          console.warn(`   Faixa esperada: Lat[-35 a -5], Lng[-75 a -35]`);
+          console.warn(`   Dados do ponto:`, ponto);
+          
+          // Tentar inverter se parece que está trocado
+          if (lng >= -35 && lng <= -5 && lat >= -75 && lat <= -35) {
+            console.log(`🔄 Tentando inverter coordenadas: ${lat} ↔ ${lng}`);
+            [lat, lng] = [lng, lat];
+            console.log(`✅ Coordenadas invertidas: Lat=${lat}, Lng=${lng}`);
+          }
+        }
+
+        console.log(`🎯 Coordenadas finais validadas: Lat=${lat}, Lng=${lng}`);
 
         pontosValidos++;
         
