@@ -616,6 +616,38 @@
       // URL da planilha publicada do OneDrive (formato de compartilhamento direto)
       const PLANILHA_PONTOS_INTERESSE_URL = 'https://1drv.ms/x/c/3417733bdfe00f49/EbmJLtJ8JEZFqo_XC1ZhHnoBkLc8CPTWUQ-7NdWof9d8NA?e=KsWcm6&download=1';
       
+      // Função para testar conectividade com OneDrive
+      async function testarConexaoOneDrive() {
+        console.log('🧪 Iniciando teste de conectividade com OneDrive...');
+        console.log('📋 URL a ser testada:', PLANILHA_PONTOS_INTERESSE_URL);
+        
+        const metodosTest = [
+          { nome: 'Direto', url: PLANILHA_PONTOS_INTERESSE_URL },
+          { nome: 'Proxy CORS', url: `https://corsproxy.io/?${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}` },
+          { nome: 'AllOrigins', url: `https://api.allorigins.win/get?url=${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}` }
+        ];
+        
+        for (const metodo of metodosTest) {
+          try {
+            console.log(`🔍 Testando método: ${metodo.nome}`);
+            const response = await fetch(metodo.url);
+            console.log(`📊 ${metodo.nome} - Status:`, response.status, response.statusText);
+            
+            if (response.ok) {
+              const texto = await response.text();
+              console.log(`✅ ${metodo.nome} funcionou! Tamanho da resposta:`, texto.length, 'chars');
+              console.log(`📄 Primeiros 100 chars:`, texto.substring(0, 100));
+              return true;
+            }
+          } catch (error) {
+            console.log(`❌ ${metodo.nome} falhou:`, error.message);
+          }
+        }
+        
+        console.log('❌ Todos os métodos de teste falharam');
+        return false;
+      }
+      
       // URL da planilha de linhas por trecho
       const PLANILHA_LINHAS_TRECHO_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR2wW76oOiHiip6-ThZWsw6hH5_y-7klCFeKUtR5J7VfSPEfN0G721SFxqLz9twIW25_JhYMXHsH69Z/pub?output=csv';
       
@@ -1623,7 +1655,16 @@
         
         // Se ativando e não há marcadores, carregar dados
         if (pontosInteresseAtivos && marcadoresPontosInteresse.length === 0) {
-          carregarPontosInteresse();
+          // Fazer teste de conectividade primeiro
+          console.log('🔄 Iniciando carregamento de pontos de interesse...');
+          testarConexaoOneDrive().then(conectividadeOk => {
+            if (conectividadeOk) {
+              console.log('✅ Teste de conectividade passou, carregando dados...');
+            } else {
+              console.warn('⚠️ Teste de conectividade falhou, tentando carregar mesmo assim...');
+            }
+            carregarPontosInteresse();
+          });
         }
         
         // Zoom nos pontos se ativados
