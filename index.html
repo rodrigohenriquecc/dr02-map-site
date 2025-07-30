@@ -123,36 +123,16 @@
     /*  Fetch com vários métodos (lida com CORS)                    */
     /*--------------------------------------------------------------*/
     async function baixarArquivoUltraCloud () {
-      const metodosDownload = [
-        /* 1) direto */
-        () => fetch(PLANILHA_PONTOS_INTERESSE_URL),
-
-        /* 2) via corsproxy.io */
-        () => fetch(`https://corsproxy.io/?${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`),
-
-        /* 3) URLs alternativas */
-        ...URLS_ALTERNATIVAS_ONEDRIVE.map(
-          url => () => fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`)
-        ),
-
-        /* 4) allorigins (fallback) */
-        () => fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`)
-              .then(r => r.ok ? r.json().then(j => ({ ok:true, arrayBuffer:() => fetch('data:,'+j.contents).then(r=>r.arrayBuffer()) })) : Promise.reject())
-      ];
-
-      let tentativa = 0;
-      for (const metodo of metodosDownload) {
-        tentativa++;
-        try {
-          console.log(`🔄 tentativa ${tentativa}/${metodosDownload.length}`);
-          const resp = await metodo();
-          if (!resp.ok) throw new Error(`status ${resp.status}`);
-          return resp.arrayBuffer ? resp.arrayBuffer() : resp;   // XLSX via ArrayBuffer
-        } catch (e) {
-          console.warn(`⚠️ falhou tentativa ${tentativa}:`, e.message);
-        }
+      // Sempre usar proxy corsproxy.io para evitar erro de CORS
+      try {
+        console.log('🔄 Download via corsproxy.io');
+        const resp = await fetch(`https://corsproxy.io/?${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`);
+        if (!resp.ok) throw new Error(`status ${resp.status}`);
+        return resp.arrayBuffer ? resp.arrayBuffer() : resp;
+      } catch (e) {
+        console.error('❌ Falha no download via proxy:', e);
+        throw new Error('Download falhou via proxy CORS');
       }
-      throw new Error('Todas as tentativas de download falharam');
     }
 
     /*--------------------------------------------------------------*/
@@ -181,7 +161,12 @@
           const obj={}; cabec.forEach((h,i)=>obj[h]=l[i]); return obj;
         }).filter(o=>Object.keys(o).length);
         console.log('✅ planilha carregada:', pontos.length,'registros');
-        console.log('📄 Primeiro ponto:', pontos[0]);
+        if (pontos.length > 0) {
+          console.log('📄 Primeiro ponto:', pontos[0]);
+          console.log('🔑 Campos disponíveis:', Object.keys(pontos[0]));
+        } else {
+          console.warn('⚠️ Nenhum ponto encontrado na planilha!');
+        }
 
         criarMarcadoresPontosInteresse(pontos);  // criar marcadores
         notify('Pontos de interesse carregados!','success');
@@ -232,6 +217,18 @@
           if (coords.length === 2) {
             lat = parseFloat(coords[0].trim());
             lng = parseFloat(coords[1].trim());
+          }
+        }
+        
+        // Se ainda não temos coordenadas, buscar por rodovia e km
+        if ((!lat || !lng) && ponto.rodovia && ponto.km) {
+          const coordsRodovia = buscarCoordenadasPorRodoviaKm(ponto.rodovia, ponto.km);
+          if (coordsRodovia) {
+            lat = coordsRodovia.lat;
+            lng = coordsRodovia.lng;
+            console.log(`🗺️ Coordenadas encontradas por rodovia/km: ${lat}, ${lng} para ${ponto.rodovia} km ${ponto.km}`);
+          } else {
+            console.warn(`⚠️ Coordenadas não encontradas para ${ponto.rodovia} km ${ponto.km}`);
           }
         }
         
@@ -320,6 +317,98 @@
           window.mapa.setZoom(15); // zoom específico para um único ponto
         }
       }
+    }
+
+    /*--------------------------------------------------------------*/
+    /*  Buscar coordenadas por rodovia e km                         */
+    /*--------------------------------------------------------------*/
+    function buscarCoordenadasPorRodoviaKm(rodovia, km) {
+      // Função para buscar coordenadas baseadas na rodovia e quilometragem
+      // Esta função tentará encontrar um ponto próximo nos dados carregados do sistema
+      
+      console.log(`🔍 Buscando coordenadas para ${rodovia} km ${km}`);
+      
+      // Verificar se temos dados originais carregados (do sistema principal)
+      if (!dadosOriginais || dadosOriginais.length === 0) {
+        console.warn('⚠️ Dados de rodovias não carregados ainda, usando coordenadas aproximadas');
+        return obterCoordenadasAproximadas(rodovia, km);
+      }
+      
+      // Normalizar valores para busca
+      const rodoviaLimpa = rodovia.toString().trim().toUpperCase();
+      const kmNumerico = parseFloat(km.toString().replace(',', '.'));
+      
+      console.log(`🔍 Buscando ${rodoviaLimpa} km ${kmNumerico} em ${dadosOriginais.length} registros`);
+      
+      // Buscar correspondência exata ou próxima
+      let melhorMatch = null;
+      let menorDistancia = Infinity;
+      
+      dadosOriginais.forEach(item => {
+        const rodoviaItem = item.SP ? item.SP.toString().trim().toUpperCase() : '';
+        const kmItem = parseFloat(item['KM '] ? item['KM '].toString().replace(',', '.') : '0');
+        
+        if (rodoviaItem === rodoviaLimpa && !isNaN(kmItem) && item.LOCALIZAÇÃO) {
+          const distancia = Math.abs(kmItem - kmNumerico);
+          if (distancia < menorDistancia) {
+            menorDistancia = distancia;
+            melhorMatch = item;
+          }
+        }
+      });
+      
+      if (melhorMatch && melhorMatch.LOCALIZAÇÃO) {
+        const coords = melhorMatch.LOCALIZAÇÃO.split(',');
+        if (coords.length === 2) {
+          const lat = parseFloat(coords[0].trim());
+          const lng = parseFloat(coords[1].trim());
+          
+          if (!isNaN(lat) && !isNaN(lng)) {
+            console.log(`✅ Coordenadas encontradas: ${lat}, ${lng} (distância: ${menorDistancia.toFixed(2)}km)`);
+            return { lat, lng };
+          }
+        }
+      }
+      
+      console.warn(`⚠️ Coordenadas não encontradas para ${rodovia} km ${km}, usando aproximação`);
+      return obterCoordenadasAproximadas(rodovia, km);
+    }
+
+    /*--------------------------------------------------------------*/
+    /*  Obter coordenadas aproximadas por rodovia                   */
+    /*--------------------------------------------------------------*/
+    function obterCoordenadasAproximadas(rodovia, km) {
+      // Coordenadas aproximadas para principais rodovias de São Paulo
+      const rodoviasCoordenadas = {
+        'SP-270': { lat: -23.5, lng: -47.4 }, // Raposo Tavares
+        'SP-280': { lat: -23.5, lng: -47.0 }, // Castelo Branco
+        'SP-310': { lat: -22.8, lng: -47.0 }, // Washington Luís
+        'SP-330': { lat: -22.9, lng: -47.1 }, // Anhanguera
+        'SP-348': { lat: -23.0, lng: -47.2 }, // Bandeirantes
+        'SP-160': { lat: -23.8, lng: -46.3 }, // Imigrantes
+        'SP-150': { lat: -23.7, lng: -46.5 }, // Anchieta
+        // Adicione mais rodovias conforme necessário
+      };
+      
+      const rodoviaLimpa = rodovia.toString().trim().toUpperCase();
+      const kmNumerico = parseFloat(km.toString().replace(',', '.'));
+      
+      // Buscar a rodovia nas coordenadas aproximadas
+      let baseCoords = rodoviasCoordenadas[rodoviaLimpa];
+      
+      if (!baseCoords) {
+        // Se não encontrar a rodovia específica, usar coordenadas centrais de SP
+        console.warn(`⚠️ Rodovia ${rodoviaLimpa} não encontrada, usando coordenadas centrais de SP`);
+        baseCoords = { lat: -23.5505, lng: -46.6333 };
+      }
+      
+      // Ajustar coordenadas baseado no km (aproximação simples)
+      const ajusteKm = kmNumerico * 0.01; // Aproximação: 1km = 0.01 grau
+      const lat = baseCoords.lat + (ajusteKm * 0.5); // Ajuste em latitude
+      const lng = baseCoords.lng + (ajusteKm * 0.5); // Ajuste em longitude
+      
+      console.log(`📍 Usando coordenadas aproximadas: ${lat}, ${lng} para ${rodovia} km ${km}`);
+      return { lat, lng };
     }
 
     /*--------------------------------------------------------------*/
