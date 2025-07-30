@@ -613,16 +613,16 @@
       let pontosInteresseAtivos = false;
       let linhasTrechoAtivas = false;
       
-      // URL da planilha publicada do Google Sheets
-      const PLANILHA_PONTOS_INTERESSE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTOuJGzF-kutvv3tCIyRkIRWPjvTHMggWEvowKJMRWThq-nqZXAHftJ7hWzJavJaEwxOOdL9hRnIb81/pub?output=csv';
+      // URL da planilha publicada do OneDrive (convertida para download direto)
+      const PLANILHA_PONTOS_INTERESSE_URL = 'https://1drv.ms/x/c/3417733bdfe00f49/EbmJLtJ8JEZFqo_XC1ZhHnoBkLc8CPTWUQ-7NdWof9d8NA?e=KsWcm6&download=1';
       
       // URL da planilha de linhas por trecho
       const PLANILHA_LINHAS_TRECHO_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR2wW76oOiHiip6-ThZWsw6hH5_y-7klCFeKUtR5J7VfSPEfN0G721SFxqLz9twIW25_JhYMXHsH69Z/pub?output=csv';
       
-      // Carregar e processar pontos de interesse do Google Sheets
+      // Carregar e processar pontos de interesse do OneDrive
       async function carregarPontosInteresse() {
         try {
-          console.log('🔄 Carregando pontos de interesse da planilha...');
+          console.log('🔄 Carregando pontos de interesse da planilha OneDrive...');
           console.log('📋 URL:', PLANILHA_PONTOS_INTERESSE_URL);
           
           // Tentar diferentes métodos de fetch para resolver problemas de CORS
@@ -640,47 +640,90 @@
             throw new Error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}`);
           }
           
-          const csvText = await response.text();
-          console.log('📄 CSV bruto recebido:', csvText.substring(0, 500) + '...');
+          // Verificar o tipo de conteúdo retornado
+          const contentType = response.headers.get('content-type');
+          console.log('📄 Tipo de conteúdo:', contentType);
           
-          Papa.parse(csvText, {
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) {
-              if (results.errors.length > 0) {
-                console.warn('⚠️ Avisos ao processar CSV:', results.errors);
+          let dadosParseados;
+          
+          // Se for um arquivo Excel, tentar converter para CSV-like
+          if (contentType && contentType.includes('spreadsheet')) {
+            console.log('📊 Detectado arquivo Excel, tentando conversão...');
+            // Para arquivos Excel do OneDrive, tentar obter como texto e processar
+            const textoResposta = await response.text();
+            console.log('📄 Resposta bruta:', textoResposta.substring(0, 500) + '...');
+            
+            // Tentar processar como CSV mesmo que seja Excel
+            Papa.parse(textoResposta, {
+              header: true,
+              skipEmptyLines: true,
+              delimiter: ',', // Tentar vírgula primeiro
+              complete: function(results) {
+                if (results.errors.length > 0) {
+                  console.warn('⚠️ Avisos ao processar CSV (vírgula):', results.errors);
+                  // Se der erro com vírgula, tentar com ponto e vírgula
+                  Papa.parse(textoResposta, {
+                    header: true,
+                    skipEmptyLines: true,
+                    delimiter: ';',
+                    complete: function(results2) {
+                      processarDadosCarregados(results2.data, results2.errors);
+                    }
+                  });
+                } else {
+                  processarDadosCarregados(results.data, results.errors);
+                }
               }
-              
-              console.log('📊 Dados recebidos:', results.data);
-              
-              const pontosValidos = results.data.filter(ponto => {
-                // Verificar se tem dados suficientes para criar o ponto
-                const temTipo = ponto.tipo && ponto.tipo.trim();
-                const temRodovia = ponto.rodovia && ponto.rodovia.trim();
-                const temKm = ponto.km && ponto.km.toString().trim();
-                const temCoordenadas = (ponto.Latitude && ponto.Longitude) || (temRodovia && temKm);
-                
-                return temTipo && temCoordenadas;
-              });
-              
-              console.log(`✅ ${pontosValidos.length} pontos válidos encontrados de ${results.data.length} total`);
-              
-              if (pontosValidos.length > 0) {
-                criarMarcadoresPontosInteresse(pontosValidos);
-              } else {
-                console.warn('⚠️ Nenhum ponto válido encontrado na planilha');
-                mostrarMensagemErro('Nenhum ponto válido encontrado na planilha');
+            });
+          } else {
+            // Processar como CSV normal
+            const csvText = await response.text();
+            console.log('� CSV bruto recebido:', csvText.substring(0, 500) + '...');
+            
+            Papa.parse(csvText, {
+              header: true,
+              skipEmptyLines: true,
+              complete: function(results) {
+                processarDadosCarregados(results.data, results.errors);
+              },
+              error: function(error) {
+                console.error('❌ Erro ao processar CSV:', error);
+                mostrarMensagemErro('Erro ao processar dados da planilha');
               }
-            },
-            error: function(error) {
-              console.error('❌ Erro ao processar CSV:', error);
-              mostrarMensagemErro('Erro ao processar dados da planilha');
-            }
-          });
+            });
+          }
           
         } catch (error) {
           console.error('❌ Erro ao carregar pontos de interesse:', error);
-          mostrarMensagemErro('Erro ao conectar com a planilha do Google Sheets');
+          mostrarMensagemErro('Erro ao conectar com a planilha do OneDrive');
+        }
+      }
+      
+      // Função auxiliar para processar dados carregados
+      function processarDadosCarregados(data, errors) {
+        if (errors && errors.length > 0) {
+          console.warn('⚠️ Avisos ao processar dados:', errors);
+        }
+        
+        console.log('📊 Dados recebidos:', data);
+        
+        const pontosValidos = data.filter(ponto => {
+          // Verificar se tem dados suficientes para criar o ponto
+          const temTipo = ponto.tipo && ponto.tipo.trim();
+          const temRodovia = ponto.rodovia && ponto.rodovia.trim();
+          const temKm = ponto.km && ponto.km.toString().trim();
+          const temCoordenadas = (ponto.Latitude && ponto.Longitude) || (temRodovia && temKm);
+          
+          return temTipo && temCoordenadas;
+        });
+        
+        console.log(`✅ ${pontosValidos.length} pontos válidos encontrados de ${data.length} total`);
+        
+        if (pontosValidos.length > 0) {
+          criarMarcadoresPontosInteresse(pontosValidos);
+        } else {
+          console.warn('⚠️ Nenhum ponto válido encontrado na planilha');
+          mostrarMensagemErro('Nenhum ponto válido encontrado na planilha');
         }
       }
       
