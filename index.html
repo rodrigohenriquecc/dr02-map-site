@@ -37,6 +37,7 @@
           fullscreenControl: true
         });
         console.log('✅ Google Maps inicializado!');
+        window.mapa = mapa;      // disponibilizar globalmente
 
         /* carrega o restante do sistema (script_google_maps.js) */
         if (typeof carregarSistemaCompleto === 'function') {
@@ -159,25 +160,165 @@
     /*--------------------------------------------------------------*/
     async function carregarPontosInteresse () {
       try {
+        console.log('🔄 Iniciando carregamento de pontos de interesse...');
         notify('Carregando pontos de interesse…','info');
 
         const buffer = await baixarArquivoUltraCloud();             // <-- download
+        console.log('📄 Buffer recebido, tamanho:', buffer.byteLength, 'bytes');
+        
         const wb = XLSX.read(buffer, { type: 'array' });            // SheetJS
+        console.log('📊 Workbook carregado. Planilhas:', wb.SheetNames);
+        
         const ws = wb.Sheets[wb.SheetNames[0]];
         const dados = XLSX.utils.sheet_to_json(ws, { header:1 });
+        console.log('📋 Dados brutos extraídos:', dados.length, 'linhas');
 
         /* transforma para objetos */
         const [cabec, ...linhas] = dados;
+        console.log('📋 Cabeçalhos:', cabec);
+        
         const pontos = linhas.map(l => {
           const obj={}; cabec.forEach((h,i)=>obj[h]=l[i]); return obj;
         }).filter(o=>Object.keys(o).length);
         console.log('✅ planilha carregada:', pontos.length,'registros');
+        console.log('📄 Primeiro ponto:', pontos[0]);
 
-        processarDadosCarregados(pontos);  // sua função existente
+        criarMarcadoresPontosInteresse(pontos);  // criar marcadores
         notify('Pontos de interesse carregados!','success');
       } catch (e) {
         console.error('❌ erro ao carregar PI:', e);
         notify('Erro ao conectar com a planilha do Ultra Cloud','error');
+      }
+    }
+
+    /*--------------------------------------------------------------*/
+    /*  Criar marcadores dos pontos de interesse no mapa            */
+    /*--------------------------------------------------------------*/
+    function criarMarcadoresPontosInteresse(pontos) {
+      if (!window.mapa) {
+        console.warn('⚠️ Mapa não está disponível ainda, tentando novamente...');
+        setTimeout(() => criarMarcadoresPontosInteresse(pontos), 1000);
+        return;
+      }
+
+      // Limpar marcadores anteriores
+      marcadoresPI.forEach(marker => marker.setMap(null));
+      marcadoresPI = [];
+
+      console.log('🔍 Processando pontos:', pontos);
+      let pontosValidos = 0;
+
+      pontos.forEach((ponto, index) => {
+        console.log(`🔍 Processando ponto ${index + 1}:`, ponto);
+        
+        // Tentar extrair coordenadas de diferentes campos possíveis
+        let lat, lng;
+        
+        // Verificar se há coordenadas diretas
+        if (ponto.Latitude && ponto.Longitude) {
+          lat = parseFloat(ponto.Latitude);
+          lng = parseFloat(ponto.Longitude);
+        } else if (ponto.latitude && ponto.longitude) {
+          lat = parseFloat(ponto.latitude);
+          lng = parseFloat(ponto.longitude);
+        } else if (ponto.lat && ponto.lng) {
+          lat = parseFloat(ponto.lat);
+          lng = parseFloat(ponto.lng);
+        }
+        
+        // Se não há coordenadas diretas, tentar usar coordenadas em um campo único
+        if ((!lat || !lng) && ponto.coordenadas) {
+          const coords = ponto.coordenadas.toString().split(',');
+          if (coords.length === 2) {
+            lat = parseFloat(coords[0].trim());
+            lng = parseFloat(coords[1].trim());
+          }
+        }
+        
+        if (isNaN(lat) || isNaN(lng)) {
+          console.warn(`⚠️ Coordenadas inválidas para o ponto ${index + 1}:`, ponto);
+          return;
+        }
+
+        pontosValidos++;
+        
+        // Configurações do ponto
+        const tipo = ponto.tipo || ponto.Tipo || ponto.TIPO || `Ponto ${index + 1}`;
+        const cor = ponto.cor || ponto.Cor || '#2196F3';
+        const raio = parseFloat(ponto.raio || ponto.Raio || 200);
+        const opacidade = parseFloat(ponto.opacidade || ponto.Opacidade || 0.7);
+        
+        console.log(`📍 Criando ponto: ${tipo} em (${lat}, ${lng})`);
+        
+        // Criar círculo
+        const circle = new google.maps.Circle({
+          strokeColor: cor,
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          fillColor: cor,
+          fillOpacity: opacidade,
+          map: window.mapa,
+          center: { lat, lng },
+          radius: raio
+        });
+        
+        // Criar marcador
+        const marker = new google.maps.Marker({
+          position: { lat, lng },
+          map: window.mapa,
+          title: tipo,
+          icon: {
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" fill="${cor}" stroke="#fff" stroke-width="2"/>
+                <circle cx="12" cy="12" r="4" fill="#fff"/>
+              </svg>
+            `),
+            scaledSize: new google.maps.Size(24, 24),
+            anchor: new google.maps.Point(12, 12)
+          }
+        });
+        
+        // InfoWindow
+        const infoContent = `
+          <div style="font-family: Arial, sans-serif; max-width: 300px;">
+            <h3 style="margin: 0 0 10px 0; color: ${cor};">${tipo}</h3>
+            ${ponto.rodovia ? `<p><strong>Rodovia:</strong> ${ponto.rodovia}</p>` : ''}
+            ${ponto.km ? `<p><strong>Km:</strong> ${ponto.km}</p>` : ''}
+            ${ponto.obs ? `<p><strong>Observações:</strong> ${ponto.obs}</p>` : ''}
+            <p><strong>Coordenadas:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
+            <p><strong>Raio:</strong> ${raio}m | <strong>Cor:</strong> ${cor}</p>
+          </div>
+        `;
+        
+        const infoWindow = new google.maps.InfoWindow({
+          content: infoContent
+        });
+        
+        // Event listeners
+        const openInfo = () => infoWindow.open(window.mapa, marker);
+        marker.addListener('click', openInfo);
+        circle.addListener('click', openInfo);
+        
+        // Armazenar referências
+        marcadoresPI.push(marker);
+        marcadoresPI.push(circle);
+      });
+      
+      console.log(`✅ ${pontosValidos} pontos de interesse criados no mapa`);
+      
+      // Ajustar zoom para mostrar todos os pontos
+      if (pontosValidos > 0) {
+        const bounds = new google.maps.LatLngBounds();
+        marcadoresPI.forEach(item => {
+          if (item.getPosition) bounds.extend(item.getPosition());
+          if (item.getCenter) bounds.extend(item.getCenter());
+        });
+        window.mapa.fitBounds(bounds);
+        
+        if (pontosValidos === 1) {
+          window.mapa.setZoom(15); // zoom específico para um único ponto
+        }
       }
     }
 

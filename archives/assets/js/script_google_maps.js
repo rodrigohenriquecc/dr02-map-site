@@ -638,6 +638,67 @@ function configurarFiltros() {
 }
 
 // Expor função globalmente
+
+/**
+ * Recebe dados de pontos de interesse (array de objetos) vindos do Ultra Cloud
+ * e substitui o conjunto atual, redesenhando os marcadores.
+ */
+function processarDadosCarregados(pontos) {
+  // Limpa marcadores existentes criados por carregamentos anteriores
+  if (Array.isArray(marcadoresPI) && marcadoresPI.length) {
+    marcadoresPI.forEach(m => m.setMap(null));
+  }
+  marcadoresPI = [];
+
+  // Substitui conjunto atual
+  pontosInteresse = pontos;
+
+  // Desenha marcadores
+  pontosInteresse.forEach(ponto => {
+    if (ponto.latitude && ponto.longitude) {
+      const marker = new google.maps.Marker({
+        position: {
+          lat: parseFloat(ponto.latitude),
+          lng: parseFloat(ponto.longitude)
+        },
+        map: mapa,
+        title: ponto.nome || ponto.nome_poi || 'Ponto de Interesse',
+        icon: {
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+            <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="8" fill="#e91e63" stroke="#ffffff" stroke-width="2"/>
+              <text x="12" y="16" text-anchor="middle" fill="white" font-size="12" font-weight="bold">!</text>
+            </svg>
+          `),
+          scaledSize: new google.maps.Size(20, 20),
+          anchor: new google.maps.Point(10, 10)
+        }
+      });
+      marcadoresPI.push(marker);
+
+      if (ponto.descricao) {
+        const infoWindow = new google.maps.InfoWindow({
+          content: `<div><strong>${ponto.nome || ponto.nome_poi || 'Ponto de Interesse'}</strong><br>${ponto.descricao}</div>`
+        });
+        marker.addListener('click', () => {
+          infoWindow.open(mapa, marker);
+        });
+      }
+    }
+  });
+
+  // Sinaliza carregamento completo, se relevante
+  if (typeof verificarCarregamentoCompleto === 'function') {
+    dadosCarregados.pontos = true;
+    verificarCarregamentoCompleto();
+  }
+  console.log('✅ Pontos de interesse (Ultra Cloud) processados');
+}
+
+// Disponibiliza globalmente
+window.processarDadosCarregados = processarDadosCarregados;
+
+
 window.carregarSistemaCompleto = carregarSistemaCompleto;
 
 console.log('📁 Script do sistema Google Maps carregado');
