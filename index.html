@@ -613,7 +613,7 @@
       let pontosInteresseAtivos = false;
       let linhasTrechoAtivas = false;
       
-      // URL da planilha publicada do OneDrive (convertida para download direto)
+      // URL da planilha publicada do OneDrive (formato de compartilhamento direto)
       const PLANILHA_PONTOS_INTERESSE_URL = 'https://1drv.ms/x/c/3417733bdfe00f49/EbmJLtJ8JEZFqo_XC1ZhHnoBkLc8CPTWUQ-7NdWof9d8NA?e=KsWcm6&download=1';
       
       // URL da planilha de linhas por trecho
@@ -627,17 +627,77 @@
           
           // Tentar diferentes métodos de fetch para resolver problemas de CORS
           let response;
-          try {
-            response = await fetch(PLANILHA_PONTOS_INTERESSE_URL);
-          } catch (corsError) {
-            console.warn('⚠️ Erro CORS direto, tentando com proxy:', corsError);
-            // Se houver erro de CORS, tentar com diferentes métodos
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`;
-            response = await fetch(proxyUrl);
+          let tentativaAtual = 1;
+          const maxTentativas = 4;
+          
+          // Lista de métodos para tentar
+          const metodosDownload = [
+            // Método 1: Direto
+            () => fetch(PLANILHA_PONTOS_INTERESSE_URL),
+            
+            // Método 2: Proxy CORS.io
+            () => fetch(`https://corsproxy.io/?${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`),
+            
+            // Método 3: Proxy allorigins
+            () => fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`).then(res => {
+              if (res.ok) return res.json().then(data => ({ ok: true, text: () => Promise.resolve(data.contents) }));
+              throw new Error('Proxy allorigins falhou');
+            }),
+            
+            // Método 4: Forçar download do OneDrive
+            () => {
+              let urlDownload = PLANILHA_PONTOS_INTERESSE_URL;
+              if (!urlDownload.includes('download=1')) {
+                urlDownload += (urlDownload.includes('?') ? '&' : '?') + 'download=1';
+              }
+              return fetch(`https://corsproxy.io/?${encodeURIComponent(urlDownload)}`);
+            }
+          ];
+          
+          for (const metodo of metodosDownload) {
+            try {
+              console.log(`🔄 Tentativa ${tentativaAtual}/${maxTentativas}: Testando método ${tentativaAtual}...`);
+              response = await metodo();
+              
+              if (response.ok) {
+                console.log(`✅ Sucesso na tentativa ${tentativaAtual}!`);
+                break;
+              } else {
+                console.warn(`⚠️ Tentativa ${tentativaAtual} falhou com status: ${response.status}`);
+              }
+            } catch (error) {
+              console.warn(`⚠️ Erro na tentativa ${tentativaAtual}:`, error.message);
+            }
+            
+            tentativaAtual++;
+            if (tentativaAtual > maxTentativas) {
+              throw new Error(`Todas as ${maxTentativas} tentativas de download falharam`);
+            }
+            
+            // Aguardar um pouco antes da próxima tentativa
+            await new Promise(resolve => setTimeout(resolve, 1000));
           }
           
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}`);
+          }
+          
+          // Obter o texto do arquivo
+          const textoResposta = await response.text();
+          console.log('📄 Dados recebidos (primeiros 300 chars):', textoResposta.substring(0, 300) + '...');
+          
+          // Validar se o conteúdo é válido
+          if (textoResposta.includes('<html') || textoResposta.includes('<!DOCTYPE')) {
+            console.warn('⚠️ Resposta parece ser HTML, não dados CSV');
+            throw new Error('Arquivo retornou página HTML. Verifique se o link permite download direto.');
+          }
+          
+          if (textoResposta.trim().length < 20) {
+            throw new Error('Arquivo vazio ou muito pequeno para processar');
+          }
+          
+          if (textoResposta.includes('Access Denied') || textoResposta.includes('Forbidden')) {
+            throw new Error('Acesso negado ao arquivo OneDrive. Verifique as permissões.');
           }
           
           // Verificar o tipo de conteúdo retornado
@@ -694,8 +754,29 @@
           }
           
         } catch (error) {
-          console.error('❌ Erro ao carregar pontos de interesse:', error);
-          mostrarMensagemErro('Erro ao conectar com a planilha do OneDrive');
+          console.error('❌ Erro detalhado ao carregar pontos de interesse:', error);
+          
+          // Mensagem de erro mais específica baseada no tipo de erro
+          let mensagemErro = 'Erro ao conectar com a planilha do OneDrive';
+          
+          if (error.message.includes('Todas as') && error.message.includes('tentativas')) {
+            mensagemErro = 'Falha na conexão. Verifique: 1) Sua internet, 2) Se o link do OneDrive está correto, 3) Se o arquivo está público';
+          } else if (error.message.includes('HTTP error')) {
+            mensagemErro = `Erro de acesso ao arquivo OneDrive (${error.message}). Verifique as permissões do arquivo.`;
+          } else if (error.message.includes('not ok') || error.message.includes('403') || error.message.includes('401')) {
+            mensagemErro = 'Arquivo OneDrive sem permissão de acesso. Certifique-se que o link permite visualização pública.';
+          } else if (error.message.includes('404')) {
+            mensagemErro = 'Arquivo OneDrive não encontrado. Verifique se o link está correto.';
+          } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+            mensagemErro = 'Problema de rede ao acessar OneDrive. Verifique sua conexão com a internet.';
+          }
+          
+          mostrarMensagemErro(mensagemErro);
+          
+          // Log adicional para debug
+          console.log('🔍 URL tentada:', PLANILHA_PONTOS_INTERESSE_URL);
+          console.log('🔍 Tipo do erro:', error.constructor.name);
+          console.log('🔍 Mensagem completa:', error.message);
         }
       }
       
