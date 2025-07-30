@@ -681,12 +681,7 @@
           console.log('🔄 Carregando pontos de interesse da planilha Ultra Cloud...');
           console.log('📋 URL:', PLANILHA_PONTOS_INTERESSE_URL);
           
-          // Tentar diferentes métodos de fetch para resolver problemas de CORS
-          let response;
-          let tentativaAtual = 1;
-          const maxTentativas = metodosDownload.length;
-          
-          // Lista de métodos para tentar
+          // Lista de métodos para tentar (declarar primeiro)
           const metodosDownload = [
             // Método 1: URL principal com parâmetro e=view
             () => fetch(PLANILHA_PONTOS_INTERESSE_URL),
@@ -705,6 +700,11 @@
               throw new Error('Proxy allorigins falhou');
             })
           ];
+          
+          // Tentar diferentes métodos de fetch para resolver problemas de CORS
+          let response;
+          let tentativaAtual = 1;
+          const maxTentativas = metodosDownload.length;
           
           for (const metodo of metodosDownload) {
             try {
