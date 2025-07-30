@@ -613,74 +613,230 @@
       let pontosInteresseAtivos = false;
       let linhasTrechoAtivas = false;
       
-      // URL da planilha publicada do Google Sheets
-      const PLANILHA_PONTOS_INTERESSE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTOuJGzF-kutvv3tCIyRkIRWPjvTHMggWEvowKJMRWThq-nqZXAHftJ7hWzJavJaEwxOOdL9hRnIb81/pub?output=csv';
+      // URL da planilha publicada do OneDrive (formato de compartilhamento direto)
+      const PLANILHA_PONTOS_INTERESSE_URL = 'https://1drv.ms/x/c/3417733bdfe00f49/EbmJLtJ8JEZFqo_XC1ZhHnoBkLc8CPTWUQ-7NdWof9d8NA?e=KsWcm6&download=1';
+      
+      // Função para testar conectividade com OneDrive
+      async function testarConexaoOneDrive() {
+        console.log('🧪 Iniciando teste de conectividade com OneDrive...');
+        console.log('📋 URL a ser testada:', PLANILHA_PONTOS_INTERESSE_URL);
+        
+        const metodosTest = [
+          { nome: 'Direto', url: PLANILHA_PONTOS_INTERESSE_URL },
+          { nome: 'Proxy CORS', url: `https://corsproxy.io/?${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}` },
+          { nome: 'AllOrigins', url: `https://api.allorigins.win/get?url=${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}` }
+        ];
+        
+        for (const metodo of metodosTest) {
+          try {
+            console.log(`🔍 Testando método: ${metodo.nome}`);
+            const response = await fetch(metodo.url);
+            console.log(`📊 ${metodo.nome} - Status:`, response.status, response.statusText);
+            
+            if (response.ok) {
+              const texto = await response.text();
+              console.log(`✅ ${metodo.nome} funcionou! Tamanho da resposta:`, texto.length, 'chars');
+              console.log(`📄 Primeiros 100 chars:`, texto.substring(0, 100));
+              return true;
+            }
+          } catch (error) {
+            console.log(`❌ ${metodo.nome} falhou:`, error.message);
+          }
+        }
+        
+        console.log('❌ Todos os métodos de teste falharam');
+        return false;
+      }
       
       // URL da planilha de linhas por trecho
       const PLANILHA_LINHAS_TRECHO_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR2wW76oOiHiip6-ThZWsw6hH5_y-7klCFeKUtR5J7VfSPEfN0G721SFxqLz9twIW25_JhYMXHsH69Z/pub?output=csv';
       
-      // Carregar e processar pontos de interesse do Google Sheets
+      // Carregar e processar pontos de interesse do OneDrive
       async function carregarPontosInteresse() {
         try {
-          console.log('🔄 Carregando pontos de interesse da planilha...');
+          console.log('🔄 Carregando pontos de interesse da planilha OneDrive...');
           console.log('📋 URL:', PLANILHA_PONTOS_INTERESSE_URL);
           
           // Tentar diferentes métodos de fetch para resolver problemas de CORS
           let response;
-          try {
-            response = await fetch(PLANILHA_PONTOS_INTERESSE_URL);
-          } catch (corsError) {
-            console.warn('⚠️ Erro CORS direto, tentando com proxy:', corsError);
-            // Se houver erro de CORS, tentar com diferentes métodos
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`;
-            response = await fetch(proxyUrl);
+          let tentativaAtual = 1;
+          const maxTentativas = 4;
+          
+          // Lista de métodos para tentar
+          const metodosDownload = [
+            // Método 1: Direto
+            () => fetch(PLANILHA_PONTOS_INTERESSE_URL),
+            
+            // Método 2: Proxy CORS.io
+            () => fetch(`https://corsproxy.io/?${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`),
+            
+            // Método 3: Proxy allorigins
+            () => fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`).then(res => {
+              if (res.ok) return res.json().then(data => ({ ok: true, text: () => Promise.resolve(data.contents) }));
+              throw new Error('Proxy allorigins falhou');
+            }),
+            
+            // Método 4: Forçar download do OneDrive
+            () => {
+              let urlDownload = PLANILHA_PONTOS_INTERESSE_URL;
+              if (!urlDownload.includes('download=1')) {
+                urlDownload += (urlDownload.includes('?') ? '&' : '?') + 'download=1';
+              }
+              return fetch(`https://corsproxy.io/?${encodeURIComponent(urlDownload)}`);
+            }
+          ];
+          
+          for (const metodo of metodosDownload) {
+            try {
+              console.log(`🔄 Tentativa ${tentativaAtual}/${maxTentativas}: Testando método ${tentativaAtual}...`);
+              response = await metodo();
+              
+              if (response.ok) {
+                console.log(`✅ Sucesso na tentativa ${tentativaAtual}!`);
+                break;
+              } else {
+                console.warn(`⚠️ Tentativa ${tentativaAtual} falhou com status: ${response.status}`);
+              }
+            } catch (error) {
+              console.warn(`⚠️ Erro na tentativa ${tentativaAtual}:`, error.message);
+            }
+            
+            tentativaAtual++;
+            if (tentativaAtual > maxTentativas) {
+              throw new Error(`Todas as ${maxTentativas} tentativas de download falharam`);
+            }
+            
+            // Aguardar um pouco antes da próxima tentativa
+            await new Promise(resolve => setTimeout(resolve, 1000));
           }
           
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}`);
           }
           
-          const csvText = await response.text();
-          console.log('📄 CSV bruto recebido:', csvText.substring(0, 500) + '...');
+          // Obter o texto do arquivo
+          const textoResposta = await response.text();
+          console.log('📄 Dados recebidos (primeiros 300 chars):', textoResposta.substring(0, 300) + '...');
           
-          Papa.parse(csvText, {
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) {
-              if (results.errors.length > 0) {
-                console.warn('⚠️ Avisos ao processar CSV:', results.errors);
+          // Validar se o conteúdo é válido
+          if (textoResposta.includes('<html') || textoResposta.includes('<!DOCTYPE')) {
+            console.warn('⚠️ Resposta parece ser HTML, não dados CSV');
+            throw new Error('Arquivo retornou página HTML. Verifique se o link permite download direto.');
+          }
+          
+          if (textoResposta.trim().length < 20) {
+            throw new Error('Arquivo vazio ou muito pequeno para processar');
+          }
+          
+          if (textoResposta.includes('Access Denied') || textoResposta.includes('Forbidden')) {
+            throw new Error('Acesso negado ao arquivo OneDrive. Verifique as permissões.');
+          }
+          
+          // Verificar o tipo de conteúdo retornado
+          const contentType = response.headers.get('content-type');
+          console.log('📄 Tipo de conteúdo:', contentType);
+          
+          let dadosParseados;
+          
+          // Se for um arquivo Excel, tentar converter para CSV-like
+          if (contentType && contentType.includes('spreadsheet')) {
+            console.log('📊 Detectado arquivo Excel, tentando conversão...');
+            // Para arquivos Excel do OneDrive, tentar obter como texto e processar
+            const textoResposta = await response.text();
+            console.log('📄 Resposta bruta:', textoResposta.substring(0, 500) + '...');
+            
+            // Tentar processar como CSV mesmo que seja Excel
+            Papa.parse(textoResposta, {
+              header: true,
+              skipEmptyLines: true,
+              delimiter: ',', // Tentar vírgula primeiro
+              complete: function(results) {
+                if (results.errors.length > 0) {
+                  console.warn('⚠️ Avisos ao processar CSV (vírgula):', results.errors);
+                  // Se der erro com vírgula, tentar com ponto e vírgula
+                  Papa.parse(textoResposta, {
+                    header: true,
+                    skipEmptyLines: true,
+                    delimiter: ';',
+                    complete: function(results2) {
+                      processarDadosCarregados(results2.data, results2.errors);
+                    }
+                  });
+                } else {
+                  processarDadosCarregados(results.data, results.errors);
+                }
               }
-              
-              console.log('📊 Dados recebidos:', results.data);
-              
-              const pontosValidos = results.data.filter(ponto => {
-                // Verificar se tem dados suficientes para criar o ponto
-                const temTipo = ponto.tipo && ponto.tipo.trim();
-                const temRodovia = ponto.rodovia && ponto.rodovia.trim();
-                const temKm = ponto.km && ponto.km.toString().trim();
-                const temCoordenadas = (ponto.Latitude && ponto.Longitude) || (temRodovia && temKm);
-                
-                return temTipo && temCoordenadas;
-              });
-              
-              console.log(`✅ ${pontosValidos.length} pontos válidos encontrados de ${results.data.length} total`);
-              
-              if (pontosValidos.length > 0) {
-                criarMarcadoresPontosInteresse(pontosValidos);
-              } else {
-                console.warn('⚠️ Nenhum ponto válido encontrado na planilha');
-                mostrarMensagemErro('Nenhum ponto válido encontrado na planilha');
+            });
+          } else {
+            // Processar como CSV normal
+            const csvText = await response.text();
+            console.log('� CSV bruto recebido:', csvText.substring(0, 500) + '...');
+            
+            Papa.parse(csvText, {
+              header: true,
+              skipEmptyLines: true,
+              complete: function(results) {
+                processarDadosCarregados(results.data, results.errors);
+              },
+              error: function(error) {
+                console.error('❌ Erro ao processar CSV:', error);
+                mostrarMensagemErro('Erro ao processar dados da planilha');
               }
-            },
-            error: function(error) {
-              console.error('❌ Erro ao processar CSV:', error);
-              mostrarMensagemErro('Erro ao processar dados da planilha');
-            }
-          });
+            });
+          }
           
         } catch (error) {
-          console.error('❌ Erro ao carregar pontos de interesse:', error);
-          mostrarMensagemErro('Erro ao conectar com a planilha do Google Sheets');
+          console.error('❌ Erro detalhado ao carregar pontos de interesse:', error);
+          
+          // Mensagem de erro mais específica baseada no tipo de erro
+          let mensagemErro = 'Erro ao conectar com a planilha do OneDrive';
+          
+          if (error.message.includes('Todas as') && error.message.includes('tentativas')) {
+            mensagemErro = 'Falha na conexão. Verifique: 1) Sua internet, 2) Se o link do OneDrive está correto, 3) Se o arquivo está público';
+          } else if (error.message.includes('HTTP error')) {
+            mensagemErro = `Erro de acesso ao arquivo OneDrive (${error.message}). Verifique as permissões do arquivo.`;
+          } else if (error.message.includes('not ok') || error.message.includes('403') || error.message.includes('401')) {
+            mensagemErro = 'Arquivo OneDrive sem permissão de acesso. Certifique-se que o link permite visualização pública.';
+          } else if (error.message.includes('404')) {
+            mensagemErro = 'Arquivo OneDrive não encontrado. Verifique se o link está correto.';
+          } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+            mensagemErro = 'Problema de rede ao acessar OneDrive. Verifique sua conexão com a internet.';
+          }
+          
+          mostrarMensagemErro(mensagemErro);
+          
+          // Log adicional para debug
+          console.log('🔍 URL tentada:', PLANILHA_PONTOS_INTERESSE_URL);
+          console.log('🔍 Tipo do erro:', error.constructor.name);
+          console.log('🔍 Mensagem completa:', error.message);
+        }
+      }
+      
+      // Função auxiliar para processar dados carregados
+      function processarDadosCarregados(data, errors) {
+        if (errors && errors.length > 0) {
+          console.warn('⚠️ Avisos ao processar dados:', errors);
+        }
+        
+        console.log('📊 Dados recebidos:', data);
+        
+        const pontosValidos = data.filter(ponto => {
+          // Verificar se tem dados suficientes para criar o ponto
+          const temTipo = ponto.tipo && ponto.tipo.trim();
+          const temRodovia = ponto.rodovia && ponto.rodovia.trim();
+          const temKm = ponto.km && ponto.km.toString().trim();
+          const temCoordenadas = (ponto.Latitude && ponto.Longitude) || (temRodovia && temKm);
+          
+          return temTipo && temCoordenadas;
+        });
+        
+        console.log(`✅ ${pontosValidos.length} pontos válidos encontrados de ${data.length} total`);
+        
+        if (pontosValidos.length > 0) {
+          criarMarcadoresPontosInteresse(pontosValidos);
+        } else {
+          console.warn('⚠️ Nenhum ponto válido encontrado na planilha');
+          mostrarMensagemErro('Nenhum ponto válido encontrado na planilha');
         }
       }
       
@@ -1499,7 +1655,16 @@
         
         // Se ativando e não há marcadores, carregar dados
         if (pontosInteresseAtivos && marcadoresPontosInteresse.length === 0) {
-          carregarPontosInteresse();
+          // Fazer teste de conectividade primeiro
+          console.log('🔄 Iniciando carregamento de pontos de interesse...');
+          testarConexaoOneDrive().then(conectividadeOk => {
+            if (conectividadeOk) {
+              console.log('✅ Teste de conectividade passou, carregando dados...');
+            } else {
+              console.warn('⚠️ Teste de conectividade falhou, tentando carregar mesmo assim...');
+            }
+            carregarPontosInteresse();
+          });
         }
         
         // Zoom nos pontos se ativados
