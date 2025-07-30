@@ -199,36 +199,91 @@
         // Tentar extrair coordenadas de diferentes campos possíveis
         let lat, lng;
         
-        // Verificar se há coordenadas diretas
-        if (ponto.Latitude && ponto.Longitude) {
-          lat = parseFloat(ponto.Latitude);
-          lng = parseFloat(ponto.Longitude);
-        } else if (ponto.latitude && ponto.longitude) {
-          lat = parseFloat(ponto.latitude);
-          lng = parseFloat(ponto.longitude);
-        } else if (ponto.lat && ponto.lng) {
-          lat = parseFloat(ponto.lat);
-          lng = parseFloat(ponto.lng);
-        }
-        
-        // Se não há coordenadas diretas, tentar usar coordenadas em um campo único
-        if ((!lat || !lng) && ponto.coordenadas) {
-          const coords = ponto.coordenadas.toString().split(',');
-          if (coords.length === 2) {
-            lat = parseFloat(coords[0].trim());
-            lng = parseFloat(coords[1].trim());
+        // PRIORIDADE 1: Usar a nova coluna "Lat e Long" (coordenadas na mesma célula)
+        if (ponto['Lat e Long']) {
+          const coordText = ponto['Lat e Long'].toString().trim();
+          console.log(`🔍 Encontrada coluna "Lat e Long": ${coordText}`);
+          
+          // Tentar diferentes separadores: vírgula, espaço, ponto-e-vírgula
+          let coords = [];
+          if (coordText.includes(',')) {
+            coords = coordText.split(',');
+          } else if (coordText.includes(';')) {
+            coords = coordText.split(';');
+          } else if (coordText.includes(' ') && coordText.split(' ').length >= 2) {
+            coords = coordText.split(' ').filter(c => c.trim().length > 0);
+          }
+          
+          if (coords.length >= 2) {
+            lat = parseFloat(coords[0].trim().replace(',', '.'));
+            lng = parseFloat(coords[1].trim().replace(',', '.'));
+            console.log(`📍 Coordenadas extraídas da coluna "Lat e Long": Lat=${lat}, Long=${lng}`);
           }
         }
         
-        // Se ainda não temos coordenadas, buscar por rodovia e km
-        if ((!lat || !lng) && ponto.rodovia && ponto.km) {
+        // PRIORIDADE 2: Verificar variações do nome da coluna
+        if ((!lat || !lng || isNaN(lat) || isNaN(lng))) {
+          const possiveisCampos = ['Lat e Long', 'Latitude e Longitude', 'Coordenadas', 'Lat Long', 'LatLong', 'coordenadas'];
+          
+          for (const campo of possiveisCampos) {
+            if (ponto[campo]) {
+              const coordText = ponto[campo].toString().trim();
+              console.log(`🔍 Tentando campo "${campo}": ${coordText}`);
+              
+              let coords = [];
+              if (coordText.includes(',')) {
+                coords = coordText.split(',');
+              } else if (coordText.includes(';')) {
+                coords = coordText.split(';');
+              } else if (coordText.includes(' ') && coordText.split(' ').length >= 2) {
+                coords = coordText.split(' ').filter(c => c.trim().length > 0);
+              }
+              
+              if (coords.length >= 2) {
+                lat = parseFloat(coords[0].trim().replace(',', '.'));
+                lng = parseFloat(coords[1].trim().replace(',', '.'));
+                console.log(`📍 Coordenadas encontradas em "${campo}": Lat=${lat}, Long=${lng}`);
+                break;
+              }
+            }
+          }
+        }
+        
+        // PRIORIDADE 3: Verificar se há coordenadas em campos separados (compatibilidade)
+        if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && ponto.Lat && ponto.Long) {
+          lat = parseFloat(ponto.Lat.toString().replace(',', '.'));
+          lng = parseFloat(ponto.Long.toString().replace(',', '.'));
+          console.log(`📍 Coordenadas em campos separados: Lat=${lat}, Long=${lng}`);
+        } else if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && ponto.Latitude && ponto.Longitude) {
+          lat = parseFloat(ponto.Latitude.toString().replace(',', '.'));
+          lng = parseFloat(ponto.Longitude.toString().replace(',', '.'));
+        } else if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && ponto.latitude && ponto.longitude) {
+          lat = parseFloat(ponto.latitude.toString().replace(',', '.'));
+          lng = parseFloat(ponto.longitude.toString().replace(',', '.'));
+        } else if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && ponto.lat && ponto.lng) {
+          lat = parseFloat(ponto.lat.toString().replace(',', '.'));
+          lng = parseFloat(ponto.lng.toString().replace(',', '.'));
+        }
+        
+        // PRIORIDADE 4: Se ainda não temos coordenadas, buscar por Rodovia e Km
+        if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && ponto.Rodovia && ponto.Km) {
+          const coordsRodovia = buscarCoordenadasPorRodoviaKm(ponto.Rodovia, ponto.Km);
+          if (coordsRodovia) {
+            lat = coordsRodovia.lat;
+            lng = coordsRodovia.lng;
+            console.log(`🗺️ Coordenadas encontradas por rodovia/km: ${lat}, ${lng} para ${ponto.Rodovia} km ${ponto.Km}`);
+          } else {
+            console.warn(`⚠️ Coordenadas não encontradas para ${ponto.Rodovia} km ${ponto.Km}`);
+          }
+        }
+        
+        // FALLBACK: Tentar campos antigos de rodovia se os novos não existirem
+        if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && ponto.rodovia && ponto.km) {
           const coordsRodovia = buscarCoordenadasPorRodoviaKm(ponto.rodovia, ponto.km);
           if (coordsRodovia) {
             lat = coordsRodovia.lat;
             lng = coordsRodovia.lng;
-            console.log(`🗺️ Coordenadas encontradas por rodovia/km: ${lat}, ${lng} para ${ponto.rodovia} km ${ponto.km}`);
-          } else {
-            console.warn(`⚠️ Coordenadas não encontradas para ${ponto.rodovia} km ${ponto.km}`);
+            console.log(`🗺️ Coordenadas encontradas por rodovia/km (campos antigos): ${lat}, ${lng} para ${ponto.rodovia} km ${ponto.km}`);
           }
         }
         
@@ -239,11 +294,13 @@
 
         pontosValidos++;
         
-        // Configurações do ponto
-        const tipo = ponto.tipo || ponto.Tipo || ponto.TIPO || `Ponto ${index + 1}`;
-        const cor = ponto.cor || ponto.Cor || '#2196F3';
-        const raio = parseFloat(ponto.raio || ponto.Raio || 200);
-        const opacidade = parseFloat(ponto.opacidade || ponto.Opacidade || 0.7);
+        // Configurações do ponto usando as novas colunas
+        const tipo = ponto.Tipo || ponto.tipo || ponto.TIPO || `Ponto ${index + 1}`;
+        const cor = ponto.Cor || ponto.cor || '#2196F3';
+        const raio = parseFloat((ponto.Raio || ponto.raio || 200).toString().replace(',', '.'));
+        const opacidade = parseFloat((ponto.Opacidade || ponto.opacidade || 0.7).toString().replace(',', '.'));
+        const observacoes = ponto.Obs || ponto.obs || ponto.observacoes || '';
+        const periodo = ponto.Período || ponto.periodo || '';
         
         console.log(`📍 Criando ponto: ${tipo} em (${lat}, ${lng})`);
         
@@ -276,15 +333,17 @@
           }
         });
         
-        // InfoWindow
+        // InfoWindow com as novas informações
         const infoContent = `
           <div style="font-family: Arial, sans-serif; max-width: 300px;">
             <h3 style="margin: 0 0 10px 0; color: ${cor};">${tipo}</h3>
-            ${ponto.rodovia ? `<p><strong>Rodovia:</strong> ${ponto.rodovia}</p>` : ''}
-            ${ponto.km ? `<p><strong>Km:</strong> ${ponto.km}</p>` : ''}
-            ${ponto.obs ? `<p><strong>Observações:</strong> ${ponto.obs}</p>` : ''}
+            ${ponto.Rodovia ? `<p><strong>Rodovia:</strong> ${ponto.Rodovia}</p>` : ''}
+            ${ponto.Km ? `<p><strong>Km:</strong> ${ponto.Km}</p>` : ''}
+            ${observacoes ? `<p><strong>Observações:</strong> ${observacoes}</p>` : ''}
+            ${periodo ? `<p><strong>Período:</strong> ${periodo}</p>` : ''}
             <p><strong>Coordenadas:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
-            <p><strong>Raio:</strong> ${raio}m | <strong>Cor:</strong> ${cor}</p>
+            <p><strong>Raio:</strong> ${raio}m | <strong>Opacidade:</strong> ${opacidade}</p>
+            <p><strong>Cor:</strong> ${cor}</p>
           </div>
         `;
         
