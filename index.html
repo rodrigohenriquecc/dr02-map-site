@@ -342,6 +342,14 @@
         }
 
         console.log(`🎯 Coordenadas finais validadas: Lat=${lat}, Lng=${lng}`);
+        
+        // TESTE ESPECÍFICO: Verificar se é a coordenada problemática
+        if (Math.abs(lat - (-23.55259)) < 0.001 && Math.abs(lng - (-48.05205)) < 0.001) {
+          console.log(`🚨 COORDENADA TESTE DETECTADA: -23.55259, -48.05205`);
+          console.log(`   Valores finais sendo usados: Lat=${lat}, Lng=${lng}`);
+          console.log(`   Esta deveria estar em Sorocaba, SP (interior de São Paulo)`);
+          console.log(`   Verificando se está correto no Google Maps...`);
+        }
 
         pontosValidos++;
         
@@ -632,7 +640,76 @@
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('pontosInteresseBtn')
               .addEventListener('click', carregarPontosInteresse);
+              
+      // Adicionar botão de teste de coordenadas
+      const testBtn = document.createElement('button');
+      testBtn.textContent = 'Teste Coordenada';
+      testBtn.style.cssText = 'position:fixed;top:55px;left:15px;z-index:3000;padding:8px;background:#ff5722;color:white;border:none;border-radius:4px;';
+      testBtn.addEventListener('click', testarCoordenadaEspecifica);
+      document.body.appendChild(testBtn);
     });
+
+    /*--------------------------------------------------------------*/
+    /*  Função de teste para coordenada específica                  */
+    /*--------------------------------------------------------------*/
+    function testarCoordenadaEspecifica() {
+      if (!window.mapa) {
+        notify('Aguarde o mapa carregar!', 'error');
+        return;
+      }
+      
+      // Testar a coordenada problemática: -23.55259, -48.05205
+      const latTeste = -23.55259;
+      const lngTeste = -48.05205;
+      
+      console.log(`🧪 TESTE: Criando marcador em Lat=${latTeste}, Lng=${lngTeste}`);
+      console.log(`   Esta coordenada deveria estar em Sorocaba, SP`);
+      
+      // Limpar marcadores de teste anteriores
+      if (window.marcadorTeste) {
+        window.marcadorTeste.setMap(null);
+      }
+      
+      // Criar marcador de teste
+      window.marcadorTeste = new google.maps.Marker({
+        position: { lat: latTeste, lng: lngTeste },
+        map: window.mapa,
+        title: 'TESTE: -23.55259, -48.05205',
+        icon: {
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" fill="#FF0000" stroke="#fff" stroke-width="3"/>
+              <text x="12" y="16" text-anchor="middle" fill="white" font-size="12" font-weight="bold">T</text>
+            </svg>
+          `),
+          scaledSize: new google.maps.Size(32, 32),
+          anchor: new google.maps.Point(16, 16)
+        }
+      });
+      
+      // InfoWindow de teste
+      const infoWindow = new google.maps.InfoWindow({
+        content: `
+          <div style="font-family: Arial, sans-serif;">
+            <h3 style="color: #FF0000; margin: 0 0 10px 0;">🧪 MARCADOR DE TESTE</h3>
+            <p><strong>Coordenadas:</strong> ${latTeste}, ${lngTeste}</p>
+            <p><strong>Local esperado:</strong> Sorocaba, SP</p>
+            <p><strong>Está correto?</strong> Verifique se o marcador vermelho está em Sorocaba!</p>
+          </div>
+        `
+      });
+      
+      window.marcadorTeste.addListener('click', () => {
+        infoWindow.open(window.mapa, window.marcadorTeste);
+      });
+      
+      // Centrar mapa na coordenada de teste
+      window.mapa.setCenter({ lat: latTeste, lng: lngTeste });
+      window.mapa.setZoom(12);
+      
+      notify(`Marcador de teste criado em ${latTeste}, ${lngTeste}`, 'info');
+      console.log(`✅ Marcador de teste criado. Verifique se está em Sorocaba!`);
+    }
 
     /*--------------------------------------------------------------*/
     /*  (o restante das suas funções originais permanece igual)     */
