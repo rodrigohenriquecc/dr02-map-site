@@ -614,7 +614,15 @@
       let linhasTrechoAtivas = false;
       
       // URL da planilha publicada do OneDrive (formato de compartilhamento direto)
-      const PLANILHA_PONTOS_INTERESSE_URL = 'https://1drv.ms/x/c/3417733bdfe00f49/EZultx4njYtFpeZwfiQg12oBeULjNBQDXhzKLHpBxyLsjQ?download=1';
+      const PLANILHA_PONTOS_INTERESSE_URL = 'https://1drv.ms/x/c/3417733bdfe00f49/EZultx4njYtFpeZwfiQg12oBeULjNBQDXhzKLHpBxyLsjQ?e=view&download=1';
+      
+      // URLs alternativas para OneDrive
+      const URLS_ALTERNATIVAS_ONEDRIVE = [
+        'https://onedrive.live.com/download?cid=3417733BDFE00F49&resid=3417733BDFE00F49%21sQ&authkey=!AHpBxyLsjQ',
+        'https://1drv.ms/x/c/3417733bdfe00f49/EZultx4njYtFpeZwfiQg12oBeULjNBQDXhzKLHpBxyLsjQ?download=1',
+        'https://1drv.ms/x/c/3417733bdfe00f49/EZultx4njYtFpeZwfiQg12oBeULjNBQDXhzKLHpBxyLsjQ?e=view',
+        'https://onedrive.live.com/view.aspx?cid=3417733BDFE00F49&resid=3417733BDFE00F49%21sQ'
+      ];
       
       // Função para testar conectividade com OneDrive
       async function testarConexaoOneDrive() {
@@ -660,30 +668,26 @@
           // Tentar diferentes métodos de fetch para resolver problemas de CORS
           let response;
           let tentativaAtual = 1;
-          const maxTentativas = 4;
+          const maxTentativas = metodosDownload.length;
           
           // Lista de métodos para tentar
           const metodosDownload = [
-            // Método 1: Direto
+            // Método 1: URL principal com parâmetro e=view
             () => fetch(PLANILHA_PONTOS_INTERESSE_URL),
             
-            // Método 2: Proxy CORS.io
+            // Método 2: Proxy CORS.io com URL principal
             () => fetch(`https://corsproxy.io/?${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`),
             
-            // Método 3: Proxy allorigins
+            // Método 3: Tentar URLs alternativas uma por uma
+            ...URLS_ALTERNATIVAS_ONEDRIVE.map(url => 
+              () => fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`)
+            ),
+            
+            // Método 4: AllOrigins como último recurso (pode retornar HTML)
             () => fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`).then(res => {
               if (res.ok) return res.json().then(data => ({ ok: true, text: () => Promise.resolve(data.contents) }));
               throw new Error('Proxy allorigins falhou');
-            }),
-            
-            // Método 4: Forçar download do OneDrive
-            () => {
-              let urlDownload = PLANILHA_PONTOS_INTERESSE_URL;
-              if (!urlDownload.includes('download=1')) {
-                urlDownload += (urlDownload.includes('?') ? '&' : '?') + 'download=1';
-              }
-              return fetch(`https://corsproxy.io/?${encodeURIComponent(urlDownload)}`);
-            }
+            })
           ];
           
           for (const metodo of metodosDownload) {
@@ -692,7 +696,17 @@
               response = await metodo();
               
               if (response.ok) {
-                console.log(`✅ Sucesso na tentativa ${tentativaAtual}!`);
+                console.log(`✅ Resposta OK na tentativa ${tentativaAtual}!`);
+                
+                // Verificar se o conteúdo é válido antes de prosseguir
+                const textoTeste = await response.clone().text();
+                if (textoTeste.includes('<html') || textoTeste.includes('<!DOCTYPE')) {
+                  console.warn(`⚠️ Tentativa ${tentativaAtual} retornou HTML, tentando próximo método`);
+                  tentativaAtual++;
+                  continue;
+                }
+                
+                console.log(`✅ Tentativa ${tentativaAtual} retornou dados válidos!`);
                 break;
               } else {
                 console.warn(`⚠️ Tentativa ${tentativaAtual} falhou com status: ${response.status}`);
