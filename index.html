@@ -334,21 +334,53 @@
         return obterCoordenadasAproximadas(rodovia, km);
       }
       
-      // Normalizar valores para busca
-      const rodoviaLimpa = rodovia.toString().trim().toUpperCase();
+      // Normalizar valores para busca - suporte aos formatos SP XXX e SPA XXX/XXX
+      let rodoviaLimpa = rodovia.toString().trim().toUpperCase();
+      
+      // Normalizar formato: remover espaços extras e padronizar
+      rodoviaLimpa = rodoviaLimpa.replace(/\s+/g, ' '); // múltiplos espaços -> um espaço
+      
+      // Converter vírgula decimal para ponto
       const kmNumerico = parseFloat(km.toString().replace(',', '.'));
       
-      console.log(`🔍 Buscando ${rodoviaLimpa} km ${kmNumerico} em ${dadosOriginais.length} registros`);
+      console.log(`🔍 Buscando "${rodoviaLimpa}" km ${kmNumerico} em ${dadosOriginais.length} registros`);
       
       // Buscar correspondência exata ou próxima
       let melhorMatch = null;
       let menorDistancia = Infinity;
       
       dadosOriginais.forEach(item => {
-        const rodoviaItem = item.SP ? item.SP.toString().trim().toUpperCase() : '';
-        const kmItem = parseFloat(item['KM '] ? item['KM '].toString().replace(',', '.') : '0');
+        // Verificar diferentes campos que podem conter a rodovia
+        let rodoviaItem = '';
         
-        if (rodoviaItem === rodoviaLimpa && !isNaN(kmItem) && item.LOCALIZAÇÃO) {
+        // Tentar vários campos possíveis
+        if (item.SP) {
+          rodoviaItem = item.SP.toString().trim().toUpperCase();
+        } else if (item.RODOVIA) {
+          rodoviaItem = item.RODOVIA.toString().trim().toUpperCase();
+        } else if (item.rodovia) {
+          rodoviaItem = item.rodovia.toString().trim().toUpperCase();
+        }
+        
+        // Normalizar formato da rodovia do item
+        rodoviaItem = rodoviaItem.replace(/\s+/g, ' ');
+        
+        // Verificar diferentes campos que podem conter o km
+        let kmItem = 0;
+        if (item['KM ']) {
+          kmItem = parseFloat(item['KM '].toString().replace(',', '.'));
+        } else if (item.KM) {
+          kmItem = parseFloat(item.KM.toString().replace(',', '.'));
+        } else if (item.km) {
+          kmItem = parseFloat(item.km.toString().replace(',', '.'));
+        }
+        
+        // Verificar se há correspondência de rodovia
+        const rodoviaMatch = rodoviaItem === rodoviaLimpa || 
+                            rodoviaItem.includes(rodoviaLimpa) || 
+                            rodoviaLimpa.includes(rodoviaItem);
+        
+        if (rodoviaMatch && !isNaN(kmItem) && item.LOCALIZAÇÃO) {
           const distancia = Math.abs(kmItem - kmNumerico);
           if (distancia < menorDistancia) {
             menorDistancia = distancia;
@@ -364,7 +396,7 @@
           const lng = parseFloat(coords[1].trim());
           
           if (!isNaN(lat) && !isNaN(lng)) {
-            console.log(`✅ Coordenadas encontradas: ${lat}, ${lng} (distância: ${menorDistancia.toFixed(2)}km)`);
+            console.log(`✅ Coordenadas encontradas: ${lat}, ${lng} (distância: ${menorDistancia.toFixed(3)}km)`);
             return { lat, lng };
           }
         }
@@ -379,35 +411,108 @@
     /*--------------------------------------------------------------*/
     function obterCoordenadasAproximadas(rodovia, km) {
       // Coordenadas aproximadas para principais rodovias de São Paulo
+      // Suporte aos formatos SP XXX e SPA XXX/XXX
       const rodoviasCoordenadas = {
-        'SP-270': { lat: -23.5, lng: -47.4 }, // Raposo Tavares
-        'SP-280': { lat: -23.5, lng: -47.0 }, // Castelo Branco
-        'SP-310': { lat: -22.8, lng: -47.0 }, // Washington Luís
-        'SP-330': { lat: -22.9, lng: -47.1 }, // Anhanguera
-        'SP-348': { lat: -23.0, lng: -47.2 }, // Bandeirantes
-        'SP-160': { lat: -23.8, lng: -46.3 }, // Imigrantes
-        'SP-150': { lat: -23.7, lng: -46.5 }, // Anchieta
-        // Adicione mais rodovias conforme necessário
+        // Formato SP XXX
+        'SP 270': { lat: -23.5505, lng: -47.4583 }, // Raposo Tavares
+        'SP 280': { lat: -23.5505, lng: -47.0058 }, // Castelo Branco
+        'SP 310': { lat: -22.8084, lng: -47.0647 }, // Washington Luís
+        'SP 330': { lat: -22.9068, lng: -47.0631 }, // Anhanguera
+        'SP 348': { lat: -23.0329, lng: -47.2319 }, // Bandeirantes
+        'SP 160': { lat: -23.8775, lng: -46.3297 }, // Imigrantes
+        'SP 150': { lat: -23.7348, lng: -46.5653 }, // Anchieta
+        'SP 099': { lat: -23.9297, lng: -46.3031 }, // Tamoios
+        'SP 070': { lat: -23.4424, lng: -46.5477 }, // Ayrton Senna
+        'SP 021': { lat: -23.5505, lng: -46.6333 }, // Rodoanel (trecho Sul)
+        'SP 332': { lat: -22.7358, lng: -47.3369 }, // General Milton Tavares
+        'SP 225': { lat: -22.5406, lng: -47.4011 }, // Eng. João Tosello
+        
+        // Formato SPA XXX/XXX (acessos e trevos)
+        'SPA 070/330': { lat: -23.3200, lng: -46.7300 }, // Acesso SP-070/SP-330
+        'SPA 280/160': { lat: -23.6500, lng: -46.8000 }, // Acesso SP-280/SP-160
+        'SPA 348/330': { lat: -23.1200, lng: -46.9500 }, // Acesso SP-348/SP-330
+        'SPA 270/160': { lat: -23.7000, lng: -46.9200 }, // Acesso SP-270/SP-160
+        'SPA 021/280': { lat: -23.6200, lng: -46.7800 }, // Acesso Rodoanel/Castelo Branco
+        'SPA 021/160': { lat: -23.8200, lng: -46.4500 }, // Acesso Rodoanel/Imigrantes
+        'SPA 021/150': { lat: -23.7800, lng: -46.5200 }, // Acesso Rodoanel/Anchieta
+        
+        // Variações sem espaço (compatibilidade)
+        'SP270': { lat: -23.5505, lng: -47.4583 },
+        'SP280': { lat: -23.5505, lng: -47.0058 },
+        'SP310': { lat: -22.8084, lng: -47.0647 },
+        'SP330': { lat: -22.9068, lng: -47.0631 },
+        'SP348': { lat: -23.0329, lng: -47.2319 },
+        'SP160': { lat: -23.8775, lng: -46.3297 },
+        'SP150': { lat: -23.7348, lng: -46.5653 },
+        'SP099': { lat: -23.9297, lng: -46.3031 },
+        'SP070': { lat: -23.4424, lng: -46.5477 },
+        'SP021': { lat: -23.5505, lng: -46.6333 }
       };
       
-      const rodoviaLimpa = rodovia.toString().trim().toUpperCase();
+      // Normalizar rodovia para busca
+      let rodoviaLimpa = rodovia.toString().trim().toUpperCase();
+      rodoviaLimpa = rodoviaLimpa.replace(/\s+/g, ' '); // normalizar espaços
+      
+      // Converter vírgula decimal para ponto
       const kmNumerico = parseFloat(km.toString().replace(',', '.'));
+      
+      console.log(`🔍 Buscando coordenadas aproximadas para "${rodoviaLimpa}" km ${kmNumerico}`);
       
       // Buscar a rodovia nas coordenadas aproximadas
       let baseCoords = rodoviasCoordenadas[rodoviaLimpa];
       
+      // Se não encontrar com espaço, tentar sem espaço
       if (!baseCoords) {
-        // Se não encontrar a rodovia específica, usar coordenadas centrais de SP
-        console.warn(`⚠️ Rodovia ${rodoviaLimpa} não encontrada, usando coordenadas centrais de SP`);
-        baseCoords = { lat: -23.5505, lng: -46.6333 };
+        const rodoviaSemEspaco = rodoviaLimpa.replace(/\s+/g, '');
+        baseCoords = rodoviasCoordenadas[rodoviaSemEspaco];
       }
       
-      // Ajustar coordenadas baseado no km (aproximação simples)
-      const ajusteKm = kmNumerico * 0.01; // Aproximação: 1km = 0.01 grau
-      const lat = baseCoords.lat + (ajusteKm * 0.5); // Ajuste em latitude
-      const lng = baseCoords.lng + (ajusteKm * 0.5); // Ajuste em longitude
+      // Se ainda não encontrar, tentar busca parcial
+      if (!baseCoords) {
+        for (const [key, coords] of Object.entries(rodoviasCoordenadas)) {
+          if (key.includes(rodoviaLimpa) || rodoviaLimpa.includes(key)) {
+            baseCoords = coords;
+            console.log(`🔍 Encontrada correspondência parcial: ${key} para ${rodoviaLimpa}`);
+            break;
+          }
+        }
+      }
       
-      console.log(`📍 Usando coordenadas aproximadas: ${lat}, ${lng} para ${rodovia} km ${km}`);
+      if (!baseCoords) {
+        // Se não encontrar a rodovia específica, usar coordenadas centrais de SP
+        console.warn(`⚠️ Rodovia "${rodoviaLimpa}" não encontrada, usando coordenadas centrais de SP`);
+        baseCoords = { lat: -23.5505, lng: -46.6333 }; // Centro de São Paulo
+      }
+      
+      // Ajustar coordenadas baseado no km (aproximação melhorada)
+      // Cada km representa aproximadamente 0.009 graus (mais preciso)
+      const fatorKm = 0.009;
+      
+      // Para SPA (acessos), usar menos variação
+      const isSPA = rodoviaLimpa.startsWith('SPA');
+      const ajusteKm = isSPA ? kmNumerico * fatorKm * 0.5 : kmNumerico * fatorKm;
+      
+      // Variação baseada na direção típica da rodovia
+      let latAjuste = 0, lngAjuste = 0;
+      
+      if (rodoviaLimpa.includes('270')) { // Raposo Tavares (E-O)
+        lngAjuste = ajusteKm;
+      } else if (rodoviaLimpa.includes('280')) { // Castelo Branco (E-O)
+        lngAjuste = ajusteKm;
+      } else if (rodoviaLimpa.includes('330') || rodoviaLimpa.includes('348')) { // N-S
+        latAjuste = ajusteKm;
+      } else if (rodoviaLimpa.includes('160') || rodoviaLimpa.includes('150')) { // N-S
+        latAjuste = -ajusteKm; // direção sul
+      } else {
+        // Direção padrão para outras rodovias
+        latAjuste = ajusteKm * 0.5;
+        lngAjuste = ajusteKm * 0.5;
+      }
+      
+      const lat = baseCoords.lat + latAjuste;
+      const lng = baseCoords.lng + lngAjuste;
+      
+      console.log(`📍 Coordenadas aproximadas calculadas: ${lat.toFixed(6)}, ${lng.toFixed(6)} para ${rodovia} km ${km}`);
       return { lat, lng };
     }
 
