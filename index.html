@@ -8,11 +8,12 @@
   <!-- favicon "vazio" evita 404 -->
   <link rel="icon" href="data:," />
 
-  <!-- JSZip, shp.js, Turf, PapaParse, toGeoJSON -->
+  <!-- JSZip, shp.js, Turf, PapaParse, toGeoJSON, SheetJS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/shpjs@3.6.2/dist/shp.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
 
   <!-- Firebase (compat) -->
@@ -613,27 +614,27 @@
       let pontosInteresseAtivos = false;
       let linhasTrechoAtivas = false;
       
-      // URL da planilha publicada do OneDrive (formato de compartilhamento direto)
-      const PLANILHA_PONTOS_INTERESSE_URL = 'https://1drv.ms/x/c/3417733bdfe00f49/EZultx4njYtFpeZwfiQg12oBeULjNBQDXhzKLHpBxyLsjQ?e=4DaPbh&download=1';
+      // URL da planilha publicada do Ultra Cloud (formato direto XLSX)
+      const PLANILHA_PONTOS_INTERESSE_URL = 'https://der59.ultra.com.vc/public.php/dav/files/6bz643r3fYnGBzd/?accept=zip';
       
-      // URLs alternativas para OneDrive
+      // URLs alternativas para Ultra Cloud e OneDrive (fallback)
       const URLS_ALTERNATIVAS_ONEDRIVE = [
+        'https://der59.ultra.com.vc/s/6bz643r3fYnGBzd/download',
+        'https://der59.ultra.com.vc/s/6bz643r3fYnGBzd',
         'https://1drv.ms/x/c/3417733bdfe00f49/EZultx4njYtFpeZwfiQg12oBeULjNBQDXhzKLHpBxyLsjQ?e=4DaPbh&nav=MTVfezhFRjhEMzU0LURCRTItNDMxOC05Qzg5LTJEOTM2QTQ5MDI1N30',
+        'https://1drv.ms/x/c/3417733bdfe00f49/EZultx4njYtFpeZwfiQg12oBeULjNBQDXhzKLHpBxyLsjQ?e=4DaPbh&download=1',
         'https://1drv.ms/x/c/3417733bdfe00f49/EZultx4njYtFpeZwfiQg12oBeULjNBQDXhzKLHpBxyLsjQ?e=4DaPbh',
         'https://onedrive.live.com/download?cid=3417733BDFE00F49&resid=3417733BDFE00F49%21sQ&authkey=!AHpBxyLsjQ',
-        'https://1drv.ms/x/c/3417733bdfe00f49/EZultx4njYtFpeZwfiQg12oBeULjNBQDXhzKLHpBxyLsjQ?download=1',
-        'https://1drv.ms/x/c/3417733bdfe00f49/EZultx4njYtFpeZwfiQg12oBeULjNBQDXhzKLHpBxyLsjQ?e=eQgyzE',
-        'https://1drv.ms/x/c/3417733bdfe00f49/EZultx4njYtFpeZwfiQg12oBeULjNBQDXhzKLHpBxyLsjQ?e=view',
-        'https://onedrive.live.com/view.aspx?cid=3417733BDFE00F49&resid=3417733BDFE00F49%21sQ'
+        'https://1drv.ms/x/c/3417733bdfe00f49/EZultx4njYtFpeZwfiQg12oBeULjNBQDXhzKLHpBxyLsjQ?download=1'
       ];
       
-      // Função para testar conectividade com OneDrive
+      // Função para testar conectividade com Ultra Cloud
       async function testarConexaoOneDrive() {
-        console.log('🧪 Iniciando teste de conectividade com OneDrive...');
+        console.log('🧪 Iniciando teste de conectividade com Ultra Cloud...');
         console.log('📋 URL a ser testada:', PLANILHA_PONTOS_INTERESSE_URL);
         
         const metodosTest = [
-          { nome: 'Direto', url: PLANILHA_PONTOS_INTERESSE_URL },
+          { nome: 'Direto Ultra Cloud', url: PLANILHA_PONTOS_INTERESSE_URL },
           { nome: 'Proxy CORS', url: `https://corsproxy.io/?${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}` },
           { nome: 'AllOrigins', url: `https://api.allorigins.win/get?url=${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}` }
         ];
@@ -645,10 +646,20 @@
             console.log(`📊 ${metodo.nome} - Status:`, response.status, response.statusText);
             
             if (response.ok) {
-              const texto = await response.text();
-              console.log(`✅ ${metodo.nome} funcionou! Tamanho da resposta:`, texto.length, 'chars');
-              console.log(`📄 Primeiros 100 chars:`, texto.substring(0, 100));
-              return true;
+              const contentType = response.headers.get('content-type');
+              console.log(`✅ ${metodo.nome} funcionou! Content-Type:`, contentType);
+              
+              // Para arquivos XLSX, verificar como binário
+              if (contentType && (contentType.includes('spreadsheet') || contentType.includes('excel'))) {
+                const arrayBuffer = await response.arrayBuffer();
+                console.log(`📊 XLSX detectado! Tamanho:`, arrayBuffer.byteLength, 'bytes');
+                return true;
+              } else {
+                const texto = await response.text();
+                console.log(`📄 Texto detectado! Tamanho:`, texto.length, 'chars');
+                console.log(`📄 Primeiros 100 chars:`, texto.substring(0, 100));
+                return true;
+              }
             }
           } catch (error) {
             console.log(`❌ ${metodo.nome} falhou:`, error.message);
@@ -662,10 +673,10 @@
       // URL da planilha de linhas por trecho
       const PLANILHA_LINHAS_TRECHO_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR2wW76oOiHiip6-ThZWsw6hH5_y-7klCFeKUtR5J7VfSPEfN0G721SFxqLz9twIW25_JhYMXHsH69Z/pub?output=csv';
       
-      // Carregar e processar pontos de interesse do OneDrive
+      // Carregar e processar pontos de interesse do Ultra Cloud
       async function carregarPontosInteresse() {
         try {
-          console.log('🔄 Carregando pontos de interesse da planilha OneDrive...');
+          console.log('🔄 Carregando pontos de interesse da planilha Ultra Cloud...');
           console.log('📋 URL:', PLANILHA_PONTOS_INTERESSE_URL);
           
           // Tentar diferentes métodos de fetch para resolver problemas de CORS
@@ -746,48 +757,92 @@
           }
           
           if (textoResposta.includes('Access Denied') || textoResposta.includes('Forbidden')) {
-            throw new Error('Acesso negado ao arquivo OneDrive. Verifique as permissões.');
+            throw new Error('Acesso negado ao arquivo Ultra Cloud. Verifique as permissões.');
           }
           
           // Verificar o tipo de conteúdo retornado
           const contentType = response.headers.get('content-type');
           console.log('📄 Tipo de conteúdo:', contentType);
           
-          let dadosParseados;
-          
-          // Se for um arquivo Excel, tentar converter para CSV-like
-          if (contentType && contentType.includes('spreadsheet')) {
-            console.log('📊 Detectado arquivo Excel, tentando conversão...');
-            // Para arquivos Excel do OneDrive, tentar obter como texto e processar
-            const textoResposta = await response.text();
-            console.log('📄 Resposta bruta:', textoResposta.substring(0, 500) + '...');
+          // Detectar tipo de arquivo e processar adequadamente
+          if (contentType && (contentType.includes('spreadsheet') || contentType.includes('excel') || contentType.includes('openxmlformats'))) {
+            console.log('📊 Detectado arquivo XLSX, processando com SheetJS...');
             
-            // Tentar processar como CSV mesmo que seja Excel
-            Papa.parse(textoResposta, {
-              header: true,
-              skipEmptyLines: true,
-              delimiter: ',', // Tentar vírgula primeiro
-              complete: function(results) {
-                if (results.errors.length > 0) {
-                  console.warn('⚠️ Avisos ao processar CSV (vírgula):', results.errors);
-                  // Se der erro com vírgula, tentar com ponto e vírgula
-                  Papa.parse(textoResposta, {
-                    header: true,
-                    skipEmptyLines: true,
-                    delimiter: ';',
-                    complete: function(results2) {
-                      processarDadosCarregados(results2.data, results2.errors);
-                    }
-                  });
-                } else {
-                  processarDadosCarregados(results.data, results.errors);
-                }
+            try {
+              // Obter dados como ArrayBuffer para arquivos binários XLSX
+              const arrayBuffer = await response.arrayBuffer();
+              console.log('📄 Arquivo XLSX carregado, tamanho:', arrayBuffer.byteLength, 'bytes');
+              
+              // Processar XLSX com SheetJS
+              const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+              console.log('📊 Workbook carregado. Planilhas disponíveis:', workbook.SheetNames);
+              
+              // Usar a primeira planilha
+              const sheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[sheetName];
+              
+              // Converter para JSON (array de objetos)
+              const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+              console.log('� Dados brutos extraídos:', jsonData.length, 'linhas');
+              
+              if (jsonData.length === 0) {
+                throw new Error('Planilha vazia ou sem dados válidos');
               }
-            });
+              
+              // Converter para formato esperado (primeira linha como cabeçalho)
+              const headers = jsonData[0];
+              const dataRows = jsonData.slice(1);
+              
+              const formattedData = dataRows.map(row => {
+                const obj = {};
+                headers.forEach((header, index) => {
+                  if (header && row[index] !== undefined) {
+                    obj[header.toString().trim()] = row[index];
+                  }
+                });
+                return obj;
+              }).filter(row => Object.keys(row).length > 0); // Filtrar linhas vazias
+              
+              console.log('✅ XLSX processado com sucesso:', formattedData.length, 'registros válidos');
+              console.log('📋 Cabeçalhos encontrados:', headers);
+              console.log('📄 Primeira linha de dados:', formattedData[0]);
+              
+              processarDadosCarregados(formattedData, []);
+              
+            } catch (xlsxError) {
+              console.error('❌ Erro ao processar XLSX:', xlsxError);
+              console.log('🔄 Fallback: tentando processar como CSV...');
+              
+              // Fallback: tentar como texto/CSV
+              const textoResposta = await response.text();
+              Papa.parse(textoResposta, {
+                header: true,
+                skipEmptyLines: true,
+                delimiter: ',',
+                complete: function(results) {
+                  if (results.errors.length > 0) {
+                    console.warn('⚠️ Avisos ao processar CSV fallback:', results.errors);
+                    // Tentar com ponto e vírgula
+                    Papa.parse(textoResposta, {
+                      header: true,
+                      skipEmptyLines: true,
+                      delimiter: ';',
+                      complete: function(results2) {
+                        processarDadosCarregados(results2.data, results2.errors);
+                      }
+                    });
+                  } else {
+                    processarDadosCarregados(results.data, results.errors);
+                  }
+                }
+              });
+            }
+            
           } else {
             // Processar como CSV normal
+            console.log('📄 Processando como CSV...');
             const csvText = await response.text();
-            console.log('� CSV bruto recebido:', csvText.substring(0, 500) + '...');
+            console.log('📄 CSV bruto recebido:', csvText.substring(0, 500) + '...');
             
             Papa.parse(csvText, {
               header: true,
@@ -806,18 +861,18 @@
           console.error('❌ Erro detalhado ao carregar pontos de interesse:', error);
           
           // Mensagem de erro mais específica baseada no tipo de erro
-          let mensagemErro = 'Erro ao conectar com a planilha do OneDrive';
+          let mensagemErro = 'Erro ao conectar com a planilha do Ultra Cloud';
           
           if (error.message.includes('Todas as') && error.message.includes('tentativas')) {
-            mensagemErro = 'Falha na conexão. Verifique: 1) Sua internet, 2) Se o link do OneDrive está correto, 3) Se o arquivo está público';
+            mensagemErro = 'Falha na conexão. Verifique: 1) Sua internet, 2) Se o link do Ultra Cloud está correto, 3) Se o arquivo está público';
           } else if (error.message.includes('HTTP error')) {
-            mensagemErro = `Erro de acesso ao arquivo OneDrive (${error.message}). Verifique as permissões do arquivo.`;
+            mensagemErro = `Erro de acesso ao arquivo Ultra Cloud (${error.message}). Verifique as permissões do arquivo.`;
           } else if (error.message.includes('not ok') || error.message.includes('403') || error.message.includes('401')) {
-            mensagemErro = 'Arquivo OneDrive sem permissão de acesso. Certifique-se que o link permite visualização pública.';
+            mensagemErro = 'Arquivo Ultra Cloud sem permissão de acesso. Certifique-se que o link permite visualização pública.';
           } else if (error.message.includes('404')) {
-            mensagemErro = 'Arquivo OneDrive não encontrado. Verifique se o link está correto.';
+            mensagemErro = 'Arquivo Ultra Cloud não encontrado. Verifique se o link está correto.';
           } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
-            mensagemErro = 'Problema de rede ao acessar OneDrive. Verifique sua conexão com a internet.';
+            mensagemErro = 'Problema de rede ao acessar Ultra Cloud. Verifique sua conexão com a internet.';
           }
           
           mostrarMensagemErro(mensagemErro);
