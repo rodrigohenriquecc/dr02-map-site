@@ -39,6 +39,10 @@
         console.log('✅ Google Maps inicializado!');
         window.mapa = mapa;      // disponibilizar globalmente
 
+        // Adiciona o listener para o zoom, garantindo que seja único
+        google.maps.event.clearListeners(mapa, 'zoom_changed'); // Remove listeners antigos
+        google.maps.event.addListener(mapa, 'zoom_changed', atualizarVisibilidadeCirculos);
+
         /* carrega o restante do sistema (script_google_maps.js) */
         if (typeof carregarSistemaCompleto === 'function') {
           carregarSistemaCompleto(mapa);
@@ -123,36 +127,16 @@
     /*  Fetch com vários métodos (lida com CORS)                    */
     /*--------------------------------------------------------------*/
     async function baixarArquivoUltraCloud () {
-      const metodosDownload = [
-        /* 1) direto */
-        () => fetch(PLANILHA_PONTOS_INTERESSE_URL),
-
-        /* 2) via corsproxy.io */
-        () => fetch(`https://corsproxy.io/?${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`),
-
-        /* 3) URLs alternativas */
-        ...URLS_ALTERNATIVAS_ONEDRIVE.map(
-          url => () => fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`)
-        ),
-
-        /* 4) allorigins (fallback) */
-        () => fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`)
-              .then(r => r.ok ? r.json().then(j => ({ ok:true, arrayBuffer:() => fetch('data:,'+j.contents).then(r=>r.arrayBuffer()) })) : Promise.reject())
-      ];
-
-      let tentativa = 0;
-      for (const metodo of metodosDownload) {
-        tentativa++;
-        try {
-          console.log(`🔄 tentativa ${tentativa}/${metodosDownload.length}`);
-          const resp = await metodo();
-          if (!resp.ok) throw new Error(`status ${resp.status}`);
-          return resp.arrayBuffer ? resp.arrayBuffer() : resp;   // XLSX via ArrayBuffer
-        } catch (e) {
-          console.warn(`⚠️ falhou tentativa ${tentativa}:`, e.message);
-        }
+      // Sempre usar proxy corsproxy.io para evitar erro de CORS
+      try {
+        console.log('🔄 Download via corsproxy.io');
+        const resp = await fetch(`https://corsproxy.io/?${encodeURIComponent(PLANILHA_PONTOS_INTERESSE_URL)}`);
+        if (!resp.ok) throw new Error(`status ${resp.status}`);
+        return resp.arrayBuffer ? resp.arrayBuffer() : resp;
+      } catch (e) {
+        console.error('❌ Falha no download via proxy:', e);
+        throw new Error('Download falhou via proxy CORS');
       }
-      throw new Error('Todas as tentativas de download falharam');
     }
 
     /*--------------------------------------------------------------*/
@@ -181,7 +165,12 @@
           const obj={}; cabec.forEach((h,i)=>obj[h]=l[i]); return obj;
         }).filter(o=>Object.keys(o).length);
         console.log('✅ planilha carregada:', pontos.length,'registros');
-        console.log('📄 Primeiro ponto:', pontos[0]);
+        if (pontos.length > 0) {
+          console.log('📄 Primeiro ponto:', pontos[0]);
+          console.log('🔑 Campos disponíveis:', Object.keys(pontos[0]));
+        } else {
+          console.warn('⚠️ Nenhum ponto encontrado na planilha!');
+        }
 
         criarMarcadoresPontosInteresse(pontos);  // criar marcadores
         notify('Pontos de interesse carregados!','success');
@@ -189,6 +178,25 @@
         console.error('❌ erro ao carregar PI:', e);
         notify('Erro ao conectar com a planilha do Ultra Cloud','error');
       }
+    }
+
+    /*--------------------------------------------------------------*/
+    /*  Controla a visibilidade dos círculos com base no zoom       */
+    /*--------------------------------------------------------------*/
+    function atualizarVisibilidadeCirculos() {
+        if (!window.mapa || !marcadoresPI) return;
+
+        const zoomLevel = window.mapa.getZoom();
+        const devemSerVisiveis = zoomLevel >= 14; // Limite de zoom para exibir os círculos
+
+        marcadoresPI.forEach(item => {
+            if (item instanceof google.maps.Circle) {
+                const estaVisivel = item.getMap() != null;
+                if (estaVisivel !== devemSerVisiveis) {
+                    item.setMap(devemSerVisiveis ? window.mapa : null);
+                }
+            }
+        });
     }
 
     /*--------------------------------------------------------------*/
@@ -214,24 +222,105 @@
         // Tentar extrair coordenadas de diferentes campos possíveis
         let lat, lng;
         
-        // Verificar se há coordenadas diretas
-        if (ponto.Latitude && ponto.Longitude) {
-          lat = parseFloat(ponto.Latitude);
-          lng = parseFloat(ponto.Longitude);
-        } else if (ponto.latitude && ponto.longitude) {
-          lat = parseFloat(ponto.latitude);
-          lng = parseFloat(ponto.longitude);
-        } else if (ponto.lat && ponto.lng) {
-          lat = parseFloat(ponto.lat);
-          lng = parseFloat(ponto.lng);
+        // PRIORIDADE 1: Usar a nova coluna "Lat e Long" (coordenadas na mesma célula)
+        if (ponto['Lat e Long']) {
+          const coordText = ponto['Lat e Long'].toString().trim();
+          console.log(`[REGEX_PARSE] 🔍 Analisando célula "Lat e Long": "${coordText}"`);
+          
+          // Regex para extrair os dois primeiros números (negativos, decimais com ponto ou vírgula)
+          const numeros = coordText.match(/-?\d+([.,]\d+)?/g);
+          console.log(`[REGEX_PARSE] 🔍 Números extraídos:`, numeros);
+
+          if (numeros && numeros.length >= 2) {
+            // Limpa e converte os números para o formato com ponto decimal
+            const val1 = parseFloat(numeros[0].replace(',', '.'));
+            const val2 = parseFloat(numeros[1].replace(',', '.'));
+            
+            console.log(`[REGEX_PARSE] 🔍 Valores numéricos convertidos: val1=${val1}, val2=${val2}`);
+            
+            if (!isNaN(val1) && !isNaN(val2)) {
+              // Lógica de detecção de Lat/Lng (Brasil)
+              if (val1 >= -35 && val1 <= -5 && val2 >= -75 && val2 <= -35) {
+                lat = val1;
+                lng = val2;
+                console.log(`[REGEX_PARSE] ✅ Ordem detectada: Lat primeiro (${lat}), Lng segundo (${lng})`);
+              } else if (val2 >= -35 && val2 <= -5 && val1 >= -75 && val1 <= -35) {
+                lat = val2;
+                lng = val1;
+                console.log(`[REGEX_PARSE] ✅ Ordem detectada: Lng primeiro (${val1}), Lat segundo (${lat}) - INVERTIDO`);
+              } else {
+                lat = val1;
+                lng = val2;
+                console.log(`[REGEX_PARSE] ⚠️ Ordem não detectada, assumindo Lat primeiro: ${lat}, ${lng}`);
+              }
+              console.log(`[REGEX_PARSE] 📍 Coordenadas finais extraídas: Lat=${lat}, Long=${lng}`);
+            }
+          }
         }
         
-        // Se não há coordenadas diretas, tentar usar coordenadas em um campo único
-        if ((!lat || !lng) && ponto.coordenadas) {
-          const coords = ponto.coordenadas.toString().split(',');
-          if (coords.length === 2) {
-            lat = parseFloat(coords[0].trim());
-            lng = parseFloat(coords[1].trim());
+        // PRIORIDADE 2: Verificar variações do nome da coluna
+        if ((!lat || !lng || isNaN(lat) || isNaN(lng))) {
+          const possiveisCampos = ['Lat e Long', 'Latitude e Longitude', 'Coordenadas', 'Lat Long', 'LatLong', 'coordenadas'];
+          
+          for (const campo of possiveisCampos) {
+            if (ponto[campo]) {
+              const coordText = ponto[campo].toString().trim();
+              console.log(`🔍 Tentando campo "${campo}": ${coordText}`);
+              
+              let coords = [];
+              if (coordText.includes(',')) {
+                coords = coordText.split(',');
+              } else if (coordText.includes(';')) {
+                coords = coordText.split(';');
+              } else if (coordText.includes(' ') && coordText.split(' ').length >= 2) {
+                coords = coordText.split(' ').filter(c => c.trim().length > 0);
+              }
+              
+              if (coords.length >= 2) {
+                lat = parseFloat(coords[0].trim().replace(',', '.'));
+                lng = parseFloat(coords[1].trim().replace(',', '.'));
+                console.log(`📍 Coordenadas encontradas em "${campo}": Lat=${lat}, Long=${lng}`);
+                break;
+              }
+            }
+          }
+        }
+        
+        // PRIORIDADE 3: Verificar se há coordenadas em campos separados (compatibilidade)
+        if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && ponto.Lat && ponto.Long) {
+          lat = parseFloat(ponto.Lat.toString().replace(',', '.'));
+          lng = parseFloat(ponto.Long.toString().replace(',', '.'));
+          console.log(`📍 Coordenadas em campos separados: Lat=${lat}, Long=${lng}`);
+        } else if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && ponto.Latitude && ponto.Longitude) {
+          lat = parseFloat(ponto.Latitude.toString().replace(',', '.'));
+          lng = parseFloat(ponto.Longitude.toString().replace(',', '.'));
+        } else if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && ponto.latitude && ponto.longitude) {
+          lat = parseFloat(ponto.latitude.toString().replace(',', '.'));
+          lng = parseFloat(ponto.longitude.toString().replace(',', '.'));
+        } else if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && ponto.lat && ponto.lng) {
+          lat = parseFloat(ponto.lat.toString().replace(',', '.'));
+          lng = parseFloat(ponto.lng.toString().replace(',', '.'));
+        }
+        
+        // PRIORIDADE 4: Se ainda não temos coordenadas, buscar por Rodovia e Km
+        if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && ponto.Rodovia && ponto.Km) {
+          const coordsRodovia = buscarCoordenadasPorRodoviaKm(ponto.Rodovia, ponto.Km);
+          if (coordsRodovia) {
+            lat = coordsRodovia.lat;
+            lng = coordsRodovia.lng;
+            console.log(`🗺️ Coordenadas encontradas por rodovia/km: ${lat}, ${lng} para ${ponto.Rodovia} km ${ponto.Km}`);
+          } else {
+            console.warn(`⚠️ Coordenadas não encontradas para ${ponto.Rodovia} km ${ponto.Km}`);
+          }
+        }
+        
+        // FALLBACK: Tentar campos antigos de rodovia se os novos não existirem
+        if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && ponto.rodovia && ponto.km) {
+          const coordsRodovia = buscarCoordenadasPorRodoviaKm(ponto.rodovia, ponto.km);
+          if (coordsRodovia) {
+            lat = coordsRodovia.lat;
+            lng = coordsRodovia.lng;
+            console.log(`🗺️ Coordenadas encontradas por rodovia/km (campos antigos): ${lat}, ${lng} para ${ponto.rodovia} km ${ponto.km}`);
           }
         }
         
@@ -240,13 +329,31 @@
           return;
         }
 
+        // Verificação de coordenadas do Brasil
+        if (lat > -5 || lat < -35 || lng > -35 || lng < -75) {
+          console.warn(`⚠️ Coordenadas fora do Brasil detectadas para ponto ${index + 1}: Lat=${lat}, Lng=${lng}`);
+          console.warn(`   Faixa esperada: Lat[-35 a -5], Lng[-75 a -35]`);
+          console.warn(`   Dados do ponto:`, ponto);
+          
+          // Tentar inverter se parece que está trocado
+          if (lng >= -35 && lng <= -5 && lat >= -75 && lat <= -35) {
+            console.log(`🔄 Tentando inverter coordenadas: ${lat} ↔ ${lng}`);
+            [lat, lng] = [lng, lat];
+            console.log(`✅ Coordenadas invertidas: Lat=${lat}, Lng=${lng}`);
+          }
+        }
+
+        console.log(`🎯 Coordenadas finais validadas: Lat=${lat}, Lng=${lng}`);
+
         pontosValidos++;
         
-        // Configurações do ponto
-        const tipo = ponto.tipo || ponto.Tipo || ponto.TIPO || `Ponto ${index + 1}`;
-        const cor = ponto.cor || ponto.Cor || '#2196F3';
-        const raio = parseFloat(ponto.raio || ponto.Raio || 200);
-        const opacidade = parseFloat(ponto.opacidade || ponto.Opacidade || 0.7);
+        // Configurações do ponto usando as novas colunas
+        const tipo = ponto.Tipo || ponto.tipo || ponto.TIPO || `Ponto ${index + 1}`;
+        const cor = ponto.Cor || ponto.cor || '#2196F3';
+        const raio = parseFloat((ponto.Raio || ponto.raio || 200).toString().replace(',', '.'));
+        const opacidade = parseFloat((ponto.Opacidade || ponto.opacidade || 0.7).toString().replace(',', '.'));
+        const observacoes = ponto.Obs || ponto.obs || ponto.observacoes || '';
+        const periodo = ponto.Período || ponto.periodo || '';
         
         console.log(`📍 Criando ponto: ${tipo} em (${lat}, ${lng})`);
         
@@ -257,37 +364,36 @@
           strokeWeight: 2,
           fillColor: cor,
           fillOpacity: opacidade,
-          map: window.mapa,
+          map: null, // Círculo começa invisível
           center: { lat, lng },
           radius: raio
         });
         
-        // Criar marcador
+        // Criar marcador com ícone de ponto
         const marker = new google.maps.Marker({
           position: { lat, lng },
           map: window.mapa,
           title: tipo,
           icon: {
-            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" fill="${cor}" stroke="#fff" stroke-width="2"/>
-                <circle cx="12" cy="12" r="4" fill="#fff"/>
-              </svg>
-            `),
-            scaledSize: new google.maps.Size(24, 24),
-            anchor: new google.maps.Point(12, 12)
+            path: google.maps.SymbolPath.CIRCLE,
+            fillColor: cor,
+            fillOpacity: 1,
+            strokeWeight: 0,
+            scale: 5 // Tamanho do ponto
           }
         });
         
-        // InfoWindow
+        // InfoWindow com as novas informações
         const infoContent = `
           <div style="font-family: Arial, sans-serif; max-width: 300px;">
             <h3 style="margin: 0 0 10px 0; color: ${cor};">${tipo}</h3>
-            ${ponto.rodovia ? `<p><strong>Rodovia:</strong> ${ponto.rodovia}</p>` : ''}
-            ${ponto.km ? `<p><strong>Km:</strong> ${ponto.km}</p>` : ''}
-            ${ponto.obs ? `<p><strong>Observações:</strong> ${ponto.obs}</p>` : ''}
+            ${ponto.Rodovia ? `<p><strong>Rodovia:</strong> ${ponto.Rodovia}</p>` : ''}
+            ${ponto.Km ? `<p><strong>Km:</strong> ${ponto.Km}</p>` : ''}
+            ${observacoes ? `<p><strong>Observações:</strong> ${observacoes}</p>` : ''}
+            ${periodo ? `<p><strong>Período:</strong> ${periodo}</p>` : ''}
             <p><strong>Coordenadas:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
-            <p><strong>Raio:</strong> ${raio}m | <strong>Cor:</strong> ${cor}</p>
+            <p><strong>Raio:</strong> ${raio}m | <strong>Opacidade:</strong> ${opacidade}</p>
+            <p><strong>Cor:</strong> ${cor}</p>
           </div>
         `;
         
@@ -307,6 +413,8 @@
       
       console.log(`✅ ${pontosValidos} pontos de interesse criados no mapa`);
       
+      atualizarVisibilidadeCirculos(); // Garante o estado correto de visibilidade após criar
+
       // Ajustar zoom para mostrar todos os pontos
       if (pontosValidos > 0) {
         const bounds = new google.maps.LatLngBounds();
@@ -320,6 +428,203 @@
           window.mapa.setZoom(15); // zoom específico para um único ponto
         }
       }
+    }
+
+    /*--------------------------------------------------------------*/
+    /*  Buscar coordenadas por rodovia e km                         */
+    /*--------------------------------------------------------------*/
+    function buscarCoordenadasPorRodoviaKm(rodovia, km) {
+      // Função para buscar coordenadas baseadas na rodovia e quilometragem
+      // Esta função tentará encontrar um ponto próximo nos dados carregados do sistema
+      
+      console.log(`🔍 Buscando coordenadas para ${rodovia} km ${km}`);
+      
+      // Verificar se temos dados originais carregados (do sistema principal)
+      if (!dadosOriginais || dadosOriginais.length === 0) {
+        console.warn('⚠️ Dados de rodovias não carregados ainda, usando coordenadas aproximadas');
+        return obterCoordenadasAproximadas(rodovia, km);
+      }
+      
+      // Normalizar valores para busca - suporte aos formatos SP XXX e SPA XXX/XXX
+      let rodoviaLimpa = rodovia.toString().trim().toUpperCase();
+      
+      // Normalizar formato: remover espaços extras e padronizar
+      rodoviaLimpa = rodoviaLimpa.replace(/\s+/g, ' '); // múltiplos espaços -> um espaço
+      
+      // Converter vírgula decimal para ponto
+      const kmNumerico = parseFloat(km.toString().replace(',', '.'));
+      
+      console.log(`🔍 Buscando "${rodoviaLimpa}" km ${kmNumerico} em ${dadosOriginais.length} registros`);
+      
+      // Buscar correspondência exata ou próxima
+      let melhorMatch = null;
+      let menorDistancia = Infinity;
+      
+      dadosOriginais.forEach(item => {
+        // Verificar diferentes campos que podem conter a rodovia
+        let rodoviaItem = '';
+        
+        // Tentar vários campos possíveis
+        if (item.SP) {
+          rodoviaItem = item.SP.toString().trim().toUpperCase();
+        } else if (item.RODOVIA) {
+          rodoviaItem = item.RODOVIA.toString().trim().toUpperCase();
+        } else if (item.rodovia) {
+          rodoviaItem = item.rodovia.toString().trim().toUpperCase();
+        }
+        
+        // Normalizar formato da rodovia do item
+        rodoviaItem = rodoviaItem.replace(/\s+/g, ' ');
+        
+        // Verificar diferentes campos que podem conter o km
+        let kmItem = 0;
+        if (item['KM ']) {
+          kmItem = parseFloat(item['KM '].toString().replace(',', '.'));
+        } else if (item.KM) {
+          kmItem = parseFloat(item.KM.toString().replace(',', '.'));
+        } else if (item.km) {
+          kmItem = parseFloat(item.km.toString().replace(',', '.'));
+        }
+        
+        // Verificar se há correspondência de rodovia
+        const rodoviaMatch = rodoviaItem === rodoviaLimpa || 
+                            rodoviaItem.includes(rodoviaLimpa) || 
+                            rodoviaLimpa.includes(rodoviaItem);
+        
+        if (rodoviaMatch && !isNaN(kmItem) && item.LOCALIZAÇÃO) {
+          const distancia = Math.abs(kmItem - kmNumerico);
+          if (distancia < menorDistancia) {
+            menorDistancia = distancia;
+            melhorMatch = item;
+          }
+        }
+      });
+      
+      if (melhorMatch && melhorMatch.LOCALIZAÇÃO) {
+        const coords = melhorMatch.LOCALIZAÇÃO.split(',');
+        if (coords.length === 2) {
+          const lat = parseFloat(coords[0].trim());
+          const lng = parseFloat(coords[1].trim());
+          
+          if (!isNaN(lat) && !isNaN(lng)) {
+            console.log(`✅ Coordenadas encontradas: ${lat}, ${lng} (distância: ${menorDistancia.toFixed(3)}km)`);
+            return { lat, lng };
+          }
+        }
+      }
+      
+      console.warn(`⚠️ Coordenadas não encontradas para ${rodovia} km ${km}, usando aproximação`);
+      return obterCoordenadasAproximadas(rodovia, km);
+    }
+
+    /*--------------------------------------------------------------*/
+    /*  Obter coordenadas aproximadas por rodovia                   */
+    /*--------------------------------------------------------------*/
+    function obterCoordenadasAproximadas(rodovia, km) {
+      // Coordenadas aproximadas para principais rodovias de São Paulo
+      // Suporte aos formatos SP XXX e SPA XXX/XXX
+      const rodoviasCoordenadas = {
+        // Formato SP XXX
+        'SP 270': { lat: -23.5505, lng: -47.4583 }, // Raposo Tavares
+        'SP 280': { lat: -23.5505, lng: -47.0058 }, // Castelo Branco
+        'SP 310': { lat: -22.8084, lng: -47.0647 }, // Washington Luís
+        'SP 330': { lat: -22.9068, lng: -47.0631 }, // Anhanguera
+        'SP 348': { lat: -23.0329, lng: -47.2319 }, // Bandeirantes
+        'SP 160': { lat: -23.8775, lng: -46.3297 }, // Imigrantes
+        'SP 150': { lat: -23.7348, lng: -46.5653 }, // Anchieta
+        'SP 099': { lat: -23.9297, lng: -46.3031 }, // Tamoios
+        'SP 070': { lat: -23.4424, lng: -46.5477 }, // Ayrton Senna
+        'SP 021': { lat: -23.5505, lng: -46.6333 }, // Rodoanel (trecho Sul)
+        'SP 332': { lat: -22.7358, lng: -47.3369 }, // General Milton Tavares
+        'SP 225': { lat: -22.5406, lng: -47.4011 }, // Eng. João Tosello
+        
+        // Formato SPA XXX/XXX (acessos e trevos)
+        'SPA 070/330': { lat: -23.3200, lng: -46.7300 }, // Acesso SP-070/SP-330
+        'SPA 280/160': { lat: -23.6500, lng: -46.8000 }, // Acesso SP-280/SP-160
+        'SPA 348/330': { lat: -23.1200, lng: -46.9500 }, // Acesso SP-348/SP-330
+        'SPA 270/160': { lat: -23.7000, lng: -46.9200 }, // Acesso SP-270/SP-160
+        'SPA 021/280': { lat: -23.6200, lng: -46.7800 }, // Acesso Rodoanel/Castelo Branco
+        'SPA 021/160': { lat: -23.8200, lng: -46.4500 }, // Acesso Rodoanel/Imigrantes
+        'SPA 021/150': { lat: -23.7800, lng: -46.5200 }, // Acesso Rodoanel/Anchieta
+        
+        // Variações sem espaço (compatibilidade)
+        'SP270': { lat: -23.5505, lng: -47.4583 },
+        'SP280': { lat: -23.5505, lng: -47.0058 },
+        'SP310': { lat: -22.8084, lng: -47.0647 },
+        'SP330': { lat: -22.9068, lng: -47.0631 },
+        'SP348': { lat: -23.0329, lng: -47.2319 },
+        'SP160': { lat: -23.8775, lng: -46.3297 },
+        'SP150': { lat: -23.7348, lng: -46.5653 },
+        'SP099': { lat: -23.9297, lng: -46.3031 },
+        'SP070': { lat: -23.4424, lng: -46.5477 },
+        'SP021': { lat: -23.5505, lng: -46.6333 }
+      };
+      
+      // Normalizar rodovia para busca
+      let rodoviaLimpa = rodovia.toString().trim().toUpperCase();
+      rodoviaLimpa = rodoviaLimpa.replace(/\s+/g, ' '); // normalizar espaços
+      
+      // Converter vírgula decimal para ponto
+      const kmNumerico = parseFloat(km.toString().replace(',', '.'));
+      
+      console.log(`🔍 Buscando coordenadas aproximadas para "${rodoviaLimpa}" km ${kmNumerico}`);
+      
+      // Buscar a rodovia nas coordenadas aproximadas
+      let baseCoords = rodoviasCoordenadas[rodoviaLimpa];
+      
+      // Se não encontrar com espaço, tentar sem espaço
+      if (!baseCoords) {
+        const rodoviaSemEspaco = rodoviaLimpa.replace(/\s+/g, '');
+        baseCoords = rodoviasCoordenadas[rodoviaSemEspaco];
+      }
+      
+      // Se ainda não encontrar, tentar busca parcial
+      if (!baseCoords) {
+        for (const [key, coords] of Object.entries(rodoviasCoordenadas)) {
+          if (key.includes(rodoviaLimpa) || rodoviaLimpa.includes(key)) {
+            baseCoords = coords;
+            console.log(`🔍 Encontrada correspondência parcial: ${key} para ${rodoviaLimpa}`);
+            break;
+          }
+        }
+      }
+      
+      if (!baseCoords) {
+        // Se não encontrar a rodovia específica, usar coordenadas centrais de SP
+        console.warn(`⚠️ Rodovia "${rodoviaLimpa}" não encontrada, usando coordenadas centrais de SP`);
+        baseCoords = { lat: -23.5505, lng: -46.6333 }; // Centro de São Paulo
+      }
+      
+      // Ajustar coordenadas baseado no km (aproximação melhorada)
+      // Cada km representa aproximadamente 0.009 graus (mais preciso)
+      const fatorKm = 0.009;
+      
+      // Para SPA (acessos), usar menos variação
+      const isSPA = rodoviaLimpa.startsWith('SPA');
+      const ajusteKm = isSPA ? kmNumerico * fatorKm * 0.5 : kmNumerico * fatorKm;
+      
+      // Variação baseada na direção típica da rodovia
+      let latAjuste = 0, lngAjuste = 0;
+      
+      if (rodoviaLimpa.includes('270')) { // Raposo Tavares (E-O)
+        lngAjuste = ajusteKm;
+      } else if (rodoviaLimpa.includes('280')) { // Castelo Branco (E-O)
+        lngAjuste = ajusteKm;
+      } else if (rodoviaLimpa.includes('330') || rodoviaLimpa.includes('348')) { // N-S
+        latAjuste = ajusteKm;
+      } else if (rodoviaLimpa.includes('160') || rodoviaLimpa.includes('150')) { // N-S
+        latAjuste = -ajusteKm; // direção sul
+      } else {
+        // Direção padrão para outras rodovias
+        latAjuste = ajusteKm * 0.5;
+        lngAjuste = ajusteKm * 0.5;
+      }
+      
+      const lat = baseCoords.lat + latAjuste;
+      const lng = baseCoords.lng + lngAjuste;
+      
+      console.log(`📍 Coordenadas aproximadas calculadas: ${lat.toFixed(6)}, ${lng.toFixed(6)} para ${rodovia} km ${km}`);
+      return { lat, lng };
     }
 
     /*--------------------------------------------------------------*/
