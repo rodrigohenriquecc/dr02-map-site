@@ -95,6 +95,16 @@
     const PLANILHA_LINHAS_TRECHO_URL =
       'https://docs.google.com/spreadsheets/d/e/2PACX-1vR2wW76oOiHiip6-ThZWsw6hH5_y-7klCFeKUtR5J7VfSPEfN0G721SFxqLz9twIW25_JhYMXHsH69Z/pub?output=csv';
 
+    // Lista fixa de rodovias
+    const rodoviasFixas = [
+      "SP 129","SPA 205/270","SP 157","SP 250","SP 189","SPA 173/250","SPA 180/250","SPA 204/270",
+      "SPA 099/139","SPA 142/270","SPA 145/270","SPA 162/270","SP 268","SP 270","SP 139","SPA 223/270",
+      "SP 127","SP 252","SP 165","SP 181","SP 249","SPA 010/249","SPA 294/250","SP 267","SP 259",
+      "SPA 324/259","SPA 112/249","SP 275","SP 281","SP 079","SPA 097/300","SPA 103/079","SPA 104/079",
+      "SPA 112/270","SPA 115/280","SPA 040/079","SPA 097/250","SP 264","SP 097","SP 073","SPA 162/280",
+      "SP 141","SP 143","SP 147","SP 245","SPA 005/245","SPA 245/270","SPA 003/245"
+    ];
+
     /*--------------------------------------------------------------*/
     /*  Variáveis de estado                                         */
     /*--------------------------------------------------------------*/
@@ -147,32 +157,25 @@
         console.log('🔄 Iniciando carregamento de pontos de interesse...');
         notify('Carregando pontos de interesse…','info');
 
-        const buffer = await baixarArquivoUltraCloud();             // <-- download
-        console.log('📄 Buffer recebido, tamanho:', buffer.byteLength, 'bytes');
-        
-        const wb = XLSX.read(buffer, { type: 'array' });            // SheetJS
-        console.log('📊 Workbook carregado. Planilhas:', wb.SheetNames);
-        
+        const rodoviaSelecionada = document.getElementById('rodoviaSelect').value;
+
+        const buffer = await baixarArquivoUltraCloud();
+        const wb = XLSX.read(buffer, { type: 'array' });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const dados = XLSX.utils.sheet_to_json(ws, { header:1 });
-        console.log('📋 Dados brutos extraídos:', dados.length, 'linhas');
 
-        /* transforma para objetos */
         const [cabec, ...linhas] = dados;
-        console.log('📋 Cabeçalhos:', cabec);
-        
         const pontos = linhas.map(l => {
           const obj={}; cabec.forEach((h,i)=>obj[h]=l[i]); return obj;
         }).filter(o=>Object.keys(o).length);
-        console.log('✅ planilha carregada:', pontos.length,'registros');
-        if (pontos.length > 0) {
-          console.log('📄 Primeiro ponto:', pontos[0]);
-          console.log('🔑 Campos disponíveis:', Object.keys(pontos[0]));
-        } else {
-          console.warn('⚠️ Nenhum ponto encontrado na planilha!');
+
+        let pontosFiltrados = pontos;
+        if (rodoviaSelecionada) {
+          pontosFiltrados = pontos.filter(p => (p.Rodovia || p.rodovia) === rodoviaSelecionada);
         }
 
-        criarMarcadoresPontosInteresse(pontos);  // criar marcadores
+        dadosOriginais = pontos;
+        criarMarcadoresPontosInteresse(pontosFiltrados);
         notify('Pontos de interesse carregados!','success');
       } catch (e) {
         console.error('❌ erro ao carregar PI:', e);
@@ -379,7 +382,7 @@
             fillColor: cor,
             fillOpacity: 1,
             strokeWeight: 0,
-            scale: 5 // Tamanho do ponto
+            scale: 3 // Tamanho do ponto
           }
         });
         
@@ -636,8 +639,34 @@
     });
 
     /*--------------------------------------------------------------*/
+    /*  Preencher o select de rodovias com opções únicas           */
+    /*--------------------------------------------------------------*/
+    function preencherSelectRodovias(pontos) {
+      const select = document.getElementById('rodoviaSelect');
+      const rodoviasUnicas = [...new Set(pontos.map(p => p.Rodovia).filter(Boolean))].sort();
+      select.innerHTML = '<option value="">Todas as rodovias</option>' +
+        rodoviasUnicas.map(r => `<option value="${r}">${r}</option>`).join('');
+    }
+
+    // Preencher o select ao carregar a página
+    document.addEventListener('DOMContentLoaded', () => {
+      const select = document.getElementById('rodoviaSelect');
+      const rodoviasOrdenadas = [...rodoviasFixas].sort();
+      select.innerHTML = '<option value="">Todas as rodovias</option>' +
+        rodoviasOrdenadas.map(r => `<option value="${r}">${r}</option>`).join('');
+    });
+
+    /*--------------------------------------------------------------*/
     /*  (o restante das suas funções originais permanece igual)     */
     /*--------------------------------------------------------------*/
+    document.getElementById('rodoviaSelect').addEventListener('change', function() {
+      const rodoviaSelecionada = document.getElementById('rodoviaSelect').value;
+      let pontosFiltrados = pontos;
+      if (rodoviaSelecionada) {
+        pontosFiltrados = pontos.filter(p => (p.Rodovia || p.rodovia) === rodoviaSelecionada);
+      }
+      criarMarcadoresPontosInteresse(pontosFiltrados);
+    });
   </script>
 
   <!-- ============================================================ -->
@@ -652,6 +681,9 @@
           style="position:fixed;top:15px;left:15px;z-index:3000">
     Pontos de Interesse
   </button>
+  <select id="rodoviaSelect" style="position:fixed;top:15px;left:180px;z-index:3000">
+    <option value="">Todas as rodovias</option>
+  </select>
   <div id="map"></div>
 </body>
 </html>
