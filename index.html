@@ -158,12 +158,20 @@
         notify('Carregando pontos de interesse…','info');
 
         const rodoviaSelecionada = document.getElementById('rodoviaSelect').value;
+        const periodoSelecionado = document.getElementById('periodoSelect').value;
 
         const buffer = await baixarArquivoUltraCloud();
         const wb = XLSX.read(buffer, { type: 'array' });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const dados = XLSX.utils.sheet_to_json(ws, { header:1 });
 
+        // Usa a primeira aba da planilha
+        const primeiraAba = wb.SheetNames[0];
+        const ws = wb.Sheets[primeiraAba];
+        if (!ws) {
+          notify('Nenhuma aba encontrada na planilha!','error');
+          return;
+        }
+
+        const dados = XLSX.utils.sheet_to_json(ws, { header:1 });
         const [cabec, ...linhas] = dados;
         const pontos = linhas.map(l => {
           const obj={}; cabec.forEach((h,i)=>obj[h]=l[i]); return obj;
@@ -171,10 +179,16 @@
 
         let pontosFiltrados = pontos;
         if (rodoviaSelecionada) {
-          pontosFiltrados = pontos.filter(p => (p.Rodovia || p.rodovia) === rodoviaSelecionada);
+          pontosFiltrados = pontosFiltrados.filter(p => (p.Rodovia || p.rodovia) === rodoviaSelecionada);
+        }
+        if (periodoSelecionado) {
+          pontosFiltrados = pontosFiltrados.filter(p => (p.Período || p.periodo) == periodoSelecionado);
         }
 
         dadosOriginais = pontos;
+        if (pontosFiltrados.length === 0) {
+          notify('Nenhum ponto encontrado para o filtro selecionado.','error');
+        }
         criarMarcadoresPontosInteresse(pontosFiltrados);
         notify('Pontos de interesse carregados!','success');
       } catch (e) {
@@ -392,11 +406,14 @@
             <h3 style="margin: 0 0 10px 0; color: ${cor};">${tipo}</h3>
             ${ponto.Rodovia ? `<p><strong>Rodovia:</strong> ${ponto.Rodovia}</p>` : ''}
             ${ponto.Km ? `<p><strong>Km:</strong> ${ponto.Km}</p>` : ''}
-            ${observacoes ? `<p><strong>Observações:</strong> ${observacoes}</p>` : ''}
             ${periodo ? `<p><strong>Período:</strong> ${periodo}</p>` : ''}
-            <p><strong>Coordenadas:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
-            <p><strong>Raio:</strong> ${raio}m | <strong>Opacidade:</strong> ${opacidade}</p>
-            <p><strong>Cor:</strong> ${cor}</p>
+            ${ponto.Diâmetro || ponto.Diametro || ponto.DIAMETRO ? `<p><strong>Diâmetro:</strong> ${ponto.Diâmetro || ponto.Diametro || ponto.DIAMETRO}</p>` : ''}
+            <p>
+              <strong>Coordenadas:</strong>
+              <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" style="color:#1565C0;text-decoration:underline;">
+                ${lat.toFixed(6)}, ${lng.toFixed(6)}
+              </a>
+            </p>
           </div>
         `;
         
@@ -659,14 +676,8 @@
     /*--------------------------------------------------------------*/
     /*  (o restante das suas funções originais permanece igual)     */
     /*--------------------------------------------------------------*/
-    document.getElementById('rodoviaSelect').addEventListener('change', function() {
-      const rodoviaSelecionada = document.getElementById('rodoviaSelect').value;
-      let pontosFiltrados = pontos;
-      if (rodoviaSelecionada) {
-        pontosFiltrados = pontos.filter(p => (p.Rodovia || p.rodovia) === rodoviaSelecionada);
-      }
-      criarMarcadoresPontosInteresse(pontosFiltrados);
-    });
+    document.getElementById('rodoviaSelect').addEventListener('change', carregarPontosInteresse);
+document.getElementById('periodoSelect').addEventListener('change', carregarPontosInteresse);
   </script>
 
   <!-- ============================================================ -->
@@ -678,11 +689,26 @@
 </head>
 <body>
   <button id="pontosInteresseBtn"
-          style="position:fixed;top:15px;left:15px;z-index:3000">
-    Pontos de Interesse
+          style="position:fixed;top:15px;left:200px;z-index:3000">
+    Carregar Bueiros
   </button>
-  <select id="rodoviaSelect" style="position:fixed;top:15px;left:180px;z-index:3000">
+  <select id="rodoviaSelect" style="position:fixed;top:15px;left:320px;z-index:3000">
     <option value="">Todas as rodovias</option>
+  </select>
+  <select id="periodoSelect" style="position:fixed;top:15px;left:455px;z-index:3000">
+    <option value="">Todos os períodos</option>
+    <option value="37">37</option>
+    <option value="38">38</option>
+    <option value="39">39</option>
+    <option value="40">40</option>
+    <option value="41">41</option>
+    <option value="42">42</option>
+    <option value="43">43</option>
+    <option value="44">44</option>
+    <option value="45">45</option>
+    <option value="46">46</option>
+    <option value="47">47</option>
+    <option value="48">48</option>
   </select>
   <div id="map"></div>
 </body>
